@@ -20,6 +20,7 @@ import {
   X,
   UserCog,
   CalendarCheck,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { hasPermission } from '../constants/permissions.js';
@@ -32,6 +33,7 @@ import logo from '../images/logo.png';
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, module: null },
   { to: '/stock', label: 'Stock', icon: Boxes, module: 'stock' },
+  { to: '/stock-adjustments', label: 'Stock Adjustment', icon: SlidersHorizontal, module: 'stock' },
   { to: '/inventory', label: 'Inventory', icon: Boxes, module: 'inventory' },
   { to: '/categories', label: 'Categories', icon: Tag, module: 'categories' },
   { to: '/pos', label: 'Seller / POS', icon: ShoppingCart, module: 'pos' },

@@ -23,6 +23,7 @@ import quickItemRoutes from './routes/quickItems.js';
 import partnerRoutes from './routes/partners.js';
 import fixedAssetRoutes from './routes/fixedAssets.js';
 import zakatRoutes from './routes/zakat.js';
+import stockAdjustmentRoutes from './routes/stockAdjustments.js';
 
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js';
 import { ApiError } from './utils/ApiError.js';
@@ -81,6 +82,7 @@ app.use('/api/quick-items', quickItemRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/fixed-assets', fixedAssetRoutes);
 app.use('/api/zakat', zakatRoutes);
+app.use('/api/stock-adjustments', stockAdjustmentRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

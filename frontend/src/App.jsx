@@ -1,4 +1,5 @@
 import StockPage from './pages/stock/StockPage.jsx';
+import StockAdjustmentsPage from './pages/stock/StockAdjustmentsPage.jsx';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import SalesInvoicePage from './pages/pos/SalesInvoicePage.jsx';
 import QuotationsPage from './pages/quotations/QuotationsPage.jsx';
@@ -68,6 +69,7 @@ export default function App() {
               <Route path="/pos/close-day/history" element={<RequirePermission module="pos"><CloseDayHistoryPage /></RequirePermission>} />
               <Route path="/daily-closing" element={<RequirePermission module="pos"><CloseDayHistoryPage /></RequirePermission>} />
               <Route path="/stock" element={<RequirePermission module="stock"><StockPage /></RequirePermission>} />
+              <Route path="/stock-adjustments" element={<RequirePermission module="stock"><StockAdjustmentsPage /></RequirePermission>} />
               <Route path="/purchases" element={<RequirePermission module="purchases"><PurchasesPage /></RequirePermission>} />
               <Route path="/purchases/:id" element={<RequirePermission module="purchases"><PurchaseDetailPage /></RequirePermission>} />
               <Route path="/purchases/:id/receipt" element={<RequirePermission module="purchases"><PurchaseReceiptPage /></RequirePermission>} />

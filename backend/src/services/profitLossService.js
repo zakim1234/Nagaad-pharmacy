@@ -5,6 +5,7 @@ import AccountTransaction from '../models/AccountTransaction.js';
 import { listExpenseCategories } from './expenseCategoryService.js';
 import { ApiError } from '../utils/ApiError.js';
 import { fromCents } from '../utils/money.js';
+import { netAdjustmentValueCents } from './stockAdjustmentService.js';
 import { BUSINESS_NAME } from '../config/business.js';
 
 export const BASES = ['accrual', 'cash'];
@@ -74,7 +75,7 @@ function monthBuckets(start, end) {
 // (everything before that) lines -- see balanceSheetService.js.
 export async function computePeriod({ start, end, basis }) {
   const salesMatch = { status: 'CONFIRMED', createdAt: { $gte: start, $lte: end } };
-  const [[sales], expenseRows] = await Promise.all([
+  const [[sales], expenseRows, inventoryAdjustmentCents] = await Promise.all([
     Sale.aggregate([
       { $match: salesMatch },
       { $group: { _id: null, total: { $sum: '$totalCents' }, cogs: { $sum: '$costOfGoodsCents' }, wallet: { $sum: '$walletAmountCents' } } },
@@ -83,6 +84,7 @@ export async function computePeriod({ start, end, basis }) {
       { $match: { status: 'POSTED', date: { $gte: start, $lte: end } } },
       { $group: { _id: '$category', cents: { $sum: '$amountCents' } } },
     ]),
+    netAdjustmentValueCents({ start, end }),
   ]);
 
   let salesIncomeCents = sales?.total || 0;
@@ -109,12 +111,17 @@ export async function computePeriod({ start, end, basis }) {
   const totalExpenseCents = [...expenses.values()].reduce((sum, c) => sum + c, 0);
   const discountReceivedCents = 0;
   const totalIncomeCents = salesIncomeCents + discountReceivedCents;
-  const cogsCents = sales?.cogs || 0;
+  const salesCogsCents = sales?.cogs || 0;
+  // Stock written off (damaged/expired/lost) minus stock found, valued at
+  // average cost -- part of the cost of goods for the period.
+  const cogsCents = salesCogsCents + inventoryAdjustmentCents;
   const grossProfitCents = totalIncomeCents - cogsCents;
   return {
     salesIncomeCents,
     discountReceivedCents,
     totalIncomeCents,
+    salesCogsCents,
+    inventoryAdjustmentCents,
     cogsCents,
     grossProfitCents,
     expenses,
@@ -153,7 +160,8 @@ export async function buildProfitLoss({ from, to, basis = 'accrual', columns = '
     { type: 'line', label: 'Sales Income', depth: 1, values: values((p) => p.salesIncomeCents) },
     { type: 'total', label: 'Total Income', values: values((p) => p.totalIncomeCents) },
     { type: 'section', label: 'Cost of Goods Sold' },
-    { type: 'line', label: 'Cost of Goods Sold', depth: 1, values: values((p) => p.cogsCents) },
+    { type: 'line', label: 'Cost of Goods Sold', depth: 1, values: values((p) => p.salesCogsCents) },
+    { type: 'line', label: 'Inventory Adjustments', depth: 1, values: values((p) => p.inventoryAdjustmentCents) },
     { type: 'total', label: 'Total COGS', values: values((p) => p.cogsCents) },
     { type: 'grand', label: 'Gross Profit', values: values((p) => p.grossProfitCents) },
     { type: 'section', label: 'Expense' },

@@ -93,7 +93,7 @@ test('PROFIT & LOSS -- accrual vs cash basis, expense categories, month columns,
     assert.equal(total(accrual, 'grand', 'Net Income'), 42);
     // Section order and default expense-category order (Rent, Fuel, then the custom one; nothing with zero activity).
     assert.deepEqual(accrual.rows.filter((r) => r.type === 'section').map((r) => r.label), ['Income', 'Cost of Goods Sold', 'Expense']);
-    const expenseRows = (report) => report.rows.filter((r) => r.depth === 1 && !['Discount Received', 'Sales Income', 'Cost of Goods Sold'].includes(r.label));
+    const expenseRows = (report) => report.rows.filter((r) => r.depth === 1 && !['Discount Received', 'Sales Income', 'Cost of Goods Sold', 'Inventory Adjustments'].includes(r.label));
     assert.deepEqual(expenseRows(accrual).map((r) => [r.label, r.values.total]), [['Rent', 15], ['Fuel', 5], ['Zako Expense', 10]]);
 
     // Cross-check: the accrual P&L must agree exactly with the existing Profit report for the same range.
