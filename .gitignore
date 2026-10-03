@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+*.local
+.DS_Store
+npm-debug.log*
+
+# Isolated local integration database
+.test-mongo/
+.claude/worktrees/
