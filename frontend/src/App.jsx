@@ -16,7 +16,6 @@ import InventoryPage from './pages/inventory/InventoryPage.jsx';
 import InventoryPrintPage from './pages/inventory/InventoryPrintPage.jsx';
 import CategoriesPage from './pages/categories/CategoriesPage.jsx';
 import POSPage from './pages/pos/POSPage.jsx';
-import CloseDayPage from './pages/pos/CloseDayPage.jsx';
 import CloseDayHistoryPage from './pages/pos/CloseDayHistoryPage.jsx';
 import PurchasesPage from './pages/purchases/PurchasesPage.jsx';
 import PurchaseDetailPage from './pages/purchases/PurchaseDetailPage.jsx';
@@ -66,8 +65,9 @@ export default function App() {
               <Route path="/quotations" element={<RequirePermission module="quotations"><QuotationsPage /></RequirePermission>} />
               <Route path="/quotations/new" element={<RequirePermission module="quotations"><QuotationDetailPage key="new" /></RequirePermission>} />
               <Route path="/quotations/:id" element={<RequirePermission module="quotations"><QuotationDetailPage /></RequirePermission>} />
-              <Route path="/pos/close-day" element={<RequirePermission module="pos"><CloseDayPage /></RequirePermission>} />
-              <Route path="/pos/close-day/history" element={<RequirePermission module="pos"><CloseDayHistoryPage /></RequirePermission>} />
+              {/* Close Day now lives inside Daily Closing; old links redirect there. */}
+              <Route path="/pos/close-day" element={<Navigate to="/daily-closing" replace />} />
+              <Route path="/pos/close-day/history" element={<Navigate to="/daily-closing" replace />} />
               <Route path="/daily-closing" element={<RequirePermission module="pos"><CloseDayHistoryPage /></RequirePermission>} />
               <Route path="/stock" element={<RequirePermission module="stock"><StockPage /></RequirePermission>} />
               <Route path="/stock-adjustments" element={<RequirePermission module="stock"><StockAdjustmentsPage /></RequirePermission>} />

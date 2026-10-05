@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import {
   RotateCcw,
-  Lock,
   ChevronDown,
   CalendarCheck,
   DollarSign,
@@ -28,6 +26,7 @@ import Modal from '../../components/ui/Modal.jsx';
 import { Textarea } from '../../components/ui/Field.jsx';
 import Pagination from '../../components/ui/Pagination.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
+import TodayClosingPanel from './TodayClosingPanel.jsx';
 
 const SALES_COLOR = '#6366f1';
 const NET_COLOR = '#10b981';
@@ -54,7 +53,6 @@ function compactCurrency(v) {
 export default function CloseDayHistoryPage() {
   const { user } = useAuth();
   const toast = useToast();
-  const canClose = user?.role === 'admin' || user?.role === 'manager';
   const [days, setDays] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, limit: 30 });
   const [loading, setLoading] = useState(true);
@@ -63,6 +61,7 @@ export default function CloseDayHistoryPage() {
   const [reopenTarget, setReopenTarget] = useState(null);
   const [reopenReason, setReopenReason] = useState('');
   const [reopening, setReopening] = useState(false);
+  const [panelKey, setPanelKey] = useState(0);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -87,6 +86,7 @@ export default function CloseDayHistoryPage() {
       toast.success('Business day reopened. Account balances have been restored.');
       setReopenTarget(null);
       setReopenReason('');
+      setPanelKey((k) => k + 1);
       await load();
     } catch (err) {
       toast.error(err.friendlyMessage || 'Could not reopen this closing.');
@@ -133,14 +133,6 @@ export default function CloseDayHistoryPage() {
                 ? `Last closed at ${timeLabel(latest.lastClosedAt)}${latest.closes.length > 1 ? ` · ${latest.closes.length} closings this day` : ''}`
                 : 'Close the day to see its figures here.'}
             </p>
-            {canClose && (
-              <Link
-                to="/pos/close-day"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-indigo-700 shadow-sm transition hover:bg-indigo-50"
-              >
-                <Lock className="h-4 w-4" /> Close Day
-              </Link>
-            )}
           </div>
 
           {latest && (
@@ -157,6 +149,9 @@ export default function CloseDayHistoryPage() {
           )}
         </div>
       </section>
+
+      {/* Today: status, pending invoices, Close Day / Open the Day */}
+      <TodayClosingPanel onChanged={load} refreshKey={panelKey} />
 
       {days.length > 0 && (
         <>
