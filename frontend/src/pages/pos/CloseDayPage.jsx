@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Lock, LockOpen, AlertTriangle, Printer, CheckCircle2, History } from 'lucide-react';
+import { ArrowLeft, Lock, LockOpen, AlertTriangle, Printer, CheckCircle2 } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -72,13 +72,10 @@ export default function CloseDayPage() {
     return (
       <div>
         <div className="mb-4 flex items-center justify-between no-print">
-          <Link to="/pos" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
-            <ArrowLeft className="h-4 w-4" /> Back to POS
+          <Link to="/daily-closing" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+            <ArrowLeft className="h-4 w-4" /> Back to Daily Closing
           </Link>
           <div className="flex gap-2">
-            <Link to="/daily-closing">
-              <Button variant="secondary"><History className="h-4 w-4" /> Daily Closing</Button>
-            </Link>
             <Button onClick={() => printReport('portrait')}>
               <Printer className="h-4 w-4" /> Print Day Summary
             </Button>
@@ -190,11 +187,8 @@ export default function CloseDayPage() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between no-print">
-        <Link to="/pos" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
-          <ArrowLeft className="h-4 w-4" /> Back to POS
-        </Link>
-        <Link to="/daily-closing">
-          <Button variant="secondary"><History className="h-4 w-4" /> Daily Closing</Button>
+        <Link to="/daily-closing" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+          <ArrowLeft className="h-4 w-4" /> Back to Daily Closing
         </Link>
       </div>
 

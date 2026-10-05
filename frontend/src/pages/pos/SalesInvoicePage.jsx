@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { RefreshCw, MoreHorizontal, Filter, Lock } from 'lucide-react';
+import { RefreshCw, MoreHorizontal, Filter } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
@@ -48,7 +48,7 @@ export default function SalesInvoicePage() {
   const setFilter = (key, value) => { setFilters(f => ({ ...f, [key]: value })); setPage(1); };
   const padding = compact ? 'px-3 py-2' : 'p-3';
   return <div className="min-w-0 space-y-4">
-    <PageHeader title="Sales Invoice" subtitle="Draft invoices are submitted by Close Day." actions={<div className="flex flex-wrap gap-2">{['admin', 'manager'].includes(user?.role) && <Link to="/pos/close-day"><Button variant="secondary"><Lock size={16} /> Close Day</Button></Link>}<Link to="/pos/new"><Button>+ Add Sales Invoice</Button></Link></div>} />
+    <PageHeader title="Sales Invoice" subtitle="Draft invoices are submitted by Close Day." actions={<div className="flex flex-wrap gap-2"><Link to="/pos/new"><Button>+ Add Sales Invoice</Button></Link></div>} />
     <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><Select aria-label="List View" value={compact ? 'compact' : 'list'} onChange={e => setCompact(e.target.value === 'compact')}><option value="list">List View</option><option value="compact">Compact List View</option></Select><Button variant="secondary" aria-label="Refresh invoices" onClick={() => setRefresh(n => n + 1)} disabled={loading}><RefreshCw size={16} /></Button><Button variant="secondary" aria-label="Toggle filters" aria-expanded={showFilters} onClick={() => setShowFilters(v => !v)}><Filter size={16} /></Button></div><div className="flex items-center gap-2"><Select aria-label="Last Updated On sorting" value={filters.sortDir} onChange={e => setFilter('sortDir', e.target.value)}><option value="desc">Last Updated On: Newest</option><option value="asc">Last Updated On: Oldest</option></Select><Button variant="secondary" aria-label="Invoice list settings" aria-expanded={settings} onClick={() => setSettings(v => !v)}><MoreHorizontal size={16} /></Button></div></div>
     {settings && <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={showModified} onChange={e => setShowModified(e.target.checked)} /> Show Last Modified column</label></div>}
     {showFilters && <Card><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

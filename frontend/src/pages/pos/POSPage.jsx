@@ -20,7 +20,6 @@ export default function POSPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const canCloseDay = user?.role === 'admin' || user?.role === 'manager';
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   const quotationId = searchParams.get('quotation');
@@ -359,15 +358,6 @@ export default function POSPage() {
       <PageHeader
         title={quotationId ? 'Convert Quotation to Invoice' : editId ? 'Edit Sales Invoice' : 'Add Sales Invoice'}
         subtitle="Find the customer, add products, and create the pending invoice"
-        actions={
-          canCloseDay && (
-            <Link to="/pos/close-day">
-              <Button variant="secondary">
-                <Lock className="h-4 w-4" /> Close Day
-              </Button>
-            </Link>
-          )
-        }
       />
       {storageWarning && <p className="text-sm text-amber-700">Browser storage is unavailable. This draft is retained during navigation, but cannot survive a reload.</p>}
       {quotation && <p className="rounded-lg bg-indigo-50 p-3 text-sm">From {quotation.quotationNumber}. Accepted items, prices and discount are preserved. {quotation.notes}</p>}

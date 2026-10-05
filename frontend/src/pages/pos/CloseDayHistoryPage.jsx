@@ -138,7 +138,7 @@ export default function CloseDayHistoryPage() {
                 to="/pos/close-day"
                 className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-indigo-700 shadow-sm transition hover:bg-indigo-50"
               >
-                <Lock className="h-4 w-4" /> Close Today
+                <Lock className="h-4 w-4" /> Close Day
               </Link>
             )}
           </div>
