@@ -1,4 +1,4 @@
-import { createSaleDraft, normalizeSaleNotes, validateSaleItems, resolveLinePricing, debitWallet, restoreWallet } from '../services/saleService.js';
+import { createSaleDraft, normalizeSaleNotes, validateSaleItems, resolveLinePricing, debitWallet, restoreWallet, assertBusinessDayOpen } from '../services/saleService.js';
 import Sale from '../models/Sale.js';
 import Customer from '../models/Customer.js';
 import InventoryItem from '../models/InventoryItem.js';
@@ -106,6 +106,7 @@ export const updateSale = asyncHandler(async (req, res) => {
   if (!Number.isFinite(Number(walletAmount)) || !Number.isSafeInteger(toCents(walletAmount)) || Number(walletAmount) < 0) {
     throw new ApiError(400, 'Wallet amount cannot be negative.');
   }
+  await assertBusinessDayOpen();
 
   const result = await runInTransaction(async (session) => {
     const sale = await Sale.findById(req.params.id).session(session);

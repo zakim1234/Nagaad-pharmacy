@@ -68,17 +68,20 @@ export function normalizeSaleNotes(value) {
   return notes;
 }
 
+// Once Close Day runs, Seller/POS is locked for everyone -- admins too --
+// until the day is opened again: no new sale, no quotation conversion, no
+// editing a pending invoice. Enforced here, not just in the UI, so a direct
+// API call cannot get around it.
+export async function assertBusinessDayOpen() {
+  const businessDay = await getBusinessDayStatus();
+  if (businessDay.status === 'CLOSED') {
+    throw new ApiError(403, 'Maalintu waa xiran tahay. Waxba lama iibin karo ilaa maalinta la furo. (The day is closed: nothing can be sold until it is opened.)');
+  }
+}
+
 // Authoritative draft creation, shared by POS and quotation conversion.
 export async function createSaleDraft(payload, user, session, { quotedPrices, quotationId } = {}) {
-  // Non-admins cannot start a new sale while the business day is closed --
-  // enforced here (not just in the UI) so a direct API call can't bypass
-  // it. Admin retains access, matching Close Day's own admin-only confirm.
-  if (user?.role !== 'admin') {
-    const businessDay = await getBusinessDayStatus();
-    if (businessDay.status === 'CLOSED') {
-      throw new ApiError(403, 'Maalintu waa xiran tahay, fadlan sug Admin inuu furo.');
-    }
-  }
+  await assertBusinessDayOpen();
 
   const { customerId, items, discount = 0, paidAmount = 0, walletAmount = 0, paymentAccountId } = payload;
   const notes = normalizeSaleNotes(payload.notes);

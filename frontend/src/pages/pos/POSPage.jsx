@@ -1,9 +1,11 @@
 import { draftKey, readDraft, writeDraft, clearDraft, isDraftMeaningful } from '../../utils/posDraft.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { ShoppingCart, ClipboardList, Lock, Pencil, ChevronDown, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, ClipboardList, Pencil, ChevronDown, ArrowLeft } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useBusinessDay } from '../../hooks/useBusinessDay.js';
+import DayClosedNotice from '../../components/DayClosedNotice.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency } from '../../utils/format.js';
 import PageHeader from '../../components/ui/PageHeader.jsx';
@@ -58,15 +60,9 @@ export default function POSPage() {
     if (customer) setMobilePanelOpen(false);
   }, [customer?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Backend independently rejects sale creation while CLOSED regardless of
-  // this check (see saleService.createSaleDraft) -- this is only so a
-  // non-admin sees a clear message instead of a confusing error after
-  // filling out the whole form.
-  const [businessDayStatus, setBusinessDayStatus] = useState(null);
-  useEffect(() => {
-    client.get('/day-close/status').then((res) => setBusinessDayStatus(res.data.data)).catch(() => setBusinessDayStatus(null));
-  }, []);
-  const posLocked = businessDayStatus?.status === 'CLOSED' && user?.role !== 'admin';
+  // After Close Day, Seller/POS is locked for everyone (admins too) until
+  // the day is opened; the server enforces the same rule.
+  const { closed: posLocked } = useBusinessDay();
 
   const loadDrafts = useCallback(() => {
     setDraftsLoading(true);
@@ -326,15 +322,7 @@ export default function POSPage() {
     }
   };
 
-  if (posLocked) {
-    return (
-      <div className="flex h-[60vh] flex-col items-center justify-center text-center">
-        <Lock className="mb-3 h-8 w-8 text-slate-300" />
-        <p className="text-lg font-semibold text-rose-600">Maalintu waa xiran tahay, fadlan sug Admin inuu furo.</p>
-        <p className="mt-1 text-sm text-slate-400">The business day is closed. Please wait for an admin to open it.</p>
-      </div>
-    );
-  }
+  if (posLocked) return <DayClosedNotice />;
 
   return (
     // No max-width/centering here: <main> in AppLayout already gives every

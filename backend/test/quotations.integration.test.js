@@ -12,7 +12,7 @@ import Sale from '../src/models/Sale.js';
 import Payment from '../src/models/Payment.js';
 import AccountTransaction from '../src/models/AccountTransaction.js';
 import DayClose from '../src/models/DayClose.js';
-import { closeDay } from '../src/services/dayCloseService.js';
+import { closeDay, openDay } from '../src/services/dayCloseService.js';
 
 test('quotation lifecycle, concurrent conversion, rollback, reports and debt-account settlement', { timeout: 120000 }, async () => {
   let server;
@@ -63,6 +63,8 @@ test('quotation lifecycle, concurrent conversion, rollback, reports and debt-acc
     const pending = await request('/quotations', { ...payload, items: [{ itemId: product.id, quantity: 5, unitPrice: 60 }] });
     assert.equal(pending.data.grandTotal, 300);
     await closeDay({ user });
+    // Converting a quotation is selling: open the day again before the next ones.
+    await openDay({ user });
     assert.equal((await InventoryItem.findById(product.id)).quantity, 18);
     assert.equal((await Customer.findById(customer.id)).balanceCents, 6000);
     // Not 5000: Close Day posts today's $50 EVC payment and then, in that

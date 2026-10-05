@@ -88,6 +88,9 @@ test('purchase, stock, reservations, close-day, expiry, rollback and concurrency
     const sellOut = await request('/sales', { customerId: customer.id, items: [{ itemId: item.id, quantity: 70 }] });
     assert.equal(sellOut.status, 201);
     await closeDay({ user });
+    // Selling is locked for everyone after Close Day until the day is opened.
+    assert.equal((await request('/sales', { customerId: customer.id, items: [{ itemId: item.id, quantity: 1 }] })).status, 403);
+    await openDay({ user });
     assert.equal((await InventoryItem.findById(item.id)).quantity, 0);
     const restock = await request('/stock', { rows: [{ ...row('Amoxicillin', 100, 1.3, '2032-01-01'), itemId: item.id }] });
     assert.equal(restock.status, 201);
@@ -107,7 +110,6 @@ test('purchase, stock, reservations, close-day, expiry, rollback and concurrency
     assert.equal(edited.status, 200, JSON.stringify(edited));
     assert.equal((await InventoryItem.findById(item.id)).reservedQuantity, 5);
     await InventoryLot.updateMany({ item: item.id, remainingQuantity: { $gt: 0 } }, { $set: { expiryDate: new Date('2020-01-01') } });
-    await openDay({ user });
     await assert.rejects(() => closeDay({ user }), /expired or is unavailable/);
     assert.equal((await InventoryItem.findById(item.id)).quantity, 100);
     assert.equal((await request(`/sales/${winner.data.id}/cancel`, {})).status, 200);
