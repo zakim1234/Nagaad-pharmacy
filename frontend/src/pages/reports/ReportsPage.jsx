@@ -3,26 +3,42 @@ import QuotationsPage from '../quotations/QuotationsPage.jsx';
 import { Link } from 'react-router-dom';
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
 } from 'recharts';
-import { Printer } from 'lucide-react';
+import {
+  Printer,
+  BarChart3,
+  TrendingUp,
+  Boxes,
+  UserRound,
+  Scale,
+  Landmark,
+  HandCoins,
+  CreditCard,
+  CalendarX,
+  AlertTriangle,
+  Undo2,
+  PackageX,
+  FileText,
+  Receipt,
+  LineChart as LineChartIcon,
+  PieChart as PieChartIcon,
+  Trophy,
+  Layers,
+  ShieldCheck,
+  CalendarRange,
+} from 'lucide-react';
 import client from '../../api/client.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 import { printReport } from '../../utils/printReport.js';
-import PageHeader from '../../components/ui/PageHeader.jsx';
-import Button from '../../components/ui/Button.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import { Table, THead, Th, TBody, Td, TableEmpty, TableLoading } from '../../components/ui/Table.jsx';
 import Badge from '../../components/ui/Badge.jsx';
@@ -32,6 +48,7 @@ import EmptyReportState from '../../components/reports/EmptyReportState.jsx';
 import DateRangeFilter from '../../components/reports/DateRangeFilter.jsx';
 import PrintReportHeader, { formatRangeLabel } from '../../components/reports/PrintReportHeader.jsx';
 import PrintReportFooter from '../../components/reports/PrintReportFooter.jsx';
+import { COLORS, axisProps, gridProps, compactMoney, gradient, ChartTooltip, LegendDots, DonutChart } from '../../components/reports/chartKit.jsx';
 import ProfitDrilldownModal from './ProfitDrilldownModal.jsx';
 import ProfitLossReport from './ProfitLossReport.jsx';
 import BalanceSheetReport from './BalanceSheetReport.jsx';
@@ -46,19 +63,25 @@ import {
 } from './FinancialReports.jsx';
 
 const TABS = [
-  { key: 'quotations', label: 'Quotation', title: 'Quotation Report', orientation: 'landscape' },
-  { key: 'sales', label: 'Sales', title: 'Sales Report', orientation: 'portrait' },
-  { key: 'profit', label: 'Profit', title: 'Profit Report', orientation: 'portrait' },
-  { key: 'inventory', label: 'Inventory', title: 'Inventory Report', orientation: 'landscape' },
-  { key: 'performance', label: 'User Performance', title: 'User Performance Report', orientation: 'portrait' },
-  { key: 'pnl', label: 'Profit & Loss', title: 'Profit & Loss Report', orientation: 'portrait' },
-  { key: 'balance-sheet', label: 'Balance Sheet', title: 'Balance Sheet', orientation: 'portrait' },
-  { key: 'expenses', label: 'Expenses', title: 'Expense Report', orientation: 'portrait' },
-  { key: 'payment-methods', label: 'Payment Methods', title: 'Payment Method Report', orientation: 'portrait' },
-  { key: 'expired', label: 'Expired Products', title: 'Expired Products Report', orientation: 'landscape' },
-  { key: 'low-stock', label: 'Low Stock', title: 'Low Stock Report', orientation: 'landscape' },
-  { key: 'sales-returns', label: 'Sales Returns', title: 'Sales Return Report', orientation: 'landscape' },
-  { key: 'purchase-returns', label: 'Purchase Returns', title: 'Purchase Return Report', orientation: 'landscape' },
+  { key: 'sales', label: 'Sales', title: 'Sales Report', orientation: 'portrait', icon: BarChart3, hint: 'Revenue, transactions and how customers paid' },
+  { key: 'profit', label: 'Profit', title: 'Profit Report', orientation: 'portrait', icon: TrendingUp, hint: 'Gross profit and margin by item and category' },
+  { key: 'payment-methods', label: 'Payment Methods', title: 'Payment Method Report', orientation: 'portrait', icon: CreditCard, hint: 'Money received per account' },
+  { key: 'sales-returns', label: 'Sales Returns', title: 'Sales Return Report', orientation: 'landscape', icon: Undo2, hint: 'Items customers brought back' },
+  { key: 'performance', label: 'User Performance', title: 'User Performance Report', orientation: 'portrait', icon: UserRound, hint: 'What one cashier sold and collected' },
+  { key: 'quotations', label: 'Quotation', title: 'Quotation Report', orientation: 'landscape', icon: FileText, hint: 'Quotations issued and converted' },
+  { key: 'pnl', label: 'Profit & Loss', title: 'Profit & Loss Report', orientation: 'portrait', icon: Scale, hint: 'Income, costs, expenses and net income' },
+  { key: 'balance-sheet', label: 'Balance Sheet', title: 'Balance Sheet', orientation: 'portrait', icon: Landmark, hint: 'Assets, liabilities and equity on a date' },
+  { key: 'expenses', label: 'Expenses', title: 'Expense Report', orientation: 'portrait', icon: HandCoins, hint: 'Spending by category and day' },
+  { key: 'inventory', label: 'Inventory', title: 'Inventory Report', orientation: 'landscape', icon: Boxes, hint: 'Stock value, health and expiry right now' },
+  { key: 'low-stock', label: 'Low Stock', title: 'Low Stock Report', orientation: 'landscape', icon: AlertTriangle, hint: 'Items at or below their minimum' },
+  { key: 'expired', label: 'Expired Products', title: 'Expired Products Report', orientation: 'landscape', icon: CalendarX, hint: 'Expired and soon-to-expire batches' },
+  { key: 'purchase-returns', label: 'Purchase Returns', title: 'Purchase Return Report', orientation: 'landscape', icon: PackageX, hint: 'Stock sent back to suppliers' },
+];
+
+const GROUPS = [
+  { label: 'Sales', keys: ['sales', 'profit', 'payment-methods', 'sales-returns', 'performance', 'quotations'] },
+  { label: 'Finance', keys: ['pnl', 'balance-sheet', 'expenses'] },
+  { label: 'Inventory', keys: ['inventory', 'low-stock', 'expired', 'purchase-returns'] },
 ];
 
 // Reports that describe the current state of stock rather than a date range.
@@ -111,87 +134,132 @@ export default function ReportsPage() {
   }, [load]);
 
   const ready = data && data.__tab === tab && !loading;
-  const showDateFilters = !NO_DATE_TABS.includes(tab) && tab !== 'pnl' && tab !== 'balance-sheet';
+  const ownsLayout = tab === 'pnl' || tab === 'balance-sheet' || tab === 'quotations';
+  const showDateFilters = !NO_DATE_TABS.includes(tab) && !ownsLayout;
   const rangeLabel = NO_DATE_TABS.includes(tab) ? 'As of today' : formatRangeLabel(data?.range);
-
-  if (tab === 'quotations') return <div className="space-y-4"><Button variant="secondary" onClick={() => setTab('sales')}>← Other Reports</Button><QuotationsPage report /></div>;
+  const ActiveIcon = activeTab.icon;
 
   return (
-    <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 no-print">
-        <PageHeader title="Reports" subtitle="Sales, profit, inventory and purchasing performance" />
-        <Button variant="secondary" onClick={() => printReport(activeTab.orientation)}>
-          <Printer className="h-4 w-4" /> Print Report
-        </Button>
-      </div>
+    <div className="space-y-5">
+      {/* Hero: which report is open, for which period */}
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-lg shadow-indigo-500/20 no-print">
+        <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-fuchsia-400/30 blur-3xl" />
+        <div className="relative flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25 backdrop-blur">
+              <ActiveIcon className="h-7 w-7" />
+            </div>
+            <div>
+              <p className="text-sm text-indigo-100">Reports</p>
+              <h1 className="text-2xl font-bold leading-tight">{activeTab.title}</h1>
+              <p className="mt-0.5 text-sm text-indigo-100">{activeTab.hint}</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {!ownsLayout && rangeLabel && (
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-3 py-2 text-sm ring-1 ring-white/25 backdrop-blur">
+                <CalendarRange className="h-4 w-4" /> {rangeLabel}
+              </span>
+            )}
+            {!ownsLayout && (
+              <button
+                onClick={() => printReport(activeTab.orientation)}
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-indigo-700 shadow-sm transition hover:bg-indigo-50"
+              >
+                <Printer className="h-4 w-4" /> Print Report
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
 
-      <div className="mb-5 flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1 no-print">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-              tab === t.key ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            {t.label}
-          </button>
+      {/* Report picker, grouped */}
+      <div className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm lg:grid-cols-[2fr_1.1fr_1.5fr] no-print">
+        {GROUPS.map((g) => (
+          <div key={g.label}>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{g.label}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {g.keys.map((key) => {
+                const t = TABS.find((x) => x.key === key);
+                const Icon = t.icon;
+                const active = tab === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setTab(key)}
+                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                      active
+                        ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
+                        : 'border-slate-200 text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" /> {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         ))}
       </div>
 
-      {tab === 'performance' && (
-        <UserPerformancePicker userId={performanceUserId} onUserChange={setPerformanceUserId} />
-      )}
+      {tab === 'quotations' ? (
+        <QuotationsPage report />
+      ) : (
+        <div>
+          {tab === 'performance' && <UserPerformancePicker userId={performanceUserId} onUserChange={setPerformanceUserId} />}
 
-      {tab === 'expired' && (
-        <ExpiredProductsControls mode={expiredMode} onModeChange={setExpiredMode} days={nearDays} onDaysChange={setNearDays} />
-      )}
+          {tab === 'expired' && (
+            <ExpiredProductsControls mode={expiredMode} onModeChange={setExpiredMode} days={nearDays} onDaysChange={setNearDays} />
+          )}
 
-      {showDateFilters && (
-        <DateRangeFilter
-          range={range}
-          onRangeChange={(v) => {
-            setRange(v);
-            setFrom('');
-            setTo('');
-          }}
-          from={from}
-          to={to}
-          onFromChange={setFrom}
-          onToChange={setTo}
-        />
-      )}
+          {showDateFilters && (
+            <DateRangeFilter
+              range={range}
+              onRangeChange={(v) => {
+                setRange(v);
+                setFrom('');
+                setTo('');
+              }}
+              from={from}
+              to={to}
+              onFromChange={setFrom}
+              onToChange={setTo}
+            />
+          )}
 
-      <div id="print-area">
-        {tab !== 'pnl' && tab !== 'balance-sheet' && <PrintReportHeader title={activeTab.title} rangeLabel={rangeLabel} />}
+          <div id="print-area">
+            {tab !== 'pnl' && tab !== 'balance-sheet' && <PrintReportHeader title={activeTab.title} rangeLabel={rangeLabel} />}
 
-        {tab === 'pnl' ? (
-          <ProfitLossReport />
-        ) : tab === 'balance-sheet' ? (
-          <BalanceSheetReport />
-        ) : tab === 'performance' && !performanceUserId ? (
-          <EmptyReportState message="Select a user above to view their performance report." />
-        ) : !ready ? (
-          <PageSpinner />
-        ) : (
-          <>
-            {tab === 'sales' && <SalesReport data={data} rangeParams={rangeParams} />}
-            {tab === 'profit' && (
-              <ProfitReport data={data} onDrilldown={(itemId, name) => setDrilldownItem({ id: itemId, name })} />
+            {tab === 'pnl' ? (
+              <ProfitLossReport />
+            ) : tab === 'balance-sheet' ? (
+              <BalanceSheetReport />
+            ) : tab === 'performance' && !performanceUserId ? (
+              <ReportSection>
+                <EmptyReportState message="Select a user above to view their performance report." />
+              </ReportSection>
+            ) : !ready ? (
+              <PageSpinner />
+            ) : (
+              <>
+                {tab === 'sales' && <SalesReport data={data} rangeParams={rangeParams} />}
+                {tab === 'profit' && <ProfitReport data={data} onDrilldown={(itemId, name) => setDrilldownItem({ id: itemId, name })} />}
+                {tab === 'inventory' && <InventoryReport data={data} />}
+                {tab === 'performance' && <UserPerformanceReport data={data} />}
+                {tab === 'expenses' && <ExpenseReport data={data} />}
+                {tab === 'payment-methods' && <PaymentMethodReport data={data} />}
+                {tab === 'expired' && <ExpiredProductsReport data={data} />}
+                {tab === 'low-stock' && <LowStockReport data={data} />}
+                {tab === 'sales-returns' && <SalesReturnReport data={data} />}
+                {tab === 'purchase-returns' && <PurchaseReturnReport data={data} />}
+              </>
             )}
-            {tab === 'inventory' && <InventoryReport data={data} />}
-            {tab === 'performance' && <UserPerformanceReport data={data} />}
-            {tab === 'expenses' && <ExpenseReport data={data} />}
-            {tab === 'payment-methods' && <PaymentMethodReport data={data} />}
-            {tab === 'expired' && <ExpiredProductsReport data={data} />}
-            {tab === 'low-stock' && <LowStockReport data={data} />}
-            {tab === 'sales-returns' && <SalesReturnReport data={data} />}
-            {tab === 'purchase-returns' && <PurchaseReturnReport data={data} />}
-          </>
-        )}
 
-        {ready && <PrintReportFooter />}
-      </div>
+            {ready && <PrintReportFooter />}
+          </div>
+        </div>
+      )}
 
       <ProfitDrilldownModal
         itemId={drilldownItem?.id}
@@ -207,6 +275,35 @@ function paymentStatusBadge(outstanding) {
   return outstanding > 0 ? { color: 'amber', label: 'Credit' } : { color: 'green', label: 'Paid' };
 }
 
+const dayTick = (d) => String(d).slice(5);
+
+// A ranked list with proportional bars -- reads faster than a horizontal
+// bar chart for "top N" lists, and prints cleanly.
+function RankedBars({ rows, valueKey, nameKey = 'name', money = false, color = 'from-indigo-500 to-violet-500', suffix = '' }) {
+  const max = Math.max(...rows.map((r) => Math.abs(r[valueKey]) || 0), 1);
+  return (
+    <ul className="space-y-3">
+      {rows.map((r, i) => (
+        <li key={`${r[nameKey]}-${i}`}>
+          <div className="flex items-baseline justify-between gap-3 text-sm">
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="w-5 shrink-0 text-xs font-semibold text-slate-400">{i + 1}</span>
+              <span className="truncate font-medium text-slate-700">{r[nameKey]}</span>
+            </span>
+            <span className="shrink-0 font-semibold tabular-nums text-slate-800">
+              {money ? formatCurrency(r[valueKey]) : r[valueKey]}
+              {suffix}
+            </span>
+          </div>
+          <div className="ml-7 mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+            <div className={`h-full rounded-full bg-gradient-to-r ${color}`} style={{ width: `${(Math.abs(r[valueKey]) / max) * 100}%` }} />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function SalesReport({ data, rangeParams }) {
   const toast = useToast();
   const [sales, setSales] = useState(null);
@@ -219,12 +316,14 @@ function SalesReport({ data, rangeParams }) {
       .catch((err) => toast.error(err.friendlyMessage || 'Failed to load sales.'));
   }, [rangeParams.range, rangeParams.from, rangeParams.to]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const noSales = data.byDay.length === 0;
+
   return (
-    <div className="space-y-6">
-      <ReportSection title="Sales Overview">
+    <div className="space-y-5">
+      <ReportSection title="Sales Overview" icon={BarChart3}>
         <ReportStatRow
           items={[
-            { label: 'Total Sales', value: formatCurrency(data.totalSales) },
+            { label: 'Total Sales', value: formatCurrency(data.totalSales), tone: 'text-indigo-600' },
             { label: 'Cash Collected', value: formatCurrency(data.cashCollected), tone: 'text-emerald-600' },
             { label: 'Credit Sales', value: formatCurrency(data.creditSales), tone: 'text-amber-600' },
             { label: 'Outstanding Receivables', value: formatCurrency(data.outstandingReceivables), tone: 'text-rose-600' },
@@ -235,106 +334,75 @@ function SalesReport({ data, rangeParams }) {
         />
       </ReportSection>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ReportSection title="Sales Revenue Over Time">
-          {data.byDay.length === 0 ? (
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <ReportSection title="Revenue Over Time" icon={LineChartIcon} className="chart-container lg:col-span-2">
+          {noSales ? (
             <EmptyReportState message="No sales found for this date range." />
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={data.byDay}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(d) => d.slice(5)} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v) => formatCurrency(v)} />
-                <Line type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={2} dot={false} name="Revenue" />
-              </LineChart>
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={data.byDay} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                <defs>{gradient('gSalesRev', COLORS.revenue)}</defs>
+                <CartesianGrid {...gridProps} />
+                <XAxis dataKey="date" {...axisProps} tickFormatter={dayTick} />
+                <YAxis {...axisProps} tickFormatter={compactMoney} width={56} />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#c7d2fe' }} />
+                <Area type="monotone" dataKey="revenue" name="Revenue" stroke={COLORS.revenue} strokeWidth={2.5} fill="url(#gSalesRev)" activeDot={{ r: 5 }} />
+              </AreaChart>
             </ResponsiveContainer>
           )}
         </ReportSection>
 
-        <ReportSection title="Number of Transactions Over Time">
-          {data.byDay.length === 0 ? (
-            <EmptyReportState message="No sales found for this date range." />
-          ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={data.byDay}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(d) => d.slice(5)} />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#0ea5e9" radius={[4, 4, 0, 0]} name="Transactions" />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </ReportSection>
-
-        <ReportSection title="Cash vs Credit Sales">
+        <ReportSection title="Cash vs Credit" icon={PieChartIcon} className="chart-container">
           {data.cashVsCredit.cash + data.cashVsCredit.credit === 0 ? (
             <EmptyReportState message="No sales found for this date range." />
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: 'Cash', value: data.cashVsCredit.cash },
-                    { name: 'Credit', value: data.cashVsCredit.credit },
-                  ]}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={80}
-                  label={(e) => `${e.name}: ${formatCurrency(e.value)}`}
-                >
-                  <Cell fill="#10b981" />
-                  <Cell fill="#f59e0b" />
-                </Pie>
-                <Tooltip formatter={(v) => formatCurrency(v)} />
-              </PieChart>
-            </ResponsiveContainer>
+            <DonutChart
+              data={[
+                { name: 'Cash', value: data.cashVsCredit.cash, color: COLORS.profit },
+                { name: 'Credit', value: data.cashVsCredit.credit, color: COLORS.cost },
+              ]}
+              valueKey="value"
+              nameKey="name"
+              centerLabel="Sales"
+              height={180}
+            />
           )}
         </ReportSection>
 
-        <ReportSection title="Revenue by Payment Account">
-          {!data.paymentByAccount || data.paymentByAccount.length === 0 ? (
-            <EmptyReportState message="No account payments found for this date range." />
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={data.paymentByAccount}
-                  dataKey="amount"
-                  nameKey="account"
-                  outerRadius={80}
-                  label={(e) => `${e.account}: ${formatCurrency(e.amount)}`}
-                >
-                  {data.paymentByAccount.map((entry, i) => (
-                    <Cell key={entry.account} fill={['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#a855f7'][i % 6]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v) => formatCurrency(v)} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </ReportSection>
-
-        <ReportSection title="Top Items by Quantity Sold">
-          {data.topByQuantity.length === 0 ? (
+        <ReportSection title="Transactions per Day" icon={Receipt} className="chart-container">
+          {noSales ? (
             <EmptyReportState message="No sales found for this date range." />
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={data.topByQuantity} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={100} />
-                <Tooltip />
-                <Bar dataKey="quantity" fill="#4f46e5" radius={[0, 4, 4, 0]} name="Qty Sold" />
+              <BarChart data={data.byDay} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                <CartesianGrid {...gridProps} />
+                <XAxis dataKey="date" {...axisProps} tickFormatter={dayTick} />
+                <YAxis {...axisProps} allowDecimals={false} width={40} />
+                <Tooltip content={<ChartTooltip money={false} />} cursor={{ fill: '#f1f5f9' }} />
+                <Bar dataKey="count" name="Transactions" fill={COLORS.count} radius={[6, 6, 0, 0]} maxBarSize={28} />
               </BarChart>
             </ResponsiveContainer>
+          )}
+        </ReportSection>
+
+        <ReportSection title="Revenue by Payment Account" icon={CreditCard} className="chart-container">
+          {!data.paymentByAccount || data.paymentByAccount.length === 0 ? (
+            <EmptyReportState message="No account payments found for this date range." />
+          ) : (
+            <DonutChart data={data.paymentByAccount} valueKey="amount" nameKey="account" centerLabel="Received" height={180} />
+          )}
+        </ReportSection>
+
+        <ReportSection title="Top Items by Quantity" icon={Trophy} className="chart-container">
+          {data.topByQuantity.length === 0 ? (
+            <EmptyReportState message="No sales found for this date range." />
+          ) : (
+            <RankedBars rows={data.topByQuantity} valueKey="quantity" suffix=" sold" />
           )}
         </ReportSection>
       </div>
 
-      <ReportSection title={`Transactions (${sales?.length ?? '…'})`}>
+      <ReportSection title="Transactions" subtitle={sales ? `${sales.length} confirmed sale(s)` : 'Loading…'} icon={Receipt}>
         <Table>
           <THead>
             <tr>
@@ -358,7 +426,7 @@ function SalesReport({ data, rangeParams }) {
               sales.map((s) => {
                 const status = paymentStatusBadge(s.outstanding);
                 return (
-                  <tr key={s.id}>
+                  <tr key={s.id} className="hover:bg-slate-50/70">
                     <Td className="font-medium text-slate-900">
                       <Link to={`/receipt/${s.id}`} className="text-indigo-600 hover:underline no-print">
                         {s.receiptNumber}
@@ -369,9 +437,9 @@ function SalesReport({ data, rangeParams }) {
                     <Td>{new Date(s.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</Td>
                     <Td>{s.customerName}</Td>
                     <Td>{s.items.length}</Td>
-                    <Td>{formatCurrency(s.total)}</Td>
-                    <Td>{formatCurrency(s.paidAmount)}</Td>
-                    <Td className={s.outstanding > 0 ? 'font-semibold text-rose-600' : ''}>{formatCurrency(s.outstanding)}</Td>
+                    <Td className="font-semibold tabular-nums">{formatCurrency(s.total)}</Td>
+                    <Td className="tabular-nums">{formatCurrency(s.paidAmount)}</Td>
+                    <Td className={`tabular-nums ${s.outstanding > 0 ? 'font-semibold text-rose-600' : ''}`}>{formatCurrency(s.outstanding)}</Td>
                     <Td>
                       <Badge color={status.color}>{status.label}</Badge>
                     </Td>
@@ -388,12 +456,12 @@ function SalesReport({ data, rangeParams }) {
 
 function ProfitReport({ data, onDrilldown }) {
   return (
-    <div className="space-y-6">
-      <ReportSection title="Profit Overview">
+    <div className="space-y-5">
+      <ReportSection title="Profit Overview" icon={TrendingUp}>
         <ReportStatRow
           items={[
-            { label: 'Revenue', value: formatCurrency(data.revenue) },
-            { label: 'Cost of Goods Sold', value: formatCurrency(data.costOfGoodsSold) },
+            { label: 'Revenue', value: formatCurrency(data.revenue), tone: 'text-indigo-600' },
+            { label: 'Cost of Goods Sold', value: formatCurrency(data.costOfGoodsSold), tone: 'text-amber-600' },
             { label: 'Gross Profit', value: formatCurrency(data.grossProfit), tone: 'text-emerald-600' },
             { label: 'Gross Margin', value: `${data.grossMarginPct}%`, tone: 'text-emerald-600' },
             { label: 'Units Sold', value: data.unitsSold },
@@ -401,60 +469,68 @@ function ProfitReport({ data, onDrilldown }) {
         />
       </ReportSection>
 
-      <ReportSection title="Revenue vs COGS vs Profit Over Time">
+      <ReportSection
+        title="Revenue, Cost and Profit Over Time"
+        icon={LineChartIcon}
+        className="chart-container"
+        actions={
+          <LegendDots
+            items={[
+              { label: 'Revenue', color: COLORS.revenue },
+              { label: 'COGS', color: COLORS.cost },
+              { label: 'Profit', color: COLORS.profit },
+            ]}
+          />
+        }
+      >
         {data.byDay.length === 0 ? (
           <EmptyReportState message="No sales found for this date range." />
         ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={data.byDay}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(d) => d.slice(5)} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v) => formatCurrency(v)} />
-              <Legend />
-              <Line type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={2} dot={false} name="Revenue" />
-              <Line type="monotone" dataKey="cost" stroke="#f59e0b" strokeWidth={2} dot={false} name="COGS" />
-              <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={2} dot={false} name="Profit" />
-            </LineChart>
+          <ResponsiveContainer width="100%" height={270}>
+            <AreaChart data={data.byDay} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+              <defs>
+                {gradient('gProfRev', COLORS.revenue)}
+                {gradient('gProfProfit', COLORS.profit)}
+              </defs>
+              <CartesianGrid {...gridProps} />
+              <XAxis dataKey="date" {...axisProps} tickFormatter={dayTick} />
+              <YAxis {...axisProps} tickFormatter={compactMoney} width={56} />
+              <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#c7d2fe' }} />
+              <Area type="monotone" dataKey="revenue" name="Revenue" stroke={COLORS.revenue} strokeWidth={2.5} fill="url(#gProfRev)" />
+              <Area type="monotone" dataKey="cost" name="COGS" stroke={COLORS.cost} strokeWidth={2} strokeDasharray="5 4" fill="none" />
+              <Area type="monotone" dataKey="profit" name="Profit" stroke={COLORS.profit} strokeWidth={2.5} fill="url(#gProfProfit)" />
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </ReportSection>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ReportSection title="Top 10 Profit Contributors">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <ReportSection title="Top 10 Profit Contributors" icon={Trophy} className="chart-container">
           {data.topProfitItems.length === 0 ? (
             <EmptyReportState message="No sales found for this date range." />
           ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={data.topProfitItems} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={100} />
-                <Tooltip formatter={(v) => formatCurrency(v)} />
-                <Bar dataKey="profit" fill="#10b981" radius={[0, 4, 4, 0]} name="Profit" />
-              </BarChart>
-            </ResponsiveContainer>
+            <RankedBars rows={data.topProfitItems} valueKey="profit" money color="from-emerald-400 to-teal-500" />
           )}
         </ReportSection>
 
-        <ReportSection title="Profit by Category">
+        <ReportSection title="Profit by Category" icon={Layers} className="chart-container">
           {data.profitByCategory.length === 0 ? (
             <EmptyReportState message="No sales found for this date range." />
           ) : (
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={data.profitByCategory}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="category" tick={{ fontSize: 11 }} interval={0} angle={-10} textAnchor="end" height={50} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v) => formatCurrency(v)} />
-                <Bar dataKey="profit" fill="#4f46e5" radius={[4, 4, 0, 0]} name="Profit" />
+              <BarChart data={data.profitByCategory} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                <CartesianGrid {...gridProps} />
+                <XAxis dataKey="category" {...axisProps} interval={0} angle={-10} textAnchor="end" height={50} />
+                <YAxis {...axisProps} tickFormatter={compactMoney} width={56} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                <Bar dataKey="profit" name="Profit" fill={COLORS.revenue} radius={[6, 6, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </ReportSection>
       </div>
 
-      <ReportSection title="Profit by Item — click a row on screen to see the invoices behind it">
+      <ReportSection title="Profit by Item" subtitle="Click a row to see the invoices behind it" icon={Receipt}>
         <Table>
           <THead>
             <tr>
@@ -470,18 +546,16 @@ function ProfitReport({ data, onDrilldown }) {
               <TableEmpty colSpan={5} message="No sales in this range." />
             ) : (
               data.profitByItem.map((i) => (
-                <tr
-                  key={i.itemId}
-                  onClick={() => onDrilldown(i.itemId, i.name)}
-                  className="cursor-pointer hover:bg-indigo-50"
-                >
+                <tr key={i.itemId} onClick={() => onDrilldown(i.itemId, i.name)} className="cursor-pointer hover:bg-indigo-50/60">
                   <Td className="font-medium text-slate-900">{i.name}</Td>
-                  <Td>{formatCurrency(i.revenue)}</Td>
-                  <Td>{formatCurrency(i.cost)}</Td>
-                  <Td className={i.profit >= 0 ? 'font-semibold text-emerald-600' : 'font-semibold text-rose-600'}>
-                    {formatCurrency(i.profit)}
+                  <Td className="tabular-nums">{formatCurrency(i.revenue)}</Td>
+                  <Td className="tabular-nums">{formatCurrency(i.cost)}</Td>
+                  <Td>
+                    <span className={`font-semibold tabular-nums ${i.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{formatCurrency(i.profit)}</span>
                   </Td>
-                  <Td>{i.marginPct}%</Td>
+                  <Td>
+                    <MarginPill pct={i.marginPct} />
+                  </Td>
                 </tr>
               ))
             )}
@@ -490,7 +564,7 @@ function ProfitReport({ data, onDrilldown }) {
       </ReportSection>
 
       {data.lossItems.length > 0 && (
-        <ReportSection title="Loss-Making Items">
+        <ReportSection title="Loss-Making Items" subtitle="Sold for less than they cost" icon={AlertTriangle}>
           <Table>
             <THead>
               <tr>
@@ -504,9 +578,11 @@ function ProfitReport({ data, onDrilldown }) {
               {data.lossItems.map((i) => (
                 <tr key={i.itemId}>
                   <Td className="font-medium text-slate-900">{i.name}</Td>
-                  <Td>{formatCurrency(i.revenue)}</Td>
-                  <Td>{formatCurrency(i.cost)}</Td>
-                  <Td className="font-semibold text-rose-600">{formatCurrency(i.profit)}</Td>
+                  <Td className="tabular-nums">{formatCurrency(i.revenue)}</Td>
+                  <Td className="tabular-nums">{formatCurrency(i.cost)}</Td>
+                  <Td>
+                    <span className="font-semibold tabular-nums text-rose-600">{formatCurrency(i.profit)}</span>
+                  </Td>
                 </tr>
               ))}
             </TBody>
@@ -517,20 +593,26 @@ function ProfitReport({ data, onDrilldown }) {
   );
 }
 
+function MarginPill({ pct }) {
+  const n = Number(pct) || 0;
+  const cls = n < 0 ? 'bg-rose-50 text-rose-700' : n < 15 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700';
+  return <span className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${cls}`}>{pct}%</span>;
+}
+
 function InventoryReport({ data }) {
   const distribution = [
-    { name: 'Healthy', value: data.stockDistribution.healthy },
-    { name: 'Low Stock', value: data.stockDistribution.lowStock },
-    { name: 'Out of Stock', value: data.stockDistribution.outOfStock },
+    { name: 'Healthy', value: data.stockDistribution.healthy, color: COLORS.profit },
+    { name: 'Low Stock', value: data.stockDistribution.lowStock, color: COLORS.cost },
+    { name: 'Out of Stock', value: data.stockDistribution.outOfStock, color: COLORS.loss },
   ].filter((d) => d.value > 0);
 
   return (
-    <div className="space-y-6">
-      <ReportSection title="Inventory Overview">
+    <div className="space-y-5">
+      <ReportSection title="Inventory Overview" icon={Boxes}>
         <ReportStatRow
           items={[
-            { label: 'Inventory Cost Value', value: formatCurrency(data.stockValueAtCost) },
-            { label: 'Potential Retail Value', value: formatCurrency(data.stockValueAtSelling) },
+            { label: 'Inventory Cost Value', value: formatCurrency(data.stockValueAtCost), tone: 'text-indigo-600' },
+            { label: 'Potential Retail Value', value: formatCurrency(data.stockValueAtSelling), tone: 'text-sky-600' },
             { label: 'Potential Gross Profit', value: formatCurrency(data.potentialGrossProfit), tone: 'text-emerald-600' },
             { label: 'Total Products', value: data.totalItems },
             { label: 'Total Units', value: data.totalQuantity },
@@ -541,70 +623,64 @@ function InventoryReport({ data }) {
         />
       </ReportSection>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ReportSection title="Stock Value by Category">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <ReportSection
+          title="Stock Value by Category"
+          icon={Layers}
+          className="chart-container lg:col-span-2"
+          actions={
+            <LegendDots
+              items={[
+                { label: 'Cost value', color: COLORS.muted },
+                { label: 'Retail value', color: COLORS.revenue },
+              ]}
+            />
+          }
+        >
           {data.valueByCategory.length === 0 ? (
             <EmptyReportState message="No inventory items yet." />
           ) : (
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={data.valueByCategory}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="category" tick={{ fontSize: 11 }} interval={0} angle={-10} textAnchor="end" height={50} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v) => formatCurrency(v)} />
-                <Legend />
-                <Bar dataKey="costValue" fill="#94a3b8" radius={[4, 4, 0, 0]} name="Cost Value" />
-                <Bar dataKey="sellingValue" fill="#4f46e5" radius={[4, 4, 0, 0]} name="Retail Value" />
+              <BarChart data={data.valueByCategory} barGap={4} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                <CartesianGrid {...gridProps} />
+                <XAxis dataKey="category" {...axisProps} interval={0} angle={-10} textAnchor="end" height={50} />
+                <YAxis {...axisProps} tickFormatter={compactMoney} width={56} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                <Bar dataKey="costValue" name="Cost Value" fill={COLORS.muted} radius={[6, 6, 0, 0]} maxBarSize={32} />
+                <Bar dataKey="sellingValue" name="Retail Value" fill={COLORS.revenue} radius={[6, 6, 0, 0]} maxBarSize={32} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </ReportSection>
 
-        <ReportSection title="Stock Health Distribution">
+        <ReportSection title="Stock Health" icon={ShieldCheck} className="chart-container">
           {distribution.length === 0 ? (
             <EmptyReportState message="No inventory items yet." />
           ) : (
-            <ResponsiveContainer width="100%" height={260}>
-              <PieChart>
-                <Pie data={distribution} dataKey="value" nameKey="name" outerRadius={90} label={(e) => `${e.name}: ${e.value}`}>
-                  {distribution.map((d) => (
-                    <Cell key={d.name} fill={d.name === 'Healthy' ? '#10b981' : d.name === 'Low Stock' ? '#f59e0b' : '#ef4444'} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </ReportSection>
-
-        <ReportSection title="Most Valuable Inventory Items" className="lg:col-span-2">
-          {data.mostValuableItems.length === 0 ? (
-            <EmptyReportState message="No inventory items yet." />
-          ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={data.mostValuableItems} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
-                <Tooltip formatter={(v) => formatCurrency(v)} />
-                <Bar dataKey="stockValue" fill="#4f46e5" radius={[0, 4, 4, 0]} name="Stock Value" />
-              </BarChart>
-            </ResponsiveContainer>
+            <DonutChart data={distribution} valueKey="value" nameKey="name" money={false} centerLabel="Items" height={180} />
           )}
         </ReportSection>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ReportSection title={`Low Stock (${data.lowStock.length})`}>
+      <ReportSection title="Most Valuable Inventory Items" icon={Trophy} className="chart-container">
+        {data.mostValuableItems.length === 0 ? (
+          <EmptyReportState message="No inventory items yet." />
+        ) : (
+          <RankedBars rows={data.mostValuableItems} valueKey="stockValue" money />
+        )}
+      </ReportSection>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <ReportSection title="Low Stock" subtitle={`${data.lowStock.length} item(s)`} icon={AlertTriangle}>
           <SimpleItemTable rows={data.lowStock} extraLabel="Threshold" extraKey="lowStockThreshold" />
         </ReportSection>
-        <ReportSection title={`Out of Stock (${data.outOfStock.length})`}>
+        <ReportSection title="Out of Stock" subtitle={`${data.outOfStock.length} item(s)`} icon={PackageX}>
           <SimpleItemTable rows={data.outOfStock} />
         </ReportSection>
-        <ReportSection title={`Expired (${data.expired.length})`}>
+        <ReportSection title="Expired" subtitle={`${data.expired.length} item(s)`} icon={CalendarX}>
           <SimpleItemTable rows={data.expired} extraLabel="Expired On" extraKey="expiryDate" isDate />
         </ReportSection>
-        <ReportSection title={`Near-Expiry (${data.nearExpiry.length})`}>
+        <ReportSection title="Near Expiry" subtitle={`${data.nearExpiry.length} item(s)`} icon={CalendarRange}>
           <SimpleItemTable rows={data.nearExpiry} extraLabel="Expires On" extraKey="expiryDate" isDate />
         </ReportSection>
       </div>
@@ -624,15 +700,16 @@ function UserPerformancePicker({ userId, onUserChange }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2 no-print">
+    <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm no-print sm:inline-flex">
+      <UserRound className="h-4 w-4 text-indigo-600" />
       <label className="text-sm font-medium text-slate-600" htmlFor="perf-user-select">
-        Select User
+        User
       </label>
       <select
         id="perf-user-select"
         value={userId}
         onChange={(e) => onUserChange(e.target.value)}
-        className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
       >
         <option value="">— Choose a user —</option>
         {(users || []).map((u) => (
@@ -647,11 +724,11 @@ function UserPerformancePicker({ userId, onUserChange }) {
 
 function UserPerformanceReport({ data }) {
   return (
-    <div className="space-y-6">
-      <ReportSection title={`Performance — ${data.user.name} (${data.user.username})`}>
+    <div className="space-y-5">
+      <ReportSection title={`Performance — ${data.user.name}`} subtitle={`@${data.user.username}`} icon={UserRound}>
         <ReportStatRow
           items={[
-            { label: 'Total Sales', value: formatCurrency(data.totalSales) },
+            { label: 'Total Sales', value: formatCurrency(data.totalSales), tone: 'text-indigo-600' },
             { label: 'Invoice Count', value: data.invoiceCount },
             { label: 'Items Sold', value: data.itemsSold },
             { label: 'Cash Collected', value: formatCurrency(data.cashCollected), tone: 'text-emerald-600' },
@@ -662,70 +739,32 @@ function UserPerformanceReport({ data }) {
         />
       </ReportSection>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ReportSection title="Sales Over Time">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <ReportSection title="Sales Over Time" icon={LineChartIcon} className="chart-container">
           {data.byDay.length === 0 ? (
             <EmptyReportState message="No confirmed sales found for this date range." />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={data.byDay}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(d) => d.slice(5)} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v) => formatCurrency(v)} />
-                <Line type="monotone" dataKey="totalSales" stroke="#4f46e5" strokeWidth={2} dot={false} name="Sales" />
-              </LineChart>
+              <AreaChart data={data.byDay} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                <defs>{gradient('gPerf', COLORS.revenue)}</defs>
+                <CartesianGrid {...gridProps} />
+                <XAxis dataKey="date" {...axisProps} tickFormatter={dayTick} />
+                <YAxis {...axisProps} tickFormatter={compactMoney} width={56} />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#c7d2fe' }} />
+                <Area type="monotone" dataKey="totalSales" name="Sales" stroke={COLORS.revenue} strokeWidth={2.5} fill="url(#gPerf)" />
+              </AreaChart>
             </ResponsiveContainer>
           )}
         </ReportSection>
 
-        <ReportSection title="Payments Collected by Account">
+        <ReportSection title="Payments Collected by Account" icon={CreditCard} className="chart-container">
           {data.paymentByAccount.length === 0 ? (
             <EmptyReportState message="No account payments found for this date range." />
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={data.paymentByAccount}
-                  dataKey="amount"
-                  nameKey="account"
-                  outerRadius={80}
-                  label={(e) => `${e.account}: ${formatCurrency(e.amount)}`}
-                >
-                  {data.paymentByAccount.map((entry, i) => (
-                    <Cell key={entry.account} fill={['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#a855f7'][i % 6]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v) => formatCurrency(v)} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <DonutChart data={data.paymentByAccount} valueKey="amount" nameKey="account" centerLabel="Collected" height={190} />
           )}
         </ReportSection>
       </div>
-
-      <ReportSection title="Payments Collected by Account — Detail">
-        <Table>
-          <THead>
-            <tr>
-              <Th>Account</Th>
-              <Th>Amount Collected</Th>
-            </tr>
-          </THead>
-          <TBody>
-            {data.paymentByAccount.length === 0 ? (
-              <TableEmpty colSpan={2} message="No account payments found for this date range." />
-            ) : (
-              data.paymentByAccount.map((a) => (
-                <tr key={a.account}>
-                  <Td className="font-medium text-slate-900">{a.account}</Td>
-                  <Td>{formatCurrency(a.amount)}</Td>
-                </tr>
-              ))
-            )}
-          </TBody>
-        </Table>
-      </ReportSection>
     </div>
   );
 }
@@ -747,9 +786,9 @@ function SimpleItemTable({ rows, extraLabel, extraKey, isDate }) {
         ) : (
           rows.map((r) => (
             <tr key={r._id}>
-              <Td>{r.name}</Td>
+              <Td className="font-medium text-slate-800">{r.name}</Td>
               <Td>{r.itemCode || '—'}</Td>
-              <Td>{r.quantity}</Td>
+              <Td className="tabular-nums">{r.quantity}</Td>
               {extraLabel && <Td>{isDate ? formatDate(r[extraKey]) : r[extraKey]}</Td>}
             </tr>
           ))

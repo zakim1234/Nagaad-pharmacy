@@ -1,4 +1,4 @@
-import { ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { Link } from 'react-router-dom';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 import Badge from '../../components/ui/Badge.jsx';
@@ -7,6 +7,7 @@ import { Table, THead, Th, TBody, Td, TableEmpty } from '../../components/ui/Tab
 import ReportSection from '../../components/reports/ReportSection.jsx';
 import ReportStatRow from '../../components/reports/ReportStatRow.jsx';
 import EmptyReportState from '../../components/reports/EmptyReportState.jsx';
+import { axisProps, gridProps, compactMoney, ChartTooltip, DonutChart } from '../../components/reports/chartKit.jsx';
 
 const COLORS = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#a855f7'];
 
@@ -58,12 +59,12 @@ export function ExpenseReport({ data }) {
             <EmptyReportState message="No expenses in this date range." />
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={data.byDay}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(d) => d.slice(5)} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v) => formatCurrency(v)} />
-                <Bar dataKey="amount" fill="#f43f5e" radius={[4, 4, 0, 0]} name="Expenses" />
+              <BarChart data={data.byDay} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                <CartesianGrid {...gridProps} />
+                <XAxis dataKey="date" {...axisProps} tickFormatter={(d) => d.slice(5)} />
+                <YAxis {...axisProps} tickFormatter={compactMoney} width={56} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                <Bar dataKey="amount" fill="#f43f5e" radius={[6, 6, 0, 0]} maxBarSize={28} name="Expenses" />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -160,17 +161,7 @@ export function PaymentMethodReport({ data }) {
           {data.methods.length === 0 ? (
             <EmptyReportState message="No payments collected in this date range." />
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie data={data.methods} dataKey="total" nameKey="account" outerRadius={85} label={(e) => `${e.account}: ${e.percent}%`}>
-                  {data.methods.map((m, i) => (
-                    <Cell key={m.account} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v) => formatCurrency(v)} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <DonutChart data={data.methods} valueKey="total" nameKey="account" colors={COLORS} centerLabel="Collected" height={200} />
           )}
         </ReportSection>
       </div>
