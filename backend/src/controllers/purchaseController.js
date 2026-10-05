@@ -51,7 +51,7 @@ function toDTO(p) {
   };
 }
 
-function paymentToDTO(pay) {
+export function paymentToDTO(pay) {
   return {
     id: pay._id,
     paymentNumber: pay.paymentNumber,
@@ -62,6 +62,9 @@ function paymentToDTO(pay) {
     previousBalance: fromCents(pay.previousBalanceCents),
     newBalance: fromCents(pay.newBalanceCents),
     note: pay.note,
+    paymentDate: pay.paymentDate || pay.createdAt,
+    bulkPayment: pay.bulkPayment || null,
+    editedAt: pay.editedAt || null,
     status: pay.status,
     reversedAt: pay.reversedAt,
     reversalReason: pay.reversalReason,
@@ -76,10 +79,23 @@ async function generatePurchaseNumber(session) {
   return `PUR-${year}-${String(seq).padStart(6, '0')}`;
 }
 
-async function generatePurchasePaymentNumber(session) {
+export async function generatePurchasePaymentNumber(session) {
   const seq = await nextSequence('purchasePayment', session);
   const year = new Date().getFullYear();
   return `PPAY-${year}-${String(seq).padStart(6, '0')}`;
+}
+
+// A payment's business date: a YYYY-MM-DD from the form (anchored at local
+// noon so it never slips a day), not in the future; defaults to now.
+export function parsePaymentDate(value) {
+  if (!value) return new Date();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value))) throw new ApiError(400, 'Enter a valid payment date.');
+  const date = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(date.getTime())) throw new ApiError(400, 'Enter a valid payment date.');
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+  if (date > endOfToday) throw new ApiError(400, 'Payment date cannot be in the future.');
+  return date;
 }
 
 // POST /api/purchases -- purchase invoices are recorded immediately (there
@@ -386,6 +402,7 @@ export const addPurchasePayment = asyncHandler(async (req, res) => {
           previousBalanceCents,
           newBalanceCents: purchase.balanceCents,
           note: req.body.note || '',
+          paymentDate: parsePaymentDate(req.body.paymentDate),
           createdBy: req.user?._id,
         },
       ],

@@ -131,7 +131,10 @@ test('STOCK ADJUSTMENT -- net loss shows in Profit & Loss; balance sheet stays c
     await request('/stock-adjustments', { itemId: item.id, direction: 'DECREASE', quantity: 6, reason: 'EXPIRED' }); // -$6
     await request('/stock-adjustments', { itemId: item.id, direction: 'INCREASE', quantity: 2, reason: 'COUNT_CORRECTION' }); // +$2
 
-    const today = new Date().toISOString().slice(0, 10);
+    // Local calendar day (the report works in local time; the UTC date is
+    // already tomorrow in the evening west of Greenwich).
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const pl = await buildProfitLoss({ from: today, to: today });
     const line = pl.rows.find((r) => r.label === 'Inventory Adjustments');
     assert.equal(line.values.total, 4, 'net $4 written off');

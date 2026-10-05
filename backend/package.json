@@ -12,7 +12,7 @@
     "migrate:dayclose": "node src/utils/runMigrateDayClose.js",
     "migrate:supplierarchive": "node src/utils/runMigrateSupplierArchive.js",
     "test": "node --test test/batches.test.js test/quotations.test.js test/saleLinePricing.test.js test/purchasePaymentStatus.test.js test/costingService.test.js",
-    "test:integration": "node --test test/flow.integration.test.js test/quotations.integration.test.js test/returns.integration.test.js test/userPerformance.integration.test.js test/wac.integration.test.js test/reopen.integration.test.js test/multiReturn.integration.test.js test/supplierArchive.integration.test.js test/expenses.integration.test.js test/profitLoss.integration.test.js test/posNotes.integration.test.js test/quickCreate.integration.test.js test/walletDeposit.integration.test.js test/partnersFixedAssets.integration.test.js test/zakatBalanceSheet.integration.test.js test/dailyClosing.integration.test.js test/stockAdjustment.integration.test.js"
+    "test:integration": "node --test test/flow.integration.test.js test/quotations.integration.test.js test/returns.integration.test.js test/userPerformance.integration.test.js test/wac.integration.test.js test/reopen.integration.test.js test/multiReturn.integration.test.js test/supplierArchive.integration.test.js test/expenses.integration.test.js test/profitLoss.integration.test.js test/posNotes.integration.test.js test/quickCreate.integration.test.js test/walletDeposit.integration.test.js test/partnersFixedAssets.integration.test.js test/zakatBalanceSheet.integration.test.js test/dailyClosing.integration.test.js test/stockAdjustment.integration.test.js test/purchaseBulkPayment.integration.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

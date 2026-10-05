@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Printer, CreditCard, Undo2 } from 'lucide-react';
+import { ArrowLeft, Printer, CreditCard, Pencil, Trash2, Layers } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
-import { formatCurrency, formatDateTime } from '../../utils/format.js';
+import { formatCurrency, formatDate, formatDateTime } from '../../utils/format.js';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -15,61 +15,100 @@ import Modal from '../../components/ui/Modal.jsx';
 
 const STATUS_COLOR = { Unpaid: 'slate', Partial: 'amber', Paid: 'green' };
 
-function AddPaymentModal({ open, onClose, purchase, onPaid }) {
+function dayString(date = new Date()) {
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function useActiveAccounts(open) {
+  const [accounts, setAccounts] = useState([]);
+  useEffect(() => {
+    if (!open) return;
+    client.get('/accounts').then((r) => setAccounts(r.data.data.accounts.filter((a) => a.isActive))).catch(() => setAccounts([]));
+  }, [open]);
+  return accounts;
+}
+
+// Add a new payment, or (with `payment`) edit an existing one. When editing,
+// the most that can be paid is what is still owed plus this payment's own
+// current amount.
+function PaymentModal({ open, onClose, purchase, payment, onSaved }) {
   const toast = useToast();
+  const editing = !!payment;
   const [amount, setAmount] = useState('');
   const [accountId, setAccountId] = useState('');
+  const [paymentDate, setPaymentDate] = useState(dayString());
   const [note, setNote] = useState('');
-  const [accounts, setAccounts] = useState([]);
   const [saving, setSaving] = useState(false);
+  const accounts = useActiveAccounts(open);
 
   useEffect(() => {
     if (!open) return;
-    setAmount('');
-    setAccountId('');
-    setNote('');
-    client.get('/accounts').then((r) => setAccounts(r.data.data.accounts.filter((a) => a.isActive))).catch(() => setAccounts([]));
-  }, [open]);
+    setAmount(editing ? String(payment.amount) : '');
+    setAccountId(editing ? String(payment.paymentAccount) : '');
+    setPaymentDate(dayString(editing ? payment.paymentDate : new Date()));
+    setNote(editing ? payment.note || '' : '');
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const maxAmount = editing ? purchase.balanceDue + payment.amount : purchase.balanceDue;
+  const amt = Number(amount);
+  const newBalance = Math.round((maxAmount - (Number.isFinite(amt) ? amt : 0)) * 100) / 100;
 
   const handleSave = async () => {
-    const amt = Number(amount);
     if (!Number.isFinite(amt) || amt <= 0) return toast.error('Enter a valid amount.');
-    if (amt > purchase.balanceDue) return toast.error(`Lacagtu waa ka badan tahay inta hadhay. (Exceeds balance due of ${formatCurrency(purchase.balanceDue)}.)`);
+    if (amt > maxAmount) return toast.error(`Lacagtu waa ka badan tahay inta hadhay. (Cannot exceed ${formatCurrency(maxAmount)}.)`);
     if (!accountId) return toast.error('Select a payment account.');
     setSaving(true);
     try {
-      await client.post(`/purchases/${purchase.id}/payments`, { amount: amt, paymentAccountId: accountId, note });
-      toast.success('Payment recorded.');
-      onPaid();
+      const body = { amount: amt, paymentAccountId: accountId, paymentDate, note };
+      if (editing) await client.put(`/purchases/${purchase.id}/payments/${payment.id}`, body);
+      else await client.post(`/purchases/${purchase.id}/payments`, body);
+      toast.success(editing ? 'Payment updated.' : 'Payment recorded.');
+      onSaved();
       onClose();
     } catch (err) {
-      toast.error(err.friendlyMessage || 'Could not record payment.');
+      toast.error(err.friendlyMessage || 'Could not save the payment.');
     } finally {
       setSaving(false);
     }
   };
 
+  // An inactive account can stay on a payment being edited, but is never offered for new ones.
+  const options = editing && !accounts.some((a) => String(a.id) === String(payment.paymentAccount))
+    ? [{ id: payment.paymentAccount, name: payment.paymentAccountName }, ...accounts]
+    : accounts;
+
   return (
-    <Modal open={open} onClose={onClose} title="Add Payment" size="sm">
+    <Modal open={open} onClose={onClose} title={editing ? `Edit Payment ${payment.paymentNumber}` : 'Add Payment'} size="sm">
       <div className="space-y-4">
-        <p className="text-sm text-slate-500">Balance Due: <strong>{formatCurrency(purchase.balanceDue)}</strong></p>
-        <FormField label="Amount to Pay" required>
+        <p className="text-sm text-slate-500">
+          {editing ? 'Can be up to' : 'Balance Due'}: <strong>{formatCurrency(maxAmount)}</strong>
+        </p>
+        <FormField label="Amount" required>
           <Input type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} autoFocus />
         </FormField>
         <FormField label="Payment Account" required>
           <Select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
             <option value="">Select account</option>
-            {accounts.map((a) => (
+            {options.map((a) => (
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </Select>
         </FormField>
-        <FormField label="Note / Reference">
-          <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" />
+        <FormField label="Date">
+          <Input type="date" value={paymentDate} max={dayString()} onChange={(e) => setPaymentDate(e.target.value)} />
         </FormField>
+        <FormField label="Note / Reference">
+          <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" maxLength={500} />
+        </FormField>
+        {Number.isFinite(amt) && amt > 0 && amt <= maxAmount && (
+          <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            Balance Due after saving: <strong className={newBalance > 0 ? 'text-rose-600' : 'text-emerald-600'}>{formatCurrency(newBalance)}</strong>
+          </p>
+        )}
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button loading={saving} onClick={handleSave}>Save Payment</Button>
+          <Button loading={saving} onClick={handleSave}>{editing ? 'Save Changes' : 'Save Payment'}</Button>
         </div>
       </div>
     </Modal>
@@ -85,8 +124,9 @@ export default function PurchaseDetailPage() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [payOpen, setPayOpen] = useState(false);
-  const [reverseTarget, setReverseTarget] = useState(null);
-  const [reversing, setReversing] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -101,24 +141,29 @@ export default function PurchaseDetailPage() {
 
   useEffect(() => load(), [load]);
 
-  const handleReverse = async () => {
-    setReversing(true);
+  // Delete = the payment is reversed: refunded to its account and the
+  // balance goes back up. The record stays, marked Deleted, for the audit trail.
+  const handleDelete = async () => {
+    setDeleting(true);
     try {
-      await client.post(`/purchases/${id}/payments/${reverseTarget.id}/reverse`, { reason: 'Reversed by staff' });
-      toast.success('Payment reversed.');
-      setReverseTarget(null);
+      await client.post(`/purchases/${id}/payments/${deleteTarget.id}/reverse`, { reason: 'Deleted by staff' });
+      toast.success('Payment deleted and refunded to its account.');
+      setDeleteTarget(null);
       load();
     } catch (err) {
-      toast.error(err.friendlyMessage || 'Could not reverse this payment.');
+      toast.error(err.friendlyMessage || 'Could not delete this payment.');
     } finally {
-      setReversing(false);
+      setDeleting(false);
     }
   };
 
   if (loading && !purchase) return <PageSpinner />;
   if (!purchase) return null;
 
-  const canPay = purchase.status !== 'voided' && (purchase.paymentStatus === 'Unpaid' || purchase.paymentStatus === 'Partial');
+  const voided = purchase.status === 'voided';
+  const canPay = !voided && (purchase.paymentStatus === 'Unpaid' || purchase.paymentStatus === 'Partial');
+  const active = payments.filter((p) => p.status === 'POSTED');
+  const deleted = payments.filter((p) => p.status !== 'POSTED');
 
   return (
     <div className="space-y-4">
@@ -139,7 +184,7 @@ export default function PurchaseDetailPage() {
             <p className="mt-1 text-xs text-slate-400">{formatDateTime(purchase.createdAt)}</p>
           </div>
           <div className="flex gap-2">
-            {purchase.status === 'voided' && <Badge color="red">Voided</Badge>}
+            {voided && <Badge color="red">Voided</Badge>}
             <Badge color={STATUS_COLOR[purchase.paymentStatus]}>{purchase.paymentStatus}</Badge>
           </div>
         </div>
@@ -164,48 +209,85 @@ export default function PurchaseDetailPage() {
         )}
       </Card>
 
-      <Card dense title={`Payment History (${payments.length})`}>
+      <Card dense title={`Payment History — ${purchase.purchaseNumber} (${active.length})`}>
         {payments.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-400">No payments recorded yet.</p>
         ) : (
           <div className="space-y-2">
-            {payments.map((p) => (
-              <div key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 p-3">
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">
-                    {p.paymentNumber} · {formatCurrency(p.amount)}
-                    {p.status === 'REVERSED' && <Badge color="red" className="ml-2">Reversed</Badge>}
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    {p.paymentAccountName} · {formatDateTime(p.createdAt)}
-                    {p.note ? ` · ${p.note}` : ''}
-                  </p>
-                </div>
-                {canManage && p.status === 'POSTED' && (
-                  <button
-                    onClick={() => setReverseTarget(p)}
-                    className="flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-700"
-                  >
-                    <Undo2 className="h-3.5 w-3.5" /> Reverse
-                  </button>
-                )}
-              </div>
+            {active.length === 0 && <p className="py-3 text-center text-sm text-slate-400">No active payments.</p>}
+            {active.map((p) => (
+              <PaymentRow
+                key={p.id}
+                payment={p}
+                actions={
+                  canManage &&
+                  !voided && (
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => setEditTarget(p)}
+                        className="flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Edit
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(p)}
+                        className="flex items-center gap-1 rounded-lg border border-rose-200 px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                      </button>
+                    </div>
+                  )
+                }
+              />
             ))}
+            {deleted.length > 0 && (
+              <div className="pt-2">
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Deleted payments ({deleted.length})</p>
+                {deleted.map((p) => (
+                  <PaymentRow key={p.id} payment={p} faded />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </Card>
 
-      <AddPaymentModal open={payOpen} onClose={() => setPayOpen(false)} purchase={purchase} onPaid={load} />
+      <PaymentModal open={payOpen} onClose={() => setPayOpen(false)} purchase={purchase} onSaved={load} />
+      <PaymentModal open={!!editTarget} onClose={() => setEditTarget(null)} purchase={purchase} payment={editTarget} onSaved={load} />
       <ConfirmDialog
-        open={!!reverseTarget}
-        title="Reverse Payment"
-        message={`Reverse payment ${reverseTarget?.paymentNumber} of ${formatCurrency(reverseTarget?.amount)}? The amount will be refunded back into ${reverseTarget?.paymentAccountName}, and the invoice balance will be recalculated.`}
-        confirmLabel="Reverse Payment"
+        open={!!deleteTarget}
+        title="Delete Payment"
+        message={`Ma hubtaa inaad tirtirto lacagtan ${formatCurrency(deleteTarget?.amount)}? Falkan wuxuu kordhin doonaa Balance Due-ga. (The ${formatCurrency(deleteTarget?.amount)} goes back into ${deleteTarget?.paymentAccountName} and the invoice's Balance Due increases.)`}
+        confirmLabel="Confirm Delete"
         variant="danger"
-        loading={reversing}
-        onConfirm={handleReverse}
-        onClose={() => setReverseTarget(null)}
+        loading={deleting}
+        onConfirm={handleDelete}
+        onClose={() => setDeleteTarget(null)}
       />
+    </div>
+  );
+}
+
+function PaymentRow({ payment: p, actions, faded = false }) {
+  return (
+    <div className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 p-3 ${faded ? 'bg-slate-50/60 opacity-70' : ''}`}>
+      <div className="min-w-0">
+        <p className={`text-sm font-semibold ${faded ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
+          {formatCurrency(p.amount)} – {p.paymentAccountName} – {formatDate(p.paymentDate)}
+        </p>
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+          <span>{p.paymentNumber}</span>
+          {p.bulkPayment && (
+            <Link to={`/purchases/bulk-payments/${p.bulkPayment}`} className="inline-flex items-center gap-1 font-medium text-indigo-600 hover:underline">
+              <Layers className="h-3 w-3" /> Bulk payment receipt
+            </Link>
+          )}
+          {p.editedAt && !faded && <Badge color="blue">Edited</Badge>}
+          {faded && <Badge color="red">Deleted</Badge>}
+          {p.note && <span className="text-slate-500">{p.note}</span>}
+        </p>
+      </div>
+      {actions}
     </div>
   );
 }

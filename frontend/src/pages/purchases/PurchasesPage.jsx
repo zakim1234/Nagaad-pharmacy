@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, Ban, Printer, Search } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, Ban, Printer, Search, Percent } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -14,12 +14,14 @@ import Pagination from '../../components/ui/Pagination.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import PurchaseFormModal from './PurchaseFormModal.jsx';
+import BulkPaymentModal from './BulkPaymentModal.jsx';
 
 const PAYMENT_STATUS_COLOR = { Unpaid: 'slate', Partial: 'amber', Paid: 'green' };
 
 export default function PurchasesPage() {
   const toast = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, limit: 20 });
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,7 @@ export default function PurchasesPage() {
   const debouncedQ = useDebounce(q, 300);
   const [paymentStatus, setPaymentStatus] = useState('');
   const [formOpen, setFormOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [voidItem, setVoidItem] = useState(null);
   const [voiding, setVoiding] = useState(false);
 
@@ -69,9 +72,14 @@ export default function PurchasesPage() {
         title="Purchase Invoices"
         subtitle="Record invoices for goods purchased from suppliers"
         actions={
-          <Button onClick={() => setFormOpen(true)}>
-            <Plus className="h-4 w-4" /> New Purchase Invoice
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => setBulkOpen(true)}>
+              <Percent className="h-4 w-4" /> Bulk Payment
+            </Button>
+            <Button onClick={() => setFormOpen(true)}>
+              <Plus className="h-4 w-4" /> New Purchase Invoice
+            </Button>
+          </div>
         }
       />
 
@@ -147,6 +155,14 @@ export default function PurchasesPage() {
       </div>
 
       <PurchaseFormModal open={formOpen} onClose={() => setFormOpen(false)} onSaved={load} />
+      <BulkPaymentModal
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        onPaid={(bulk) => {
+          setBulkOpen(false);
+          navigate(`/purchases/bulk-payments/${bulk.id}`);
+        }}
+      />
       <ConfirmDialog
         open={!!voidItem}
         title="Void Purchase"
