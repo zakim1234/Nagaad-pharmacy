@@ -8,3 +8,6 @@ npm-debug.log*
 # Isolated local integration database
 .test-mongo/
 .claude/worktrees/
+
+# Local server logs -- never commit
+*.log
