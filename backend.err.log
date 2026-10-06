@@ -1,0 +1,2 @@
+[audit] failed to write audit log: AuditLog validation failed: entityId: Cast to ObjectId failed for value "current" (type string) at path "entityId" because of "BSONError"
+[audit] failed to write audit log: AuditLog validation failed: entityId: Cast to ObjectId failed for value "current" (type string) at path "entityId" because of "BSONError"

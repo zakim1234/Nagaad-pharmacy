@@ -366,3 +366,38 @@ Visit https://react.dev/link/error-boundaries to learn more about error boundari
 [2m9:35:07 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pos/CloseDayHistoryPage.jsx, /src/index.css[22m
 [2m12:28:52 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/index.css[22m
 [2m12:28:52 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/layouts/AppLayout.jsx, /src/index.css[22m
+[2m7:35:06 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/reports/ReportSection.jsx[22m
+[2m7:35:08 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/reports/ReportStatRow.jsx[22m
+[2m7:35:09 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/reports/EmptyReportState.jsx[22m
+[2m7:35:11 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/reports/DateRangeFilter.jsx[22m
+[2m7:35:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/reports/DateRangeFilter.jsx[22m
+[2m7:38:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/reports/ReportsPage.jsx, /src/index.css[22m
+[2m7:38:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/index.css[22m
+[2m7:38:50 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/index.css[22m
+[2m7:39:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/reports/FinancialReports.jsx[22m
+[2m7:41:06 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/reports/DateRangeFilter.jsx[22m
+[2m7:41:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/reports/chartKit.jsx[22m
+[2m7:41:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/reports/chartKit.jsx[22m Could not Fast Refresh ("COLORS" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m7:41:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/reports/ReportsPage.jsx, /src/pages/reports/FinancialReports.jsx[22m
+[2m7:42:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/reports/chartKit.jsx[22m
+[2m7:42:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/reports/ReportsPage.jsx, /src/index.css[22m
+[2m7:42:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/reports/chartKit.jsx[22m Could not Fast Refresh ("COLORS" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m7:42:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/reports/ReportsPage.jsx, /src/pages/reports/FinancialReports.jsx[22m
+[2m7:44:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/reports/ReportsPage.jsx, /src/index.css[22m
+[2m7:47:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pos/SalesInvoicePage.jsx, /src/index.css[22m
+[2m7:47:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pos/POSPage.jsx, /src/index.css[22m
+[2m7:47:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pos/CloseDayPage.jsx, /src/index.css[22m
+[2m7:47:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pos/CloseDayHistoryPage.jsx, /src/index.css[22m
+[2m7:48:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pos/CloseDayPage.jsx, /src/index.css[22m
+[2m8:15:04 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/index.css[22m
+[2m8:15:04 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/purchases/PurchasesPage.jsx, /src/index.css[22m
+[2m8:16:00 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/purchases/PurchaseDetailPage.jsx, /src/index.css[22m
+[2m8:36:09 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pos/CloseDayHistoryPage.jsx, /src/index.css[22m
+[2m8:36:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pos/CloseDayHistoryPage.jsx, /src/index.css[22m
+[2m8:36:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/index.css[22m
+[2m8:36:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pos/CloseDayPage.jsx, /src/index.css[22m
+[2m8:36:31 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] Failed to reload /src/pages/pos/CloseDayPage.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+[2m8:43:35 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pos/POSPage.jsx, /src/index.css[22m
+[2m8:43:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pos/POSPage.jsx, /src/index.css[22m
+[2m8:44:12 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pos/SalesInvoicePage.jsx, /src/index.css[22m
+[2m10:26:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/DayClosedNotice.jsx, /src/index.css[22m
