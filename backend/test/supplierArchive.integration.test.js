@@ -91,3 +91,65 @@ test('TEST SI7-SI13 -- Supplier Invoice archive: search by serial/supplier, dupl
     await mongoose.disconnect();
   }
 });
+
+test('SUPPLIER ARCHIVE -- edit corrects the record (serial stays unique), delete removes it; admin/manager only', { timeout: 60000 }, async () => {
+  await mongoose.connect(`mongodb://127.0.0.1:27028/supplier_archive_edit_${Date.now()}?replicaSet=stocktest`);
+  process.env.JWT_SECRET = 'isolated-supplier-archive-edit-secret';
+  await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
+  const admin = await User.create({ username: 'admin', name: 'Admin', passwordHash: 'unused', role: 'admin' });
+  const cashier = await User.create({ username: 'cashier', name: 'Cashier', passwordHash: 'unused', role: 'cashier', permissions: ['supplierInvoices'] });
+  const abc = await Supplier.create({ name: 'ABC Pharma Distributors' });
+  const other = await Supplier.create({ name: 'Other Supplier' });
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise((resolve) => server.once('listening', resolve));
+  const as = (user) => async (path, body, method = 'POST') => {
+    const token = jwt.sign({ sub: String(user._id) }, process.env.JWT_SECRET);
+    const r = await fetch(`http://127.0.0.1:${server.address().port}/api${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      ...(body != null ? { body: JSON.stringify(body) } : {}),
+    });
+    return { status: r.status, ...(await r.json()) };
+  };
+  const request = as(admin);
+  const asCashier = as(cashier);
+  try {
+    const a = await request('/supplier-invoice-archives', { serialNumber: '775474', supplierId: abc.id, rows: [{ itemName: 'Biotin', quantity: 10, cost: 100 }] });
+    const b = await request('/supplier-invoice-archives', { serialNumber: '999', rows: [{ itemName: 'X', quantity: 1, cost: 1 }] });
+    assert.equal(a.status, 201);
+    assert.equal(b.status, 201);
+
+    // Cashiers can create and view, but not change or remove.
+    assert.equal((await asCashier(`/supplier-invoice-archives/${a.data.id}`, { serialNumber: '775474', rows: [{ itemName: 'Y', quantity: 1, cost: 1 }] }, 'PUT')).status, 403);
+    assert.equal((await asCashier(`/supplier-invoice-archives/${a.data.id}`, null, 'DELETE')).status, 403);
+
+    // Edit: new supplier, rows and notes; the total is recalculated.
+    const edited = await request(`/supplier-invoice-archives/${a.data.id}`, {
+      serialNumber: '775474',
+      supplierId: other.id,
+      rows: [{ itemName: 'Biotin', quantity: 8, cost: 100 }, { itemName: 'Zinc', quantity: 2, cost: 25 }],
+      notes: 'corrected quantity',
+    }, 'PUT');
+    assert.equal(edited.status, 200, JSON.stringify(edited));
+    assert.equal(edited.data.grandTotal, 850);
+    assert.equal(edited.data.supplierName, 'Other Supplier');
+    assert.equal(edited.data.archiveNumber, a.data.archiveNumber, 'keeps its archive number');
+    assert.equal(edited.data.rows.length, 2);
+
+    // Cannot take another archive's serial number.
+    const clash = await request(`/supplier-invoice-archives/${a.data.id}`, { serialNumber: '999', rows: [{ itemName: 'Biotin', quantity: 1, cost: 1 }] }, 'PUT');
+    assert.equal(clash.status, 409);
+    assert.equal((await request(`/supplier-invoice-archives/${a.data.id}`, { serialNumber: '775474', rows: [] }, 'PUT')).status, 400);
+
+    // Delete.
+    const del = await request(`/supplier-invoice-archives/${a.data.id}`, null, 'DELETE');
+    assert.equal(del.status, 200, JSON.stringify(del));
+    assert.equal((await request(`/supplier-invoice-archives/${a.data.id}`, null, 'GET')).status, 404);
+    const list = await request('/supplier-invoice-archives', null, 'GET');
+    assert.deepEqual(list.data.map((x) => x.serialNumber), ['999']);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await mongoose.connection.dropDatabase();
+    await mongoose.disconnect();
+  }
+});

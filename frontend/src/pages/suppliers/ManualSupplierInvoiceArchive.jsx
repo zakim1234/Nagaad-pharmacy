@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Trash2, Plus, Search, Save, FileText, Building2 } from 'lucide-react';
+import { Trash2, Plus, Search, Save, FileText, Building2, Pencil } from 'lucide-react';
 import client from '../../api/client.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
 import { formatCurrency, formatDate, formatDateTime } from '../../utils/format.js';
 import Button from '../../components/ui/Button.jsx';
 import Modal from '../../components/ui/Modal.jsx';
+import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import { FormField, Input, Textarea } from '../../components/ui/Field.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import SupplierPicker from '../purchases/SupplierPicker.jsx';
@@ -14,17 +16,23 @@ const emptyRow = () => ({ itemName: '', quantity: '', cost: '' });
 
 // A manually-entered archive of a supplier's paper invoice, saved exactly as
 // typed. This NEVER touches Stock or Inventory -- see
-// supplierInvoiceArchiveController.createArchive on the backend. Default
-// view is a searchable file browser of every archived invoice; the entry
-// form only appears inside the "+ Manual Entry Invoice" modal.
+// supplierInvoiceArchiveController on the backend. Default view is a
+// searchable file browser of every archived invoice; the entry form only
+// appears inside the "+ Manual Entry Invoice" modal (also used to edit).
+// Edit and Delete are admin/manager only (the server enforces it too).
 export default function ManualSupplierInvoiceArchive() {
   const toast = useToast();
+  const { user } = useAuth();
+  const canManage = user?.role === 'admin' || user?.role === 'manager';
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce(query, 250);
   const [archives, setArchives] = useState(null); // null = loading
   const [loading, setLoading] = useState(true);
   const [viewing, setViewing] = useState(null);
   const [entryOpen, setEntryOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -36,6 +44,29 @@ export default function ManualSupplierInvoiceArchive() {
   }, [debouncedQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => load(), [load]);
+
+  const startEdit = (archive) => {
+    setViewing(null);
+    setEditing(archive);
+  };
+  const startDelete = (archive) => {
+    setViewing(null);
+    setDeleteTarget(archive);
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await client.delete(`/supplier-invoice-archives/${deleteTarget.id}`);
+      toast.success(`Serial ${deleteTarget.serialNumber} deleted.`);
+      setDeleteTarget(null);
+      load();
+    } catch (err) {
+      toast.error(err.friendlyMessage || 'Could not delete this invoice.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -63,46 +94,102 @@ export default function ManualSupplierInvoiceArchive() {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {archives.map((a) => (
-            <button
+            <div
               key={a.id}
-              onClick={() => setViewing(a)}
-              className="group flex flex-col items-start gap-1.5 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="group flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md"
             >
-              <div className="flex w-full items-center gap-2">
-                <FileText className="h-8 w-8 shrink-0 text-indigo-400 group-hover:text-indigo-600" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-slate-900">Serial: {a.serialNumber}</p>
-                  <p className="truncate text-xs text-slate-400">{a.archiveNumber}</p>
+              <button
+                onClick={() => setViewing(a)}
+                className="flex flex-1 flex-col items-start gap-1.5 rounded-t-xl p-4 text-left focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              >
+                <div className="flex w-full items-center gap-2">
+                  <FileText className="h-8 w-8 shrink-0 text-indigo-400 group-hover:text-indigo-600" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-900">Serial: {a.serialNumber}</p>
+                    <p className="truncate text-xs text-slate-400">{a.archiveNumber}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="mt-1 flex w-full items-center gap-1.5 text-xs text-slate-500">
-                <Building2 className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{a.supplierName || '(no supplier)'}</span>
-              </div>
-              <p className="text-xs text-slate-400">{formatDate(a.createdAt)}</p>
-              <p className="mt-1 text-base font-bold tabular-nums text-slate-900">{formatCurrency(a.grandTotal)}</p>
-            </button>
+                <div className="mt-1 flex w-full items-center gap-1.5 text-xs text-slate-500">
+                  <Building2 className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{a.supplierName || '(no supplier)'}</span>
+                </div>
+                <p className="text-xs text-slate-400">{formatDate(a.createdAt)}</p>
+                <p className="mt-1 text-base font-bold tabular-nums text-slate-900">{formatCurrency(a.grandTotal)}</p>
+              </button>
+              {canManage && (
+                <div className="flex gap-1.5 border-t border-slate-100 px-4 py-2.5">
+                  <CardAction icon={Pencil} label="Edit" onClick={() => startEdit(a)} />
+                  <CardAction icon={Trash2} label="Delete" danger onClick={() => startDelete(a)} />
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}
 
-      <ArchiveDetailModal archive={viewing} onClose={() => setViewing(null)} />
+      <ArchiveDetailModal archive={viewing} onClose={() => setViewing(null)} canManage={canManage} onEdit={startEdit} onDelete={startDelete} />
       <ManualEntryModal
-        open={entryOpen}
-        onClose={() => setEntryOpen(false)}
+        open={entryOpen || !!editing}
+        archive={editing}
+        onClose={() => {
+          setEntryOpen(false);
+          setEditing(null);
+        }}
         onSaved={() => {
           setEntryOpen(false);
+          setEditing(null);
           load();
         }}
+      />
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete Supplier Invoice"
+        message={`Ma hubtaa inaad tirtirto invoice-ka Serial ${deleteTarget?.serialNumber} (${formatCurrency(deleteTarget?.grandTotal)})? Falkan dib looma celin karo. (This archived copy will be removed permanently. Stock and accounts are not affected.)`}
+        confirmLabel="Confirm Delete"
+        variant="danger"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onClose={() => setDeleteTarget(null)}
       />
     </div>
   );
 }
 
-function ArchiveDetailModal({ archive, onClose }) {
+function CardAction({ icon: Icon, label, onClick, danger = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+        danger ? 'border-rose-200 text-rose-600 hover:bg-rose-50' : 'border-slate-200 text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700'
+      }`}
+    >
+      <Icon className="h-3.5 w-3.5" /> {label}
+    </button>
+  );
+}
+
+function ArchiveDetailModal({ archive, onClose, canManage, onEdit, onDelete }) {
   if (!archive) return null;
   return (
-    <Modal open={!!archive} onClose={onClose} title={`Serial: ${archive.serialNumber}`} size="lg">
+    <Modal
+      open={!!archive}
+      onClose={onClose}
+      title={`Serial: ${archive.serialNumber}`}
+      size="lg"
+      footer={
+        canManage && (
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => onEdit(archive)}>
+              <Pencil className="h-4 w-4" /> Edit
+            </Button>
+            <Button variant="danger" onClick={() => onDelete(archive)}>
+              <Trash2 className="h-4 w-4" /> Delete
+            </Button>
+          </div>
+        )
+      }
+    >
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
           <Field label="Archive No." value={archive.archiveNumber} />
@@ -152,8 +239,10 @@ function Field({ label, value }) {
   );
 }
 
-function ManualEntryModal({ open, onClose, onSaved }) {
+// New archive, or (with `archive`) edit an existing one.
+function ManualEntryModal({ open, archive, onClose, onSaved }) {
   const toast = useToast();
+  const editing = !!archive;
   const [supplier, setSupplier] = useState(null);
   const [serialNumber, setSerialNumber] = useState('');
   const [notes, setNotes] = useState('');
@@ -162,13 +251,19 @@ function ManualEntryModal({ open, onClose, onSaved }) {
   const nameRefs = useRef({});
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    if (archive) {
+      setSupplier(archive.supplier ? { id: archive.supplier, name: archive.supplierName } : null);
+      setSerialNumber(archive.serialNumber);
+      setNotes(archive.notes || '');
+      setRows(archive.rows.map((r) => ({ itemName: r.itemName, quantity: String(r.quantity), cost: String(r.cost) })));
+    } else {
       setSupplier(null);
       setSerialNumber('');
       setNotes('');
       setRows([emptyRow()]);
     }
-  }, [open]);
+  }, [open, archive]);
 
   const grandTotal = useMemo(() => rows.reduce((sum, r) => sum + (Number(r.quantity) || 0) * (Number(r.cost) || 0), 0), [rows]);
 
@@ -197,18 +292,24 @@ function ManualEntryModal({ open, onClose, onSaved }) {
       if (!Number(r.quantity) || Number(r.quantity) <= 0) return toast.error(`Enter a valid quantity for "${r.itemName}".`);
       if (r.cost === '' || Number(r.cost) < 0) return toast.error(`Enter a valid cost for "${r.itemName}".`);
     }
+    const body = {
+      serialNumber: serialNumber.trim(),
+      supplierId: supplier?.id || null,
+      rows: validRows.map((r) => ({ itemName: r.itemName.trim(), quantity: Number(r.quantity), cost: Number(r.cost) })),
+      notes,
+    };
     setSaving(true);
     try {
-      const res = await client.post('/supplier-invoice-archives', {
-        serialNumber: serialNumber.trim(),
-        supplierId: supplier?.id || null,
-        rows: validRows.map((r) => ({ itemName: r.itemName.trim(), quantity: Number(r.quantity), cost: Number(r.cost) })),
-        notes,
-      });
-      toast.success(`Supplier invoice archive ${res.data.data.archiveNumber} saved.`);
+      if (editing) {
+        await client.put(`/supplier-invoice-archives/${archive.id}`, body);
+        toast.success(`Serial ${body.serialNumber} updated.`);
+      } else {
+        const res = await client.post('/supplier-invoice-archives', body);
+        toast.success(`Supplier invoice archive ${res.data.data.archiveNumber} saved.`);
+      }
       onSaved();
     } catch (err) {
-      toast.error(err.friendlyMessage || 'Could not save this archive.');
+      toast.error(err.friendlyMessage || 'Could not save this invoice.');
     } finally {
       setSaving(false);
     }
@@ -218,7 +319,7 @@ function ManualEntryModal({ open, onClose, onSaved }) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Manual Entry Invoice"
+      title={editing ? `Edit Invoice — ${archive.archiveNumber}` : 'Manual Entry Invoice'}
       size="xl"
       footer={
         <>
@@ -226,7 +327,7 @@ function ManualEntryModal({ open, onClose, onSaved }) {
             Cancel
           </Button>
           <Button onClick={handleSave} loading={saving}>
-            <Save className="h-4 w-4" /> Save Archive
+            <Save className="h-4 w-4" /> {editing ? 'Save Changes' : 'Save Archive'}
           </Button>
         </>
       }
