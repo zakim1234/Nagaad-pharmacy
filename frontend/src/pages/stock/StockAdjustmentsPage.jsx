@@ -10,6 +10,7 @@ import Modal from '../../components/ui/Modal.jsx';
 import Pagination from '../../components/ui/Pagination.jsx';
 import { FormField, Input, Select, Textarea } from '../../components/ui/Field.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
+import StockCountModal from './StockCountModal.jsx';
 
 export const REASONS = {
   DAMAGED: { label: 'Damaged', color: 'red' },
@@ -42,6 +43,7 @@ export default function StockAdjustmentsPage() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [countOpen, setCountOpen] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -73,9 +75,14 @@ export default function StockAdjustmentsPage() {
           <p className="mt-1 text-sm text-slate-500">Correct stock for damaged, expired or lost goods, or after a physical count.</p>
         </div>
         {canAdjust && (
-          <Button onClick={() => setModalOpen(true)}>
-            <Plus className="h-4 w-4" /> New Adjustment
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => setCountOpen(true)}>
+              <ClipboardCheck className="h-4 w-4" /> Count All Items
+            </Button>
+            <Button onClick={() => setModalOpen(true)}>
+              <Plus className="h-4 w-4" /> New Adjustment
+            </Button>
+          </div>
         )}
       </div>
 
@@ -154,6 +161,11 @@ export default function StockAdjustmentsPage() {
                       <td className="px-4 py-3">
                         <p className="font-semibold text-slate-800">{a.adjustmentNumber}</p>
                         <p className="text-xs text-slate-400">{formatDateTime(a.createdAt)}</p>
+                        {a.countNumber && (
+                          <button type="button" onClick={() => { setQ(a.countNumber); setPage(1); }} className="mt-0.5 text-[11px] font-medium text-brand-600 hover:underline">
+                            Stock count {a.countNumber}
+                          </button>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <p className="font-medium text-slate-800">{a.itemName}</p>
@@ -197,6 +209,15 @@ export default function StockAdjustmentsPage() {
 
       <Pagination {...pagination} onChange={setPage} />
 
+      <StockCountModal
+        open={countOpen}
+        onClose={() => setCountOpen(false)}
+        onSaved={() => {
+          setCountOpen(false);
+          setPage(1);
+          load();
+        }}
+      />
       <NewAdjustmentModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}

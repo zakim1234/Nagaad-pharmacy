@@ -7,7 +7,7 @@ import { fromCents } from '../utils/money.js';
 import InventoryItem from '../models/InventoryItem.js';
 import InventoryLot from '../models/InventoryLot.js';
 import StockAdjustment from '../models/StockAdjustment.js';
-import { createStockAdjustment } from '../services/stockAdjustmentService.js';
+import { createStockAdjustment, createStockCount } from '../services/stockAdjustmentService.js';
 import { escapeRegex } from '../services/stockReceiptService.js';
 import { logAudit } from '../services/auditService.js';
 
@@ -33,6 +33,7 @@ function toDTO(a) {
     value: fromCents(a.valueCents),
     lots: a.lots.map((l) => ({ lot: l.lot, stockSerial: l.stockSerial, expiryDate: l.expiryDate, quantity: l.quantity })),
     createdByName: a.createdByName,
+    countNumber: a.countNumber || '',
     createdAt: a.createdAt,
   };
 }
@@ -41,7 +42,7 @@ function toDTO(a) {
 router.get('/', asyncHandler(async (req, res) => {
   const filter = {};
   const q = escapeRegex(String(req.query.q || '').trim());
-  if (q) filter.$or = [{ itemName: { $regex: q, $options: 'i' } }, { itemCode: { $regex: q, $options: 'i' } }, { adjustmentNumber: { $regex: q, $options: 'i' } }];
+  if (q) filter.$or = [{ itemName: { $regex: q, $options: 'i' } }, { itemCode: { $regex: q, $options: 'i' } }, { adjustmentNumber: { $regex: q, $options: 'i' } }, { countNumber: { $regex: q, $options: 'i' } }];
   if (['DECREASE', 'INCREASE'].includes(req.query.direction)) filter.direction = req.query.direction;
   if (req.query.reason) filter.reason = String(req.query.reason);
   if (req.query.from || req.query.to) {
@@ -68,6 +69,47 @@ router.get('/', asyncHandler(async (req, res) => {
       netLoss: fromCents(sum('DECREASE').cents - sum('INCREASE').cents),
     },
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  });
+}));
+
+// GET /api/stock-adjustments/count-sheet -- every active item with its
+// system quantity, for counting the whole stock in one go.
+router.get('/count-sheet', asyncHandler(async (req, res) => {
+  const items = await InventoryItem.find({ status: 'active' })
+    .select('name itemCode unit quantity reservedQuantity costPriceCents')
+    .sort({ name: 1 })
+    .limit(3000)
+    .lean();
+  res.json({
+    success: true,
+    data: items.map((i) => ({
+      id: i._id,
+      name: i.name,
+      itemCode: i.itemCode,
+      unit: i.unit,
+      quantity: i.quantity,
+      reservedQuantity: i.reservedQuantity || 0,
+      unitCost: fromCents(i.costPriceCents),
+    })),
+  });
+}));
+
+// POST /api/stock-adjustments/count -- admin/manager: apply a whole-stock
+// count (many items) in one all-or-nothing step.
+router.post('/count', requireRole('admin', 'manager'), asyncHandler(async (req, res) => {
+  const { rows, note } = req.body;
+  const result = await runInTransaction((session) => createStockCount(session, { rows, note, user: req.user }));
+  await logAudit({
+    user: req.user,
+    action: 'stock.count',
+    entityType: 'StockAdjustment',
+    entityId: result.adjustments[0]._id,
+    details: { countNumber: result.countNumber, items: result.adjustments.length },
+  });
+  const lossCents = result.adjustments.reduce((s, a) => s + (a.direction === 'DECREASE' ? a.valueCents : -a.valueCents), 0);
+  res.status(201).json({
+    success: true,
+    data: { countNumber: result.countNumber, adjusted: result.adjustments.length, netLoss: fromCents(lossCents), adjustments: result.adjustments.map(toDTO) },
   });
 }));
 

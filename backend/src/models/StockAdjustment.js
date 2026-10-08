@@ -36,11 +36,14 @@ const stockAdjustmentSchema = new mongoose.Schema(
     ],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     createdByName: { type: String, default: '' },
+    // Set when this adjustment was one line of a whole-stock count (BADJ-YYYY-NNNNNN).
+    countNumber: { type: String, default: '' },
   },
   { timestamps: true }
 );
 
 stockAdjustmentSchema.index({ createdAt: -1 });
 stockAdjustmentSchema.index({ item: 1, createdAt: -1 });
+stockAdjustmentSchema.index({ countNumber: 1 });
 
 export default mongoose.model('StockAdjustment', stockAdjustmentSchema);

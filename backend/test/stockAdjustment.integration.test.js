@@ -156,3 +156,54 @@ test('STOCK ADJUSTMENT -- net loss shows in Profit & Loss; balance sheet stays c
     await teardown(server);
   }
 });
+
+test('STOCK COUNT -- many items in one go, unchanged skipped, all-or-nothing, one count number', { timeout: 90000 }, async () => {
+  const { server, request, asCashier } = await setup('adj_count');
+  try {
+    const { item: a } = await stockedItem(); // 15 units
+    const b = await InventoryItem.create({ name: 'Biotin', itemCode: 'BIO-C', quantity: 10, costPriceCents: 50, sellingPriceCents: 100 });
+    const c = await InventoryItem.create({ name: 'Zinc', itemCode: 'ZN-C', quantity: 4, costPriceCents: 25, sellingPriceCents: 60 });
+
+    const sheet = await request('/stock-adjustments/count-sheet');
+    assert.equal(sheet.status, 200);
+    assert.deepEqual(sheet.data.map((i) => [i.name, i.quantity]), [['Amoxicillin', 15], ['Biotin', 10], ['Zinc', 4]]);
+
+    assert.equal((await asCashier('/stock-adjustments/count', { rows: [{ itemId: b.id, countedQuantity: 9 }] })).status, 403);
+
+    const res = await request('/stock-adjustments/count', {
+      note: 'Month-end count',
+      rows: [
+        { itemId: a.id, countedQuantity: 8, reason: 'EXPIRED' }, // -7
+        { itemId: b.id, countedQuantity: 12 }, // +2, count correction
+        { itemId: c.id, countedQuantity: 4 }, // unchanged -> skipped
+      ],
+    });
+    assert.equal(res.status, 201, JSON.stringify(res));
+    assert.match(res.data.countNumber, /^BADJ-\d{4}-\d{6}$/);
+    assert.equal(res.data.adjusted, 2);
+    assert.equal(res.data.netLoss, 6, '7 x $1.00 written off, 2 x $0.50 found');
+    assert.equal((await InventoryItem.findById(a.id)).quantity, 8);
+    assert.equal((await InventoryItem.findById(b.id)).quantity, 12);
+    assert.equal((await InventoryItem.findById(c.id)).quantity, 4);
+    const saved = await StockAdjustment.find({ countNumber: res.data.countNumber });
+    assert.equal(saved.length, 2);
+    assert.ok(saved.every((x) => x.note === 'Month-end count'));
+    assert.equal((await request(`/stock-adjustments?q=${res.data.countNumber}`)).data.length, 2);
+
+    // One impossible row (below units held by a pending invoice) -> nothing is saved.
+    const customer = await Customer.create({ name: 'Cumar', phone: '1' });
+    assert.equal((await request('/sales', { customerId: customer.id, items: [{ itemId: b.id, quantity: 5 }], paidAmount: 0 })).status, 201);
+    const before = await StockAdjustment.countDocuments();
+    const bad = await request('/stock-adjustments/count', { rows: [{ itemId: c.id, countedQuantity: 1 }, { itemId: b.id, countedQuantity: 2 }] });
+    assert.equal(bad.status, 409, JSON.stringify(bad));
+    assert.equal(await StockAdjustment.countDocuments(), before);
+    assert.equal((await InventoryItem.findById(c.id)).quantity, 4, 'Zinc untouched because Biotin failed');
+
+    // Nothing changed / bad input.
+    assert.equal((await request('/stock-adjustments/count', { rows: [{ itemId: c.id, countedQuantity: 4 }] })).status, 400);
+    assert.equal((await request('/stock-adjustments/count', { rows: [{ itemId: c.id, countedQuantity: -1 }] })).status, 400);
+    assert.equal((await request('/stock-adjustments/count', { rows: [{ itemId: c.id, countedQuantity: 9, reason: 'DAMAGED' }] })).status, 400, 'DAMAGED cannot be an increase');
+  } finally {
+    await teardown(server);
+  }
+});
