@@ -146,7 +146,7 @@ export default function CustomerStatementPage() {
                   return <Fragment key={`${e.type}-${e.reference}`}>
                   <tr className="border-b border-slate-100">
                     <td className="py-1.5 pr-2 text-slate-500">{formatDateTime(e.date)}</td>
-                    <td className="py-1.5 pr-2 font-medium text-slate-700">{invoice ? <button type="button" className="cursor-pointer text-indigo-700 hover:underline focus-visible:outline-2" aria-expanded={!!expanded} aria-controls={`invoice-${invoice.id}`} onClick={() => toggleInvoice(invoice.id)}><span className="no-print">{expanded ? '▾' : '▸'} </span>{e.reference}</button> : e.reference}</td>
+                    <td className="py-1.5 pr-2 font-medium text-slate-700">{invoice ? <button type="button" className="cursor-pointer text-brand-700 hover:underline focus-visible:outline-2" aria-expanded={!!expanded} aria-controls={`invoice-${invoice.id}`} onClick={() => toggleInvoice(invoice.id)}><span className="no-print">{expanded ? '▾' : '▸'} </span>{e.reference}</button> : e.reference}</td>
                     <td className="py-1.5 pr-2 text-slate-600">{TYPE_LABEL[e.type] || e.type}</td>
                     <td className="py-1.5 pr-2 text-right text-slate-700">{e.debit > 0 ? formatCurrency(e.debit) : '-'}</td>
                     <td className="py-1.5 pr-2 text-right text-slate-700">{e.credit > 0 ? formatCurrency(e.credit) : '-'}</td>

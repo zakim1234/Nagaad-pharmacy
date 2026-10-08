@@ -92,7 +92,7 @@ export default function QuickCreateItemModal({ open, initialName, onClose, onCre
             until a real purchase is recorded.
           </p>
         </FormField>
-        <p className="rounded-lg bg-indigo-50 px-3 py-2 text-xs text-indigo-700">
+        <p className="rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-700">
           Saving adds the item to Inventory, receives the Initial Qty into Stock, and puts that quantity on this sale.
         </p>
         <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">

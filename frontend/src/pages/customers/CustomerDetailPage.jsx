@@ -167,8 +167,8 @@ export default function CustomerDetailPage() {
 
       {/* Profile + stats */}
       <section className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm no-print">
-        <div className="flex flex-wrap items-center gap-4 border-b border-slate-100 bg-gradient-to-r from-indigo-50/70 via-white to-white px-6 py-5">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 text-lg font-bold text-white shadow-md">
+        <div className="flex flex-wrap items-center gap-4 border-b border-slate-100 bg-gradient-to-r from-brand-50/70 via-white to-white px-6 py-5">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-red-700 text-lg font-bold text-white shadow-md">
             {initials(customer.name)}
           </div>
           <div className="min-w-0 flex-1">
@@ -204,7 +204,7 @@ export default function CustomerDetailPage() {
             value={formatCurrency(customer.balance)}
             valueClass={customer.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}
           />
-          <StatTile icon={PiggyBank} tone="indigo" label="Wallet Balance" value={formatCurrency(customer.walletBalance)} valueClass="text-indigo-600" />
+          <StatTile icon={PiggyBank} tone="indigo" label="Wallet Balance" value={formatCurrency(customer.walletBalance)} valueClass="text-brand-600" />
         </div>
       </section>
 
@@ -232,7 +232,7 @@ export default function CustomerDetailPage() {
                 {debt.invoices.map((inv) => (
                   <tr key={inv.id}>
                     <td className="px-4 py-2.5">
-                      <Link to={`/receipt/${inv.id}`} className="font-semibold text-indigo-600 hover:underline">
+                      <Link to={`/receipt/${inv.id}`} className="font-semibold text-brand-600 hover:underline">
                         {inv.receiptNumber}
                       </Link>
                     </td>
@@ -255,12 +255,12 @@ export default function CustomerDetailPage() {
             key={key}
             onClick={() => setTab(key)}
             className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-              tab === key ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              tab === key ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             <Icon className="h-4 w-4" /> {label}
             {count != null && (
-              <span className={`rounded-full px-1.5 text-[11px] ${tab === key ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'}`}>{count}</span>
+              <span className={`rounded-full px-1.5 text-[11px] ${tab === key ? 'bg-brand-100 text-brand-700' : 'bg-slate-200 text-slate-600'}`}>{count}</span>
             )}
           </button>
         ))}
@@ -351,7 +351,7 @@ export default function CustomerDetailPage() {
                               <td className="px-3 py-3 text-right font-semibold tabular-nums text-slate-800">{formatCurrency(s.total)}</td>
                               <td className="px-3 py-3 text-right tabular-nums text-slate-700">
                                 {formatCurrency(invoicePaid(s))}
-                                {s.walletAmount > 0 && <p className="text-[11px] text-indigo-500">{formatCurrency(s.walletAmount)} wallet</p>}
+                                {s.walletAmount > 0 && <p className="text-[11px] text-brand-500">{formatCurrency(s.walletAmount)} wallet</p>}
                               </td>
                               <td className="px-3 py-3 text-right">
                                 {s.status === 'DRAFT' ? (
@@ -449,10 +449,10 @@ export default function CustomerDetailPage() {
                       <td className="px-4 py-3 text-right font-semibold tabular-nums text-slate-800">{formatCurrency(r.amount)}</td>
                       <td className="px-4 py-3 text-right tabular-nums text-slate-600">{formatCurrency(r.debtReduced)}</td>
                       <td className="px-4 py-3 text-right tabular-nums text-slate-600">{formatCurrency(r.refund)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-indigo-600">{formatCurrency(r.walletRefund)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-brand-600">{formatCurrency(r.walletRefund)}</td>
                       <td className="px-4 py-3 text-slate-500">{r.reason || '—'}</td>
                       <td className="px-4 py-3 text-right">
-                        <Link to={`/receipt/${r.sale.id}/return/${r.index}`} className="text-xs font-semibold text-indigo-600 hover:underline">
+                        <Link to={`/receipt/${r.sale.id}/return/${r.index}`} className="text-xs font-semibold text-brand-600 hover:underline">
                           Receipt
                         </Link>
                       </td>
@@ -501,7 +501,7 @@ export default function CustomerDetailPage() {
                       </td>
                       <td className="px-4 py-3 text-slate-500">{s.cancelledReason || '—'}</td>
                       <td className="px-4 py-3 text-right">
-                        <Link to={`/receipt/${s.id}`} className="text-xs font-semibold text-indigo-600 hover:underline">
+                        <Link to={`/receipt/${s.id}`} className="text-xs font-semibold text-brand-600 hover:underline">
                           View
                         </Link>
                       </td>
@@ -573,7 +573,7 @@ const TILE_TONES = {
   slate: 'bg-slate-100 text-slate-600',
   emerald: 'bg-emerald-50 text-emerald-600',
   rose: 'bg-rose-50 text-rose-600',
-  indigo: 'bg-indigo-50 text-indigo-600',
+  indigo: 'bg-brand-50 text-brand-600',
 };
 
 function StatTile({ icon: Icon, tone, label, value, hint, valueClass = 'text-slate-900' }) {
@@ -607,7 +607,7 @@ function IconAction({ icon: Icon, label, title, onClick, danger = false }) {
       onClick={onClick}
       title={title}
       className={`flex items-center gap-1 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
-        danger ? 'border-rose-200 text-rose-600 hover:bg-rose-50' : 'border-slate-200 text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700'
+        danger ? 'border-rose-200 text-rose-600 hover:bg-rose-50' : 'border-slate-200 text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
       }`}
     >
       <Icon className="h-3.5 w-3.5" /> {label}
@@ -618,7 +618,7 @@ function IconAction({ icon: Icon, label, title, onClick, danger = false }) {
 function SectionHeader({ icon: Icon, title, subtitle }) {
   return (
     <div className="flex items-center gap-2.5 border-b border-slate-100 px-5 py-4">
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
         <Icon className="h-4 w-4" />
       </div>
       <div>
@@ -659,7 +659,7 @@ function InvoiceItems({ sale }) {
               <td className="px-3 py-2 text-slate-400">{i + 1}</td>
               <td className="px-3 py-2 text-slate-700">
                 {it.name}
-                {it.returnedQuantity > 0 && <span className="ml-1.5 text-[10px] font-medium text-indigo-600">({it.returnedQuantity} returned)</span>}
+                {it.returnedQuantity > 0 && <span className="ml-1.5 text-[10px] font-medium text-brand-600">({it.returnedQuantity} returned)</span>}
               </td>
               <td className="px-3 py-2 text-center text-slate-600">{it.quantity}</td>
               <td className="px-3 py-2 text-right text-slate-500">{formatCurrency(it.unitPrice)}</td>

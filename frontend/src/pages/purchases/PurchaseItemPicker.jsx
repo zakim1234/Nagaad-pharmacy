@@ -85,7 +85,7 @@ export default function PurchaseItemPicker({ onAdd }) {
             <ul className="max-h-64 overflow-y-auto">
               {results.map((p) => (
                 <li key={p.id}>
-                  <button onClick={() => handleAdd(p)} className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left hover:bg-indigo-50">
+                  <button onClick={() => handleAdd(p)} className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left hover:bg-brand-50">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
                       <Package className="h-4 w-4" />
                     </div>
@@ -108,7 +108,7 @@ export default function PurchaseItemPicker({ onAdd }) {
               setShowCreateForm(true);
               setShowDropdown(false);
             }}
-            className="flex w-full items-center justify-center gap-1.5 border-t border-slate-100 px-3 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+            className="flex w-full items-center justify-center gap-1.5 border-t border-slate-100 px-3 py-2.5 text-sm font-semibold text-brand-700 hover:bg-brand-50"
           >
             <PackagePlus className="h-4 w-4" /> Create New Item "{query}"
           </button>

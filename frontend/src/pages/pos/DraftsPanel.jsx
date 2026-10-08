@@ -53,7 +53,7 @@ export default function DraftsPanel({ drafts, loading, onChanged }) {
               <button
                 disabled={!!d.quotation}
                 onClick={() => navigate(`/pos?edit=${d.id}`)}
-                className="rounded-md p-1.5 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600"
+                className="rounded-md p-1.5 text-slate-400 hover:bg-brand-50 hover:text-brand-600"
                 title="Open / Edit"
               >
                 <Pencil className="h-4 w-4" />

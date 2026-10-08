@@ -81,14 +81,14 @@ function SidebarContent({ onNavigate }) {
             onClick={onNavigate}
             className={({ isActive }) =>
               `group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                isActive ? 'bg-indigo-50 font-medium text-indigo-700' : 'font-normal text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                isActive ? 'bg-brand-50 font-medium text-brand-700' : 'font-normal text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <span className={`h-4 w-0.5 shrink-0 rounded-full ${isActive ? 'bg-indigo-600' : 'bg-transparent'}`} />
-                <Icon className={`h-[18px] w-[18px] shrink-0 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-500'}`} />
+                <span className={`h-4 w-0.5 shrink-0 rounded-full ${isActive ? 'bg-brand-600' : 'bg-transparent'}`} />
+                <Icon className={`h-[18px] w-[18px] shrink-0 ${isActive ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-500'}`} />
                 <span className="truncate">{label}</span>
               </>
             )}

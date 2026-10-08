@@ -3,8 +3,8 @@ import { formatCurrency } from '../../utils/format.js';
 
 // One look for every report chart: quiet axes, horizontal grid only,
 // rounded bars, gradient areas and a shared tooltip.
-export const PALETTE = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#a855f7', '#14b8a6', '#64748b'];
-export const COLORS = { revenue: '#6366f1', profit: '#10b981', cost: '#f59e0b', loss: '#f43f5e', count: '#0ea5e9', muted: '#cbd5e1' };
+export const PALETTE = ['#dc2626', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#171717', '#14b8a6', '#64748b'];
+export const COLORS = { revenue: '#dc2626', profit: '#10b981', cost: '#f59e0b', loss: '#f43f5e', count: '#0ea5e9', muted: '#cbd5e1' };
 
 export const axisProps = { tick: { fontSize: 11, fill: '#94a3b8' }, axisLine: false, tickLine: false };
 export const gridProps = { vertical: false, stroke: '#eef2f7' };

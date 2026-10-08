@@ -86,7 +86,7 @@ export default function SupplierDetailPage() {
             <ul className="space-y-1.5 text-sm text-slate-700">
               {insights.map((text, i) => (
                 <li key={i} className="flex gap-2">
-                  <span className="text-indigo-500">•</span> {text}
+                  <span className="text-brand-500">•</span> {text}
                 </li>
               ))}
             </ul>
@@ -126,7 +126,7 @@ export default function SupplierDetailPage() {
                 <Tooltip />
                 <Legend />
                 <Bar dataKey="Purchased" fill="#94a3b8" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="Sold" fill="#4f46e5" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Sold" fill="#dc2626" radius={[3, 3, 0, 0]} />
                 <Bar dataKey="Remaining" fill="#10b981" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

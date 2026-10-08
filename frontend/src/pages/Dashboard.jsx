@@ -39,7 +39,7 @@ import { stockStatusBadge } from '../components/ui/Badge.jsx';
 import { PageSpinner } from '../components/ui/Spinner.jsx';
 import logo from '../images/logo.png';
 
-const REVENUE_COLOR = '#6366f1';
+const REVENUE_COLOR = '#dc2626';
 const PROFIT_COLOR = '#10b981';
 
 function greeting() {
@@ -102,9 +102,9 @@ export default function Dashboard() {
   return (
     <div className="space-y-5">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-lg shadow-indigo-500/20 sm:p-7">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 p-6 text-white shadow-lg shadow-black/20 sm:p-7">
         <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-fuchsia-400/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-red-600/25 blur-3xl" />
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-4">
             <img
@@ -113,13 +113,13 @@ export default function Dashboard() {
               className="h-16 w-auto shrink-0 object-contain drop-shadow-[0_0_1px_rgba(255,255,255,0.9)] drop-shadow-[0_0_6px_rgba(255,255,255,0.55)]"
             />
             <div className="min-w-0">
-              <p className="flex items-center gap-1.5 text-sm text-indigo-100">
+              <p className="flex items-center gap-1.5 text-sm text-white/70">
                 <CalendarDays className="h-4 w-4" /> {todayLabel()}
               </p>
               <h1 className="mt-1 text-2xl font-bold leading-tight sm:text-3xl">
                 {greeting()}{user?.name ? `, ${user.name.split(' ')[0]}` : ''} 👋
               </h1>
-              <p className="mt-1 text-sm text-indigo-100">Here's what's happening at {BUSINESS.name} today.</p>
+              <p className="mt-1 text-sm text-white/70">Here's what's happening at {BUSINESS.name} today.</p>
               {quickActions.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
                   {quickActions.map(({ to, label, icon: Icon, primary }) => (
@@ -128,7 +128,7 @@ export default function Dashboard() {
                       to={to}
                       className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition ${
                         primary
-                          ? 'bg-white text-indigo-700 shadow-sm hover:bg-indigo-50'
+                          ? 'bg-white text-brand-700 shadow-sm hover:bg-brand-50'
                           : 'bg-white/15 text-white ring-1 ring-white/25 backdrop-blur hover:bg-white/25'
                       }`}
                     >
@@ -142,14 +142,14 @@ export default function Dashboard() {
 
           <div className="grid shrink-0 grid-cols-2 gap-3 rounded-2xl bg-white/10 p-4 ring-1 ring-white/20 backdrop-blur sm:min-w-[340px]">
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-indigo-100">Today's Sales</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/70">Today's Sales</p>
               <p className="mt-1 text-2xl font-bold tabular-nums">{formatCurrency(cards.todaySales)}</p>
-              <p className="mt-0.5 text-xs text-indigo-100">{cards.todaySalesCount} sale(s)</p>
+              <p className="mt-0.5 text-xs text-white/70">{cards.todaySalesCount} sale(s)</p>
             </div>
             <div className="border-l border-white/20 pl-3">
-              <p className="text-xs font-medium uppercase tracking-wider text-indigo-100">Today's Profit</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/70">Today's Profit</p>
               <p className="mt-1 text-2xl font-bold tabular-nums">{formatCurrency(cards.todayProfit)}</p>
-              <p className="mt-0.5 text-xs text-indigo-100">{margin === null ? 'No sales yet' : `${margin}% margin`}</p>
+              <p className="mt-0.5 text-xs text-white/70">{margin === null ? 'No sales yet' : `${margin}% margin`}</p>
             </div>
           </div>
         </div>
@@ -204,7 +204,7 @@ export default function Dashboard() {
                 <CartesianGrid vertical={false} stroke="#eef2f7" />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={(d) => d.slice(5)} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={compactCurrency} axisLine={false} tickLine={false} width={56} />
-                <Tooltip content={<MoneyTooltip />} cursor={{ stroke: '#c7d2fe', strokeWidth: 1 }} />
+                <Tooltip content={<MoneyTooltip />} cursor={{ stroke: '#fecaca', strokeWidth: 1 }} />
                 <Area type="monotone" dataKey="revenue" name="Revenue" stroke={REVENUE_COLOR} strokeWidth={2.5} fill="url(#gRevenue)" activeDot={{ r: 5 }} />
                 <Area type="monotone" dataKey="profit" name="Profit" stroke={PROFIT_COLOR} strokeWidth={2.5} fill="url(#gProfit)" activeDot={{ r: 5 }} />
               </AreaChart>
@@ -283,10 +283,10 @@ function expiryDetail(item) {
 }
 
 const TONES = {
-  indigo: { chip: 'from-indigo-500 to-violet-500', soft: 'bg-indigo-50 text-indigo-600', glow: 'bg-indigo-400/15', ring: 'ring-indigo-200' },
-  emerald: { chip: 'from-emerald-500 to-teal-500', soft: 'bg-emerald-50 text-emerald-600', glow: 'bg-emerald-400/15', ring: 'ring-emerald-200' },
-  sky: { chip: 'from-sky-500 to-cyan-500', soft: 'bg-sky-50 text-sky-600', glow: 'bg-sky-400/15', ring: 'ring-sky-200' },
-  rose: { chip: 'from-rose-500 to-pink-500', soft: 'bg-rose-50 text-rose-600', glow: 'bg-rose-400/15', ring: 'ring-rose-200' },
+  indigo: { chip: 'from-red-500 to-red-700', soft: 'bg-brand-50 text-brand-600', glow: 'bg-brand-400/15', ring: 'ring-brand-200' },
+  emerald: { chip: 'from-neutral-700 to-neutral-950', soft: 'bg-emerald-50 text-emerald-600', glow: 'bg-neutral-400/15', ring: 'ring-emerald-200' },
+  sky: { chip: 'from-neutral-700 to-neutral-950', soft: 'bg-neutral-100 text-neutral-700', glow: 'bg-neutral-400/15', ring: 'ring-neutral-200' },
+  rose: { chip: 'from-red-500 to-red-700', soft: 'bg-rose-50 text-rose-600', glow: 'bg-rose-400/15', ring: 'ring-rose-200' },
   amber: { chip: 'from-amber-400 to-orange-500', soft: 'bg-amber-50 text-amber-600', glow: 'bg-amber-400/15', ring: 'ring-amber-200' },
   orange: { chip: 'from-orange-500 to-red-500', soft: 'bg-orange-50 text-orange-600', glow: 'bg-orange-400/15', ring: 'ring-orange-200' },
   slate: { chip: 'from-slate-500 to-slate-700', soft: 'bg-slate-100 text-slate-600', glow: 'bg-slate-400/15', ring: 'ring-slate-200' },
@@ -346,7 +346,7 @@ function Panel({ title, subtitle, icon: Icon, actions, className = '', children 
       <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-4">
         <div className="flex items-center gap-2.5">
           {Icon && (
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
               <Icon className="h-4 w-4" />
             </div>
           )}
@@ -410,7 +410,7 @@ function TopSellingList({ rows }) {
                 <p className="shrink-0 text-xs font-semibold tabular-nums text-slate-600">{r.quantity} sold</p>
               </div>
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style={{ width: `${(r.quantity / max) * 100}%` }} />
+                <div className="h-full rounded-full bg-gradient-to-r from-red-500 to-red-700" style={{ width: `${(r.quantity / max) * 100}%` }} />
               </div>
             </div>
           </div>
@@ -432,7 +432,7 @@ function AlertPanel({ title, icon: Icon, tone, link, rows, total, emptyText, det
           <h3 className="text-[15px] font-semibold text-slate-800">{title}</h3>
           {total > 0 && <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${t.soft}`}>{total}</span>}
         </div>
-        <Link to={link.to} className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700">
+        <Link to={link.to} className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700">
           {link.label} <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>

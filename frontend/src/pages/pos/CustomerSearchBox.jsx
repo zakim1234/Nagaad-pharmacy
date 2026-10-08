@@ -86,10 +86,10 @@ export default function CustomerSearchBox({ activeCustomer, onSelect, onClear, c
     const hasPreviousDebt = previousDebt > 0;
 
     return (
-      <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+      <div className="rounded-xl border border-brand-200 bg-brand-50 p-4">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">Customer</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-500">Customer</p>
             <p className="text-lg font-bold text-slate-900">{activeCustomer.name}</p>
             {activeCustomer.phone && (
               <p className="mt-0.5 flex items-center gap-1 text-sm text-slate-500">
@@ -120,7 +120,7 @@ export default function CustomerSearchBox({ activeCustomer, onSelect, onClear, c
           </div>
           <div className="rounded-lg bg-white px-3 py-2">
             <p className="text-xs text-slate-400">Wallet Available</p>
-            <p className="text-base font-bold text-indigo-600">{formatCurrency(activeCustomer.walletBalance || 0)}</p>
+            <p className="text-base font-bold text-brand-600">{formatCurrency(activeCustomer.walletBalance || 0)}</p>
           </div>
           <div className="rounded-lg bg-white px-3 py-2">
             <p className="text-xs text-slate-400">Current Cart</p>
@@ -169,7 +169,7 @@ export default function CustomerSearchBox({ activeCustomer, onSelect, onClear, c
                 <li key={c.id}>
                   <button
                     onClick={() => handleSelect(c)}
-                    className="flex w-full items-center justify-between px-4 py-2.5 text-left hover:bg-indigo-50"
+                    className="flex w-full items-center justify-between px-4 py-2.5 text-left hover:bg-brand-50"
                   >
                     <div>
                       <p className="text-sm font-medium text-slate-800">{c.name}</p>
@@ -189,7 +189,7 @@ export default function CustomerSearchBox({ activeCustomer, onSelect, onClear, c
               </p>
               <button
                 onClick={openCreateForm}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100"
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-100"
               >
                 <UserPlus className="h-4 w-4" /> Create New Customer "{query}"
               </button>

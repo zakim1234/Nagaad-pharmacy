@@ -3,7 +3,7 @@ const styles = {
   green: 'bg-emerald-100 text-emerald-700',
   amber: 'bg-amber-100 text-amber-700',
   red: 'bg-rose-100 text-rose-700',
-  blue: 'bg-indigo-100 text-indigo-700',
+  blue: 'bg-neutral-900 text-white',
 };
 
 export default function Badge({ color = 'slate', children, className = '' }) {

@@ -87,7 +87,7 @@ export default function BulkPaymentReceiptPage() {
             {bulk.allocations.map((a) => (
               <tr key={a.purchase} className="border-b border-slate-50 align-top">
                 <td className="py-1.5 text-slate-700">
-                  <Link to={`/purchases/${a.purchase}`} className="font-medium text-indigo-600 hover:underline print:text-slate-800 print:no-underline">
+                  <Link to={`/purchases/${a.purchase}`} className="font-medium text-brand-600 hover:underline print:text-slate-800 print:no-underline">
                     {a.purchaseNumber}
                   </Link>
                   <div className="mt-0.5">

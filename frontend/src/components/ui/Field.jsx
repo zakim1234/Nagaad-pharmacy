@@ -9,7 +9,7 @@ export function Label({ children, required }) {
 export function Input({ error, className = '', ...props }) {
   return (
     <input
-      className={`w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${
+      className={`w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition-colors placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 ${
         error ? 'border-rose-400' : 'border-slate-300'
       } ${className}`}
       {...props}
@@ -20,7 +20,7 @@ export function Input({ error, className = '', ...props }) {
 export function Textarea({ error, className = '', ...props }) {
   return (
     <textarea
-      className={`w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${
+      className={`w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition-colors placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 ${
         error ? 'border-rose-400' : 'border-slate-300'
       } ${className}`}
       {...props}
@@ -31,7 +31,7 @@ export function Textarea({ error, className = '', ...props }) {
 export function Select({ error, className = '', children, ...props }) {
   return (
     <select
-      className={`w-full rounded-lg border bg-white px-3 py-2.5 text-sm shadow-sm outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${
+      className={`w-full rounded-lg border bg-white px-3 py-2.5 text-sm shadow-sm outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-100 ${
         error ? 'border-rose-400' : 'border-slate-300'
       } ${className}`}
       {...props}

@@ -96,7 +96,7 @@ export default function SuppliersPage() {
             items.map((s) => (
               <tr key={s.id} className="hover:bg-slate-50">
                 <Td>
-                  <Link to={`/suppliers/${s.id}`} className="font-medium text-slate-900 hover:text-indigo-600">
+                  <Link to={`/suppliers/${s.id}`} className="font-medium text-slate-900 hover:text-brand-600">
                     {s.name}
                   </Link>
                 </Td>
@@ -110,7 +110,7 @@ export default function SuppliersPage() {
                         setEditItem(s);
                         setFormOpen(true);
                       }}
-                      className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-indigo-600"
+                      className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600"
                       title="Edit"
                     >
                       <Pencil className="h-4 w-4" />

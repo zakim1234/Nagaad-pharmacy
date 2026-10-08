@@ -213,7 +213,7 @@ export default function ReceiptPage() {
             {sale.returns.map((r, i) => (
               <div key={i} className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-xs">
                 <span className="text-slate-500">{formatDate(r.createdAt)} · {formatCurrency(r.amount)}</span>
-                <Link to={`/receipt/${sale.id}/return/${r.index}`} className="font-semibold text-indigo-600 hover:underline">
+                <Link to={`/receipt/${sale.id}/return/${r.index}`} className="font-semibold text-brand-600 hover:underline">
                   View / Print
                 </Link>
               </div>

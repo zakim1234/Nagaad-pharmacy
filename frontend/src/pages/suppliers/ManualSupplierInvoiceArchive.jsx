@@ -96,14 +96,14 @@ export default function ManualSupplierInvoiceArchive() {
           {archives.map((a) => (
             <div
               key={a.id}
-              className="group flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md"
+              className="group flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
             >
               <button
                 onClick={() => setViewing(a)}
-                className="flex flex-1 flex-col items-start gap-1.5 rounded-t-xl p-4 text-left focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="flex flex-1 flex-col items-start gap-1.5 rounded-t-xl p-4 text-left focus:outline-none focus:ring-2 focus:ring-brand-400"
               >
                 <div className="flex w-full items-center gap-2">
-                  <FileText className="h-8 w-8 shrink-0 text-indigo-400 group-hover:text-indigo-600" />
+                  <FileText className="h-8 w-8 shrink-0 text-brand-400 group-hover:text-brand-600" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-slate-900">Serial: {a.serialNumber}</p>
                     <p className="truncate text-xs text-slate-400">{a.archiveNumber}</p>
@@ -161,7 +161,7 @@ function CardAction({ icon: Icon, label, onClick, danger = false }) {
       type="button"
       onClick={onClick}
       className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
-        danger ? 'border-rose-200 text-rose-600 hover:bg-rose-50' : 'border-slate-200 text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700'
+        danger ? 'border-rose-200 text-rose-600 hover:bg-rose-50' : 'border-slate-200 text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
       }`}
     >
       <Icon className="h-3.5 w-3.5" /> {label}
@@ -370,7 +370,7 @@ function ManualEntryModal({ open, archive, onClose, onSaved }) {
                       value={row.itemName}
                       onChange={(e) => setRow(i, 'itemName', e.target.value)}
                       placeholder="Item name..."
-                      className="w-full rounded-md border border-transparent px-2 py-1.5 text-sm outline-none focus:border-indigo-300 focus:ring-1 focus:ring-indigo-200"
+                      className="w-full rounded-md border border-transparent px-2 py-1.5 text-sm outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-200"
                     />
                   </td>
                   <td className="px-1 py-1.5">
@@ -380,7 +380,7 @@ function ManualEntryModal({ open, archive, onClose, onSaved }) {
                       step="1"
                       value={row.quantity}
                       onChange={(e) => setRow(i, 'quantity', e.target.value)}
-                      className="no-spinner w-full rounded-md border border-slate-200 px-2 py-1.5 text-center text-sm tabular-nums focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                      className="no-spinner w-full rounded-md border border-slate-200 px-2 py-1.5 text-center text-sm tabular-nums focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200"
                     />
                   </td>
                   <td className="px-1 py-1.5">
@@ -391,7 +391,7 @@ function ManualEntryModal({ open, archive, onClose, onSaved }) {
                       value={row.cost}
                       onChange={(e) => setRow(i, 'cost', e.target.value)}
                       onKeyDown={(e) => handleLastCellKeyDown(i, e)}
-                      className="no-spinner w-full rounded-md border border-slate-200 px-2 py-1.5 text-right text-sm tabular-nums focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                      className="no-spinner w-full rounded-md border border-slate-200 px-2 py-1.5 text-right text-sm tabular-nums focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200"
                     />
                   </td>
                   <td className="px-3 py-1.5 text-right text-sm font-semibold tabular-nums text-slate-900">
@@ -409,7 +409,7 @@ function ManualEntryModal({ open, archive, onClose, onSaved }) {
         </div>
 
         <div className="flex items-center justify-between">
-          <button type="button" onClick={() => addRow()} className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50">
+          <button type="button" onClick={() => addRow()} className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50">
             <Plus className="h-3.5 w-3.5" /> Add Row
           </button>
           <div className="text-right">

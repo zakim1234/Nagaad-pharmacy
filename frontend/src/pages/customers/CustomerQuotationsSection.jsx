@@ -77,7 +77,7 @@ export default function CustomerQuotationsSection({ customerId, customer }) {
                 return (
                   <div key={q.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-100 p-3">
                     <div>
-                      <Link to={`/quotations/${q.id}`} className="text-sm font-semibold text-indigo-600 hover:underline">
+                      <Link to={`/quotations/${q.id}`} className="text-sm font-semibold text-brand-600 hover:underline">
                         {q.quotationNumber}
                       </Link>
                       <p className="text-xs text-slate-400">
@@ -87,7 +87,7 @@ export default function CustomerQuotationsSection({ customerId, customer }) {
                     <div className="flex items-center gap-3">
                       <Badge color={badge.color}>{badge.label}</Badge>
                       <span className="text-sm font-semibold tabular-nums text-slate-800">{formatCurrency(q.grandTotal)}</span>
-                      <Link to={`/quotations/${q.id}`} className="text-xs font-semibold text-indigo-600 hover:underline">
+                      <Link to={`/quotations/${q.id}`} className="text-xs font-semibold text-brand-600 hover:underline">
                         View / Print
                       </Link>
                     </div>

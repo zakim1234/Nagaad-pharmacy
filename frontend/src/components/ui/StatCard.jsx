@@ -1,7 +1,7 @@
 export default function StatCard({ label, value, icon: Icon, tone = 'slate', hint }) {
   const tones = {
     slate: 'bg-slate-100 text-slate-600',
-    indigo: 'bg-indigo-100 text-indigo-600',
+    indigo: 'bg-brand-100 text-brand-600',
     emerald: 'bg-emerald-100 text-emerald-600',
     amber: 'bg-amber-100 text-amber-600',
     rose: 'bg-rose-100 text-rose-600',

@@ -164,7 +164,7 @@ export default function BulkPaymentModal({ open, onClose, onPaid }) {
                 <span>Outstanding invoices — paid oldest first</span>
                 <button
                   type="button"
-                  className="normal-case tracking-normal text-indigo-600 hover:underline"
+                  className="normal-case tracking-normal text-brand-600 hover:underline"
                   onClick={() => setSelected(selected.size === invoices.length ? new Set() : new Set(invoices.map((i) => i.id)))}
                 >
                   {selected.size === invoices.length ? 'Untick all' : 'Tick all'}
@@ -176,7 +176,7 @@ export default function BulkPaymentModal({ open, onClose, onPaid }) {
                   const p = preview.find((x) => x.id === inv.id);
                   return (
                     <li key={inv.id} className="flex items-center gap-3 px-3 py-2.5 text-sm">
-                      <input type="checkbox" className="h-4 w-4 accent-indigo-600" checked={selected.has(inv.id)} onChange={() => toggle(inv.id)} aria-label={`Include ${inv.purchaseNumber}`} />
+                      <input type="checkbox" className="h-4 w-4 accent-brand-600" checked={selected.has(inv.id)} onChange={() => toggle(inv.id)} aria-label={`Include ${inv.purchaseNumber}`} />
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-slate-800">{inv.purchaseNumber}</p>
                         <p className="text-xs text-slate-400">
@@ -220,7 +220,7 @@ export default function BulkPaymentModal({ open, onClose, onPaid }) {
                       pickPct(pct);
                     }}
                     className={`rounded-lg border px-3.5 py-1.5 text-sm font-semibold transition ${
-                      percentage === pct && customPct === '' ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-200 text-slate-600 hover:bg-indigo-50'
+                      percentage === pct && customPct === '' ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-200 text-slate-600 hover:bg-brand-50'
                     }`}
                   >
                     {pct}%
@@ -279,7 +279,7 @@ export default function BulkPaymentModal({ open, onClose, onPaid }) {
             </div>
 
             {amountNum > 0 && !problem && (
-              <div className="rounded-xl bg-indigo-50 p-3 text-sm text-indigo-900">
+              <div className="rounded-xl bg-brand-50 p-3 text-sm text-brand-900">
                 {percentage != null ? `${percentage}% × ${formatCurrency(totalOwed)} = ` : ''}
                 <strong>{formatCurrency(amountNum)}</strong> leaves the account as one payment, covering{' '}
                 {preview.filter((p) => p.take > 0).length} invoice(s).

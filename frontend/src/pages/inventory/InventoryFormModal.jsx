@@ -145,7 +145,7 @@ export default function InventoryFormModal({ open, onClose, item, onSaved }) {
               {categories.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-500">
                   No categories yet.{' '}
-                  <Link to="/categories" className="font-medium text-indigo-600 hover:underline" onClick={onClose}>
+                  <Link to="/categories" className="font-medium text-brand-600 hover:underline" onClick={onClose}>
                     Create one
                   </Link>
                 </div>

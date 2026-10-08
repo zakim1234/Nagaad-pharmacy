@@ -160,7 +160,7 @@ export default function ReturnItemsModal({ open, onClose, sale, onReturned }) {
                   checked={allChecked}
                   ref={(el) => { if (el) el.indeterminate = someChecked; }}
                   onChange={toggleSelectAll}
-                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-400"
+                  className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
                 />
                 Select All Items
               </label>
@@ -190,7 +190,7 @@ export default function ReturnItemsModal({ open, onClose, sale, onReturned }) {
                         disabled={l.returnable <= 0}
                         checked={isChecked(l.item)}
                         onChange={() => toggleRow(l)}
-                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-400"
+                        className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
                       />
                     </td>
                     <td className="px-3 py-2">

@@ -1,4 +1,4 @@
-export default function Spinner({ className = 'h-6 w-6 text-indigo-600' }) {
+export default function Spinner({ className = 'h-6 w-6 text-brand-600' }) {
   return (
     <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -10,7 +10,7 @@ export default function Spinner({ className = 'h-6 w-6 text-indigo-600' }) {
 export function PageSpinner() {
   return (
     <div className="flex h-64 w-full items-center justify-center">
-      <Spinner className="h-8 w-8 text-indigo-600" />
+      <Spinner className="h-8 w-8 text-brand-600" />
     </div>
   );
 }

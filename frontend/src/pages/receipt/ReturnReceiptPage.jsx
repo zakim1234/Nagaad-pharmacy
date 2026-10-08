@@ -77,7 +77,7 @@ export default function ReturnReceiptPage() {
 
         <div className="my-2 flex justify-between text-xs">
           <span className="text-slate-400">Original Invoice</span>
-          <Link to={`/receipt/${id}`} className="font-semibold text-indigo-600 no-print">{sale.receiptNumber}</Link>
+          <Link to={`/receipt/${id}`} className="font-semibold text-brand-600 no-print">{sale.receiptNumber}</Link>
           <span className="hidden font-semibold text-slate-800 print:inline">{sale.receiptNumber}</span>
         </div>
 

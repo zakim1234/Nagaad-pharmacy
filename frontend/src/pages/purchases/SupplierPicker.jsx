@@ -59,10 +59,10 @@ export default function SupplierPicker({ active, onSelect, onClear }) {
 
   if (active) {
     return (
-      <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+      <div className="rounded-xl border border-brand-200 bg-brand-50 p-4">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">Supplier</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-500">Supplier</p>
             <p className="text-lg font-bold text-slate-900">{active.name}</p>
             {active.phone && <p className="text-sm text-slate-500">{active.phone}</p>}
           </div>
@@ -97,7 +97,7 @@ export default function SupplierPicker({ active, onSelect, onClear }) {
             <ul className="max-h-56 overflow-y-auto">
               {results.map((s) => (
                 <li key={s.id}>
-                  <button onClick={() => handleSelect(s)} className="flex w-full flex-col items-start px-4 py-2.5 text-left hover:bg-indigo-50">
+                  <button onClick={() => handleSelect(s)} className="flex w-full flex-col items-start px-4 py-2.5 text-left hover:bg-brand-50">
                     <span className="text-sm font-medium text-slate-800">{s.name}</span>
                     <span className="text-xs text-slate-400">{s.phone || 'No phone'}</span>
                   </button>
@@ -113,7 +113,7 @@ export default function SupplierPicker({ active, onSelect, onClear }) {
               setShowCreateForm(true);
               setShowDropdown(false);
             }}
-            className="flex w-full items-center justify-center gap-1.5 border-t border-slate-100 px-3 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+            className="flex w-full items-center justify-center gap-1.5 border-t border-slate-100 px-3 py-2.5 text-sm font-semibold text-brand-700 hover:bg-brand-50"
           >
             <UserPlus className="h-4 w-4" /> Create New Supplier
           </button>

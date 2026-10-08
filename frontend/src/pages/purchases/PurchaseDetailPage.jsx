@@ -225,7 +225,7 @@ export default function PurchaseDetailPage() {
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => setEditTarget(p)}
-                        className="flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                        className="flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
                       >
                         <Pencil className="h-3.5 w-3.5" /> Edit
                       </button>
@@ -278,7 +278,7 @@ function PaymentRow({ payment: p, actions, faded = false }) {
         <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
           <span>{p.paymentNumber}</span>
           {p.bulkPayment && (
-            <Link to={`/purchases/bulk-payments/${p.bulkPayment}`} className="inline-flex items-center gap-1 font-medium text-indigo-600 hover:underline">
+            <Link to={`/purchases/bulk-payments/${p.bulkPayment}`} className="inline-flex items-center gap-1 font-medium text-brand-600 hover:underline">
               <Layers className="h-3 w-3" /> Bulk payment receipt
             </Link>
           )}

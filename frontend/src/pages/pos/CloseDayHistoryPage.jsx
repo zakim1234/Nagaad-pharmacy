@@ -28,7 +28,7 @@ import Pagination from '../../components/ui/Pagination.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import TodayClosingPanel from './TodayClosingPanel.jsx';
 
-const SALES_COLOR = '#6366f1';
+const SALES_COLOR = '#dc2626';
 const NET_COLOR = '#10b981';
 
 function dayLabel(date) {
@@ -117,18 +117,18 @@ export default function CloseDayHistoryPage() {
   return (
     <div className="space-y-5">
       {/* Hero: the most recent closed day */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-lg shadow-indigo-500/20 sm:p-7">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 p-6 text-white shadow-lg shadow-black/20 sm:p-7">
         <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-fuchsia-400/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-red-600/25 blur-3xl" />
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="flex items-center gap-1.5 text-sm text-indigo-100">
+            <p className="flex items-center gap-1.5 text-sm text-white/70">
               <CalendarCheck className="h-4 w-4" /> Daily Closing
             </p>
             <h1 className="mt-1 text-2xl font-bold leading-tight sm:text-3xl">
               {latest ? dayLabel(latest.businessDate) : 'No days closed yet'}
             </h1>
-            <p className="mt-1 text-sm text-indigo-100">
+            <p className="mt-1 text-sm text-white/70">
               {latest
                 ? `Last closed at ${timeLabel(latest.lastClosedAt)}${latest.closes.length > 1 ? ` · ${latest.closes.length} closings this day` : ''}`
                 : 'Close the day to see its figures here.'}
@@ -198,7 +198,7 @@ export default function CloseDayHistoryPage() {
                   <CartesianGrid vertical={false} stroke="#eef2f7" />
                   <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={compactCurrency} axisLine={false} tickLine={false} width={56} />
-                  <Tooltip content={<MoneyTooltip />} cursor={{ stroke: '#c7d2fe' }} />
+                  <Tooltip content={<MoneyTooltip />} cursor={{ stroke: '#fecaca' }} />
                   <Area type="monotone" dataKey="sales" name="Sales" stroke={SALES_COLOR} strokeWidth={2.5} fill="url(#gDailySales)" activeDot={{ r: 5 }} />
                   <Area type="monotone" dataKey="net" name="Net Profit" stroke={NET_COLOR} strokeWidth={2.5} fill="url(#gDailyNet)" activeDot={{ r: 5 }} />
                 </AreaChart>
@@ -279,11 +279,11 @@ function DayCard({ day, open, onToggle, isAdmin, onReopen }) {
   const date = new Date(day.businessDate);
   const margin = day.revenue > 0 ? Math.max(0, Math.min(100, Math.round((day.netProfit / day.revenue) * 100))) : 0;
   return (
-    <div className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition ${open ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-slate-200/70 hover:shadow-md'}`}>
+    <div className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition ${open ? 'border-brand-200 ring-1 ring-brand-100' : 'border-slate-200/70 hover:shadow-md'}`}>
       <button onClick={onToggle} className="flex w-full flex-wrap items-center gap-4 p-4 text-left sm:p-5">
         {/* Date block */}
-        <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-md">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-100">{date.toLocaleDateString(undefined, { month: 'short' })}</span>
+        <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-red-700 text-white shadow-md">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-white/70">{date.toLocaleDateString(undefined, { month: 'short' })}</span>
           <span className="text-2xl font-bold leading-none">{date.getDate()}</span>
         </div>
         <div className="min-w-0 flex-1">
@@ -308,7 +308,7 @@ function DayCard({ day, open, onToggle, isAdmin, onReopen }) {
           <Metric label="Net Profit" value={formatCurrency(day.netProfit)} valueClass={day.netProfit < 0 ? 'text-rose-600' : 'text-emerald-600'} strong />
         </div>
 
-        <span className={`ml-auto inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${open ? 'border-indigo-200 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-600'}`}>
+        <span className={`ml-auto inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${open ? 'border-brand-200 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-600'}`}>
           {open ? 'Hide' : 'Details'} <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
         </span>
       </button>
@@ -345,7 +345,7 @@ function DayCard({ day, open, onToggle, isAdmin, onReopen }) {
                     </div>
                     <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
+                        className="h-full rounded-full bg-gradient-to-r from-red-500 to-red-700"
                         style={{ width: `${day.cashCollected > 0 ? (p.amount / day.cashCollected) * 100 : 0}%` }}
                       />
                     </div>
@@ -360,7 +360,7 @@ function DayCard({ day, open, onToggle, isAdmin, onReopen }) {
             <ol className="relative ml-1.5 border-l border-slate-200">
               {day.closes.map((c, i) => (
                 <li key={c.id} className="relative pb-4 pl-5 last:pb-0">
-                  <span className="absolute -left-[6px] top-1 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-white" />
+                  <span className="absolute -left-[6px] top-1 h-3 w-3 rounded-full bg-brand-500 ring-4 ring-white" />
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
@@ -419,11 +419,11 @@ function DayCard({ day, open, onToggle, isAdmin, onReopen }) {
 }
 
 const TONES = {
-  indigo: { chip: 'from-indigo-500 to-violet-500', glow: 'bg-indigo-400/15', soft: 'bg-indigo-50 text-indigo-600' },
-  emerald: { chip: 'from-emerald-500 to-teal-500', glow: 'bg-emerald-400/15', soft: 'bg-emerald-50 text-emerald-600' },
-  teal: { chip: 'from-teal-500 to-cyan-500', glow: 'bg-teal-400/15', soft: 'bg-teal-50 text-teal-600' },
-  amber: { chip: 'from-amber-400 to-orange-500', glow: 'bg-amber-400/15', soft: 'bg-amber-50 text-amber-600' },
-  rose: { chip: 'from-rose-500 to-pink-500', glow: 'bg-rose-400/15', soft: 'bg-rose-50 text-rose-600' },
+  indigo: { chip: 'from-red-500 to-red-700', glow: 'bg-brand-400/15', soft: 'bg-brand-50 text-brand-600' },
+  emerald: { chip: 'from-neutral-700 to-neutral-950', glow: 'bg-neutral-400/15', soft: 'bg-emerald-50 text-emerald-600' },
+  teal: { chip: 'from-neutral-700 to-neutral-950', glow: 'bg-neutral-400/15', soft: 'bg-teal-50 text-teal-600' },
+  amber: { chip: 'from-neutral-400 to-neutral-600', glow: 'bg-neutral-300/20', soft: 'bg-amber-50 text-amber-600' },
+  rose: { chip: 'from-red-500 to-red-700', glow: 'bg-rose-400/15', soft: 'bg-rose-50 text-rose-600' },
 };
 
 function KpiCard({ icon: Icon, tone, label, value, hint, valueClass = 'text-slate-900' }) {
@@ -444,9 +444,9 @@ function KpiCard({ icon: Icon, tone, label, value, hint, valueClass = 'text-slat
 function HeroStat({ label, value, hint, divider = false }) {
   return (
     <div className={divider ? 'border-l border-white/20 pl-3' : ''}>
-      <p className="text-xs font-medium uppercase tracking-wider text-indigo-100">{label}</p>
+      <p className="text-xs font-medium uppercase tracking-wider text-white/70">{label}</p>
       <p className="mt-1 text-xl font-bold tabular-nums sm:text-2xl">{value}</p>
-      <p className="mt-0.5 text-xs text-indigo-100">{hint}</p>
+      <p className="mt-0.5 text-xs text-white/70">{hint}</p>
     </div>
   );
 }
@@ -456,7 +456,7 @@ function Panel({ title, subtitle, icon: Icon, actions, children }) {
     <div className="rounded-2xl border border-slate-200/70 bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 pb-2 pt-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
             <Icon className="h-4 w-4" />
           </div>
           <div>
@@ -510,7 +510,7 @@ function DetailCard({ icon: Icon, title, children }) {
   return (
     <div className="rounded-xl border border-slate-200/70 bg-white p-4">
       <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
           <Icon className="h-3.5 w-3.5" />
         </span>
         {title}

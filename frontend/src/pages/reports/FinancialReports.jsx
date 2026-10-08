@@ -9,7 +9,7 @@ import ReportStatRow from '../../components/reports/ReportStatRow.jsx';
 import EmptyReportState from '../../components/reports/EmptyReportState.jsx';
 import { axisProps, gridProps, compactMoney, ChartTooltip, DonutChart } from '../../components/reports/chartKit.jsx';
 
-const COLORS = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#a855f7'];
+const COLORS = ['#dc2626', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#171717'];
 
 export function ExpenseReport({ data }) {
   return (
@@ -324,7 +324,7 @@ export function SalesReturnReport({ data }) {
                 <tr key={`${r.saleId}-${i}`}>
                   <Td>{formatDate(r.date)}</Td>
                   <Td className="font-medium text-slate-900">
-                    <Link to={`/receipt/${r.saleId}`} className="text-indigo-600 hover:underline no-print">
+                    <Link to={`/receipt/${r.saleId}`} className="text-brand-600 hover:underline no-print">
                       {r.receiptNumber}
                     </Link>
                     <span className="hidden print:inline">{r.receiptNumber}</span>
@@ -379,7 +379,7 @@ export function PurchaseReturnReport({ data }) {
                 <tr key={r.purchaseId}>
                   <Td>{formatDate(r.date)}</Td>
                   <Td className="font-medium text-slate-900">
-                    <Link to={`/purchases/${r.purchaseId}`} className="text-indigo-600 hover:underline no-print">
+                    <Link to={`/purchases/${r.purchaseId}`} className="text-brand-600 hover:underline no-print">
                       {r.purchaseNumber}
                     </Link>
                     <span className="hidden print:inline">{r.purchaseNumber}</span>

@@ -348,11 +348,11 @@ export default function POSPage() {
         subtitle="Find the customer, add products, and create the pending invoice"
       />
       {storageWarning && <p className="text-sm text-amber-700">Browser storage is unavailable. This draft is retained during navigation, but cannot survive a reload.</p>}
-      {quotation && <p className="rounded-lg bg-indigo-50 p-3 text-sm">From {quotation.quotationNumber}. Accepted items, prices and discount are preserved. {quotation.notes}</p>}
+      {quotation && <p className="rounded-lg bg-brand-50 p-3 text-sm">From {quotation.quotationNumber}. Accepted items, prices and discount are preserved. {quotation.notes}</p>}
       {editId && (
-        <div className="flex items-center gap-2 rounded-lg bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-700">
+        <div className="flex items-center gap-2 rounded-lg bg-brand-50 px-4 py-2.5 text-sm font-medium text-brand-700">
           <Pencil className="h-4 w-4" /> Editing Draft Invoice {editReceiptNumber || editId}
-          {loadingDraft && <span className="text-indigo-400">(loading...)</span>}
+          {loadingDraft && <span className="text-brand-400">(loading...)</span>}
         </div>
       )}
 
@@ -441,7 +441,7 @@ export default function POSPage() {
                       />
                     </div>
                     {autoWalletApplies && (
-                      <p className="mt-1 text-right text-xs text-indigo-600">
+                      <p className="mt-1 text-right text-xs text-brand-600">
                         Left blank — {formatCurrency(walletNum)} will be used from the wallet automatically.
                       </p>
                     )}

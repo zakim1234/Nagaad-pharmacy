@@ -145,7 +145,7 @@ function ItemSearchCell({ onSelect, onCreateNew, canCreate, placeholder, inputRe
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         autoComplete="off"
-        className="w-full rounded-md border border-transparent bg-transparent py-1.5 pl-7 pr-2 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-indigo-300 focus:bg-white focus:ring-1 focus:ring-indigo-200"
+        className="w-full rounded-md border border-transparent bg-transparent py-1.5 pl-7 pr-2 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-brand-300 focus:bg-white focus:ring-1 focus:ring-brand-200"
       />
 
       {showDropdown &&
@@ -169,7 +169,7 @@ function ItemSearchCell({ onSelect, onCreateNew, canCreate, placeholder, inputRe
                         onCreateNew(query.trim());
                         setOpen(false);
                       }}
-                      className="mt-2 flex w-full items-center gap-1.5 rounded-md bg-indigo-50 px-2.5 py-2 text-left text-sm font-medium text-indigo-700 hover:bg-indigo-100"
+                      className="mt-2 flex w-full items-center gap-1.5 rounded-md bg-brand-50 px-2.5 py-2 text-left text-sm font-medium text-brand-700 hover:bg-brand-100"
                     >
                       <Plus className="h-3.5 w-3.5 shrink-0" />
                       <span className="min-w-0 truncate">Create new item "{query.trim()}" and add to sale</span>
@@ -193,7 +193,7 @@ function ItemSearchCell({ onSelect, onCreateNew, canCreate, placeholder, inputRe
                         }}
                         disabled={out}
                         className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left disabled:cursor-not-allowed ${
-                          i === highlighted && !out ? 'bg-indigo-50' : out ? 'bg-slate-50' : 'hover:bg-slate-50'
+                          i === highlighted && !out ? 'bg-brand-50' : out ? 'bg-slate-50' : 'hover:bg-slate-50'
                         }`}
                       >
                         <div className="min-w-0">
@@ -244,7 +244,7 @@ function PriceInput({ value, onChange, disabled, className = '' }) {
       value={value}
       disabled={disabled}
       onChange={(e) => onChange(Number(e.target.value))}
-      className={`no-spinner w-full rounded-md border border-slate-200 px-2 py-1.5 text-right text-sm tabular-nums focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${className}`}
+      className={`no-spinner w-full rounded-md border border-slate-200 px-2 py-1.5 text-right text-sm tabular-nums focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200 ${className}`}
     />
   );
 }
@@ -286,7 +286,7 @@ function QtyInput({ line, disabled, onChange, inputRef, className = '' }) {
       // becomes "5", not "105").
       onFocus={(e) => e.target.select()}
       className={`no-spinner w-full rounded-md border px-2 py-1.5 text-center text-sm tabular-nums focus:outline-none focus:ring-1 ${
-        over ? 'border-rose-400 focus:ring-rose-200' : 'border-slate-200 focus:border-indigo-400 focus:ring-indigo-200'
+        over ? 'border-rose-400 focus:ring-rose-200' : 'border-slate-200 focus:border-brand-400 focus:ring-brand-200'
       } ${className}`}
     />
   );
@@ -300,7 +300,7 @@ function LineNote({ line }) {
         {line.serialNumber ? ` · SN: ${line.serialNumber}` : ''} · Stock: {line.available}
       </p>
       {(Number(line.discount) || 0) > 0 && (
-        <p className="truncate text-xs font-normal text-indigo-600">Line discount −{formatCurrency(line.discount)} (kept from the original invoice/quotation)</p>
+        <p className="truncate text-xs font-normal text-brand-600">Line discount −{formatCurrency(line.discount)} (kept from the original invoice/quotation)</p>
       )}
     </>
   );
@@ -528,7 +528,7 @@ export default function SellerItemsGrid({ lines, grandTotal, onAddLine, onLineCh
           type="button"
           disabled={disabled}
           onClick={addBlankRow}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50 disabled:opacity-50"
         >
           <Plus className="h-3.5 w-3.5" /> Add Row
         </button>

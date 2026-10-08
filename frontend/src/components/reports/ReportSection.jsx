@@ -7,7 +7,7 @@ export default function ReportSection({ title, subtitle, icon: Icon, actions, cl
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5">
           <div className="flex items-center gap-2.5">
             {Icon && (
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 print:hidden">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600 print:hidden">
                 <Icon className="h-4 w-4" />
               </div>
             )}

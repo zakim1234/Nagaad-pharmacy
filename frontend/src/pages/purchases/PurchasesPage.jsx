@@ -138,7 +138,7 @@ export default function PurchasesPage() {
             items.map((p) => (
               <tr key={p.id} className="hover:bg-slate-50">
                 <Td>
-                  <Link to={`/purchases/${p.id}`} className="whitespace-nowrap font-medium text-indigo-600 hover:underline">{p.purchaseNumber}</Link>
+                  <Link to={`/purchases/${p.id}`} className="whitespace-nowrap font-medium text-brand-600 hover:underline">{p.purchaseNumber}</Link>
                 </Td>
                 <Td>{p.supplierInvoiceNumber || '—'}</Td>
                 <Td>{p.supplierName}</Td>

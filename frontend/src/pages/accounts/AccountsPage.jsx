@@ -28,9 +28,9 @@ import AccountFormModal from './AccountFormModal.jsx';
 
 // A soft tint per account type -- just enough colour to tell them apart.
 const TYPES = {
-  MOBILE_MONEY: { label: 'Mobile Money', icon: Smartphone, tint: 'bg-emerald-50 text-emerald-600' },
-  BANK: { label: 'Bank', icon: Landmark, tint: 'bg-blue-50 text-blue-600' },
-  MERCHANT: { label: 'Merchant', icon: Store, tint: 'bg-amber-50 text-amber-600' },
+  MOBILE_MONEY: { label: 'Mobile Money', icon: Smartphone, tint: 'bg-brand-50 text-brand-600' },
+  BANK: { label: 'Bank', icon: Landmark, tint: 'bg-neutral-900 text-white' },
+  MERCHANT: { label: 'Merchant', icon: Store, tint: 'bg-neutral-100 text-neutral-700' },
   OTHER: { label: 'Other', icon: CircleDollarSign, tint: 'bg-slate-100 text-slate-500' },
 };
 const typeOf = (t) => TYPES[t] || TYPES.OTHER;
@@ -167,8 +167,8 @@ export default function AccountsPage() {
 
       {/* Summary strip */}
       <div className="grid grid-cols-2 divide-slate-100 rounded-2xl border border-slate-200/70 bg-white shadow-sm lg:grid-cols-4 lg:divide-x">
-        <Summary label="Total balance" value={formatCurrency(data.totalBalance)} valueClass={data.totalBalance < 0 ? 'text-rose-600' : 'text-slate-900'} icon={Wallet} tint="bg-indigo-50 text-indigo-600" />
-        <Summary label="Accounts" value={`${activeCount} active`} hint={data.accounts.length > activeCount ? `${data.accounts.length - activeCount} inactive` : null} icon={Landmark} tint="bg-sky-50 text-sky-600" />
+        <Summary label="Total balance" value={formatCurrency(data.totalBalance)} valueClass={data.totalBalance < 0 ? 'text-rose-600' : 'text-slate-900'} icon={Wallet} tint="bg-brand-50 text-brand-600" />
+        <Summary label="Accounts" value={`${activeCount} active`} hint={data.accounts.length > activeCount ? `${data.accounts.length - activeCount} inactive` : null} icon={Landmark} tint="bg-neutral-900 text-white" />
         <Summary label="Money in" value={totals ? formatCurrency(totals.in) : '—'} hint={periodLabel} icon={ArrowDownLeft} tint="bg-emerald-50 text-emerald-600" />
         <Summary label="Money out" value={totals ? formatCurrency(totals.out) : '—'} hint={periodLabel} icon={ArrowUpRight} tint="bg-rose-50 text-rose-600" />
       </div>
@@ -204,11 +204,11 @@ export default function AccountsPage() {
                   <li key={a.id}>
                     <button
                       onClick={() => setSelectedId(a.id)}
-                      className={`relative flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors ${active ? 'bg-indigo-50/50' : 'hover:bg-slate-50/70'} ${
+                      className={`relative flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors ${active ? 'bg-brand-50/50' : 'hover:bg-slate-50/70'} ${
                         !a.isActive ? 'opacity-60' : ''
                       }`}
                     >
-                      {active && <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-indigo-600" />}
+                      {active && <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-brand-600" />}
                       <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${t.tint}`}>
                         <Icon className="h-4 w-4" />
                       </div>

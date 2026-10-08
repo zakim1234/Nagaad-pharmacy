@@ -108,14 +108,14 @@ export default function PayDebtModal({ open, onClose, customerId, onPaid }) {
             <button
               type="button"
               onClick={() => setMode('amount')}
-              className={`flex-1 rounded-md px-3 py-1.5 font-semibold ${mode === 'amount' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}
+              className={`flex-1 rounded-md px-3 py-1.5 font-semibold ${mode === 'amount' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500'}`}
             >
               Pay an Amount
             </button>
             <button
               type="button"
               onClick={() => setMode('specific')}
-              className={`flex-1 rounded-md px-3 py-1.5 font-semibold ${mode === 'specific' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}
+              className={`flex-1 rounded-md px-3 py-1.5 font-semibold ${mode === 'specific' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500'}`}
             >
               Pay Specific Invoices
             </button>

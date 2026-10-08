@@ -96,7 +96,7 @@ export default function CustomersPage() {
             items.map((c) => (
               <tr key={c.id} className="hover:bg-slate-50">
                 <Td>
-                  <Link to={`/customers/${c.id}`} className="font-medium text-slate-900 hover:text-indigo-600">
+                  <Link to={`/customers/${c.id}`} className="font-medium text-slate-900 hover:text-brand-600">
                     {c.name}
                   </Link>
                 </Td>
@@ -114,7 +114,7 @@ export default function CustomersPage() {
                         setEditItem(c);
                         setFormOpen(true);
                       }}
-                      className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-indigo-600"
+                      className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600"
                       title="Edit"
                     >
                       <Pencil className="h-4 w-4" />

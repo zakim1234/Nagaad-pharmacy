@@ -159,7 +159,7 @@ export default function InventoryPage() {
                 <tr key={item.id} className="hover:bg-slate-50">
                   <Td className="whitespace-nowrap font-mono text-xs text-slate-500">{item.itemCode}</Td>
                   <Td>
-                    <button onClick={() => setDetailsItem(item)} className="text-left font-medium text-slate-900 hover:text-indigo-600">
+                    <button onClick={() => setDetailsItem(item)} className="text-left font-medium text-slate-900 hover:text-brand-600">
                       {item.name}
                     </button>
                   </Td>
@@ -192,7 +192,7 @@ export default function InventoryPage() {
                           setEditItem(item);
                           setFormOpen(true);
                         }}
-                        className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-indigo-600"
+                        className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600"
                         title="Edit"
                       >
                         <Pencil className="h-4 w-4" />

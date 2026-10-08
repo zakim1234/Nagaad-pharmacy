@@ -69,7 +69,7 @@ export default function QuotationDetailPage() {
   if (loading) return <p>Loading quotation…</p>;
   if (error) return <p className="text-rose-700">{error}</p>;
   return <div className="space-y-4 min-w-0">
-    <Link className="text-sm text-indigo-700 no-print" to="/quotations">← Quotations</Link>
+    <Link className="text-sm text-brand-700 no-print" to="/quotations">← Quotations</Link>
     <div className="no-print"><PageHeader title={id ? quotation?.quotationNumber : 'New Quotation'} actions={<div className="flex flex-wrap gap-2">
       {editing ? <><Button onClick={save} loading={busy}>Save Quotation</Button>{id && <Button variant="secondary" disabled={busy} onClick={() => { fill(quotation); setEditing(false); }}>Cancel Edit</Button>}</> : <>
         <Button variant="secondary" onClick={() => printReport('portrait')}>Print</Button>
@@ -94,7 +94,7 @@ export default function QuotationDetailPage() {
       <div className="overflow-x-auto print:overflow-visible"><table className="w-full text-left text-xs sm:text-sm"><thead><tr className="border-y border-slate-300">{['NO', 'ITEM', 'QTY', 'UNIT PRICE', 'DISCOUNT', 'AMOUNT'].map(h => <th className="p-2" key={h}>{h}</th>)}</tr></thead><tbody>{quotation.items.map((i, index) => <tr key={i.itemId} className="border-b border-slate-100"><td className="p-2">{index + 1}</td><td className="p-2">{i.name}</td><td className="p-2">{i.quantity}</td><td className="p-2">{formatCurrency(i.unitPrice)}</td><td className="p-2">{formatCurrency(i.discount)}</td><td className="p-2">{formatCurrency(i.lineTotal)}</td></tr>)}</tbody></table></div>
       <div className="ml-auto mt-4 max-w-xs space-y-2 text-sm"><p className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(quotation.subtotal)}</span></p><p className="flex justify-between"><span>Total Discount</span><span>{formatCurrency(quotation.totalDiscount)}</span></p><p className="flex justify-between border-t pt-2 font-bold"><span>Grand Total</span><span>{formatCurrency(quotation.grandTotal)}</span></p></div>
       {quotation.notes && <p className="mt-6 whitespace-pre-wrap break-words text-sm">Notes: {quotation.notes}</p>}
-      {quotation.convertedInvoice && <p className="mt-4 text-sm">Converted to: <Link className="text-indigo-700 underline" to={`/receipt/${quotation.convertedInvoice}`}>{quotation.convertedInvoiceNumber}</Link></p>}
+      {quotation.convertedInvoice && <p className="mt-4 text-sm">Converted to: <Link className="text-brand-700 underline" to={`/receipt/${quotation.convertedInvoice}`}>{quotation.convertedInvoiceNumber}</Link></p>}
       <p className="mt-8 border-t pt-3 text-center text-xs text-slate-500">Thank you for your business. This quotation is valid through its expiry date and is not a payment receipt.</p>
     </div>}
   </div>;

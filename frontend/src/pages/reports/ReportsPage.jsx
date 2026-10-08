@@ -142,18 +142,18 @@ export default function ReportsPage() {
   return (
     <div className="space-y-5">
       {/* Hero: which report is open, for which period */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-lg shadow-indigo-500/20 no-print">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 p-6 text-white shadow-lg shadow-black/20 no-print">
         <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-fuchsia-400/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-red-600/25 blur-3xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25 backdrop-blur">
               <ActiveIcon className="h-7 w-7" />
             </div>
             <div>
-              <p className="text-sm text-indigo-100">Reports</p>
+              <p className="text-sm text-white/70">Reports</p>
               <h1 className="text-2xl font-bold leading-tight">{activeTab.title}</h1>
-              <p className="mt-0.5 text-sm text-indigo-100">{activeTab.hint}</p>
+              <p className="mt-0.5 text-sm text-white/70">{activeTab.hint}</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -165,7 +165,7 @@ export default function ReportsPage() {
             {!ownsLayout && (
               <button
                 onClick={() => printReport(activeTab.orientation)}
-                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-indigo-700 shadow-sm transition hover:bg-indigo-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-brand-700 shadow-sm transition hover:bg-brand-50"
               >
                 <Printer className="h-4 w-4" /> Print Report
               </button>
@@ -190,8 +190,8 @@ export default function ReportsPage() {
                     onClick={() => setTab(key)}
                     className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                       active
-                        ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
-                        : 'border-slate-200 text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700'
+                        ? 'border-brand-600 bg-brand-600 text-white shadow-sm'
+                        : 'border-slate-200 text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
                     }`}
                   >
                     <Icon className="h-4 w-4" /> {t.label}
@@ -279,7 +279,7 @@ const dayTick = (d) => String(d).slice(5);
 
 // A ranked list with proportional bars -- reads faster than a horizontal
 // bar chart for "top N" lists, and prints cleanly.
-function RankedBars({ rows, valueKey, nameKey = 'name', money = false, color = 'from-indigo-500 to-violet-500', suffix = '' }) {
+function RankedBars({ rows, valueKey, nameKey = 'name', money = false, color = 'from-red-500 to-red-700', suffix = '' }) {
   const max = Math.max(...rows.map((r) => Math.abs(r[valueKey]) || 0), 1);
   return (
     <ul className="space-y-3">
@@ -323,7 +323,7 @@ function SalesReport({ data, rangeParams }) {
       <ReportSection title="Sales Overview" icon={BarChart3}>
         <ReportStatRow
           items={[
-            { label: 'Total Sales', value: formatCurrency(data.totalSales), tone: 'text-indigo-600' },
+            { label: 'Total Sales', value: formatCurrency(data.totalSales), tone: 'text-neutral-900' },
             { label: 'Cash Collected', value: formatCurrency(data.cashCollected), tone: 'text-emerald-600' },
             { label: 'Credit Sales', value: formatCurrency(data.creditSales), tone: 'text-amber-600' },
             { label: 'Outstanding Receivables', value: formatCurrency(data.outstandingReceivables), tone: 'text-rose-600' },
@@ -345,7 +345,7 @@ function SalesReport({ data, rangeParams }) {
                 <CartesianGrid {...gridProps} />
                 <XAxis dataKey="date" {...axisProps} tickFormatter={dayTick} />
                 <YAxis {...axisProps} tickFormatter={compactMoney} width={56} />
-                <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#c7d2fe' }} />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#fecaca' }} />
                 <Area type="monotone" dataKey="revenue" name="Revenue" stroke={COLORS.revenue} strokeWidth={2.5} fill="url(#gSalesRev)" activeDot={{ r: 5 }} />
               </AreaChart>
             </ResponsiveContainer>
@@ -428,7 +428,7 @@ function SalesReport({ data, rangeParams }) {
                 return (
                   <tr key={s.id} className="hover:bg-slate-50/70">
                     <Td className="font-medium text-slate-900">
-                      <Link to={`/receipt/${s.id}`} className="text-indigo-600 hover:underline no-print">
+                      <Link to={`/receipt/${s.id}`} className="text-brand-600 hover:underline no-print">
                         {s.receiptNumber}
                       </Link>
                       <span className="hidden print:inline">{s.receiptNumber}</span>
@@ -460,7 +460,7 @@ function ProfitReport({ data, onDrilldown }) {
       <ReportSection title="Profit Overview" icon={TrendingUp}>
         <ReportStatRow
           items={[
-            { label: 'Revenue', value: formatCurrency(data.revenue), tone: 'text-indigo-600' },
+            { label: 'Revenue', value: formatCurrency(data.revenue), tone: 'text-neutral-900' },
             { label: 'Cost of Goods Sold', value: formatCurrency(data.costOfGoodsSold), tone: 'text-amber-600' },
             { label: 'Gross Profit', value: formatCurrency(data.grossProfit), tone: 'text-emerald-600' },
             { label: 'Gross Margin', value: `${data.grossMarginPct}%`, tone: 'text-emerald-600' },
@@ -495,7 +495,7 @@ function ProfitReport({ data, onDrilldown }) {
               <CartesianGrid {...gridProps} />
               <XAxis dataKey="date" {...axisProps} tickFormatter={dayTick} />
               <YAxis {...axisProps} tickFormatter={compactMoney} width={56} />
-              <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#c7d2fe' }} />
+              <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#fecaca' }} />
               <Area type="monotone" dataKey="revenue" name="Revenue" stroke={COLORS.revenue} strokeWidth={2.5} fill="url(#gProfRev)" />
               <Area type="monotone" dataKey="cost" name="COGS" stroke={COLORS.cost} strokeWidth={2} strokeDasharray="5 4" fill="none" />
               <Area type="monotone" dataKey="profit" name="Profit" stroke={COLORS.profit} strokeWidth={2.5} fill="url(#gProfProfit)" />
@@ -546,7 +546,7 @@ function ProfitReport({ data, onDrilldown }) {
               <TableEmpty colSpan={5} message="No sales in this range." />
             ) : (
               data.profitByItem.map((i) => (
-                <tr key={i.itemId} onClick={() => onDrilldown(i.itemId, i.name)} className="cursor-pointer hover:bg-indigo-50/60">
+                <tr key={i.itemId} onClick={() => onDrilldown(i.itemId, i.name)} className="cursor-pointer hover:bg-brand-50/60">
                   <Td className="font-medium text-slate-900">{i.name}</Td>
                   <Td className="tabular-nums">{formatCurrency(i.revenue)}</Td>
                   <Td className="tabular-nums">{formatCurrency(i.cost)}</Td>
@@ -611,8 +611,8 @@ function InventoryReport({ data }) {
       <ReportSection title="Inventory Overview" icon={Boxes}>
         <ReportStatRow
           items={[
-            { label: 'Inventory Cost Value', value: formatCurrency(data.stockValueAtCost), tone: 'text-indigo-600' },
-            { label: 'Potential Retail Value', value: formatCurrency(data.stockValueAtSelling), tone: 'text-sky-600' },
+            { label: 'Inventory Cost Value', value: formatCurrency(data.stockValueAtCost), tone: 'text-neutral-900' },
+            { label: 'Potential Retail Value', value: formatCurrency(data.stockValueAtSelling), tone: 'text-neutral-900' },
             { label: 'Potential Gross Profit', value: formatCurrency(data.potentialGrossProfit), tone: 'text-emerald-600' },
             { label: 'Total Products', value: data.totalItems },
             { label: 'Total Units', value: data.totalQuantity },
@@ -701,7 +701,7 @@ function UserPerformancePicker({ userId, onUserChange }) {
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm no-print sm:inline-flex">
-      <UserRound className="h-4 w-4 text-indigo-600" />
+      <UserRound className="h-4 w-4 text-brand-600" />
       <label className="text-sm font-medium text-slate-600" htmlFor="perf-user-select">
         User
       </label>
@@ -709,7 +709,7 @@ function UserPerformancePicker({ userId, onUserChange }) {
         id="perf-user-select"
         value={userId}
         onChange={(e) => onUserChange(e.target.value)}
-        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
       >
         <option value="">— Choose a user —</option>
         {(users || []).map((u) => (
@@ -728,11 +728,11 @@ function UserPerformanceReport({ data }) {
       <ReportSection title={`Performance — ${data.user.name}`} subtitle={`@${data.user.username}`} icon={UserRound}>
         <ReportStatRow
           items={[
-            { label: 'Total Sales', value: formatCurrency(data.totalSales), tone: 'text-indigo-600' },
+            { label: 'Total Sales', value: formatCurrency(data.totalSales), tone: 'text-neutral-900' },
             { label: 'Invoice Count', value: data.invoiceCount },
             { label: 'Items Sold', value: data.itemsSold },
             { label: 'Cash Collected', value: formatCurrency(data.cashCollected), tone: 'text-emerald-600' },
-            { label: 'Wallet Collected', value: formatCurrency(data.walletCollected), tone: 'text-indigo-600' },
+            { label: 'Wallet Collected', value: formatCurrency(data.walletCollected), tone: 'text-neutral-900' },
             { label: 'Credit Extended', value: formatCurrency(data.creditExtended), tone: 'text-amber-600' },
             { label: 'Average Sale Value', value: formatCurrency(data.averageSaleValue) },
           ]}
@@ -750,7 +750,7 @@ function UserPerformanceReport({ data }) {
                 <CartesianGrid {...gridProps} />
                 <XAxis dataKey="date" {...axisProps} tickFormatter={dayTick} />
                 <YAxis {...axisProps} tickFormatter={compactMoney} width={56} />
-                <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#c7d2fe' }} />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#fecaca' }} />
                 <Area type="monotone" dataKey="totalSales" name="Sales" stroke={COLORS.revenue} strokeWidth={2.5} fill="url(#gPerf)" />
               </AreaChart>
             </ResponsiveContainer>

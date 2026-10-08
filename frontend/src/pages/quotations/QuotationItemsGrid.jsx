@@ -50,7 +50,7 @@ function ItemSearchCell({ onSelect, inputRef }) {
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder="Search item, serial number, or item ID..."
-          className="w-full rounded-md border border-transparent bg-transparent py-1.5 pl-7 pr-2 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-indigo-300 focus:bg-white focus:ring-1 focus:ring-indigo-200"
+          className="w-full rounded-md border border-transparent bg-transparent py-1.5 pl-7 pr-2 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-brand-300 focus:bg-white focus:ring-1 focus:ring-brand-200"
         />
       </div>
       {open && query.trim() && (
@@ -61,7 +61,7 @@ function ItemSearchCell({ onSelect, inputRef }) {
             <ul className="max-h-60 overflow-y-auto py-1">
               {results.map((r, i) => (
                 <li key={r.id}>
-                  <button type="button" onMouseDown={(e) => { e.preventDefault(); choose(r); }} className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs ${i === highlighted ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}>
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); choose(r); }} className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs ${i === highlighted ? 'bg-brand-50' : 'hover:bg-slate-50'}`}>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-slate-800">{r.name}</p>
                       <p className="truncate text-slate-400">{r.itemCode}{r.serialNumber ? ` · SN: ${r.serialNumber}` : ''}</p>
@@ -144,21 +144,21 @@ export default function QuotationItemsGrid({ items, onAddLine, onChangeLine, onR
                     ref={(el) => { qtyRefs.current[line.itemId] = el; }}
                     type="number" min="1" step="1" value={line.quantity}
                     onChange={(e) => onChangeLine(line.itemId, 'quantity', e.target.value)}
-                    className="no-spinner mx-auto block w-16 rounded-md border border-slate-200 px-2 py-1.5 text-center text-sm tabular-nums focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                    className="no-spinner mx-auto block w-16 rounded-md border border-slate-200 px-2 py-1.5 text-center text-sm tabular-nums focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200"
                   />
                 </td>
                 <td className="px-3 py-2">
                   <input
                     type="number" min="0" step="0.01" value={line.unitPrice}
                     onChange={(e) => onChangeLine(line.itemId, 'unitPrice', e.target.value)}
-                    className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-right text-sm tabular-nums focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                    className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-right text-sm tabular-nums focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200"
                   />
                 </td>
                 <td className="px-3 py-2">
                   <input
                     type="number" min="0" step="0.01" value={line.discount}
                     onChange={(e) => onChangeLine(line.itemId, 'discount', e.target.value)}
-                    className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-right text-sm tabular-nums focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                    className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-right text-sm tabular-nums focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200"
                   />
                 </td>
                 <td className="px-3 py-2 text-right text-[15px] font-semibold tabular-nums text-slate-900">{formatCurrency(amount)}</td>

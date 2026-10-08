@@ -81,7 +81,7 @@ function UserFormModal({ open, onClose, user, onSaved }) {
         </div>
 
         {form.role === 'admin' ? (
-          <p className="rounded-lg bg-indigo-50 px-3 py-2 text-xs text-indigo-700">Admins always have access to every module.</p>
+          <p className="rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-700">Admins always have access to every module.</p>
         ) : (
           <FormField label="Permissions">
             <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 p-3 sm:grid-cols-3">
@@ -187,7 +187,7 @@ export default function UsersPage() {
                 <Td className="text-xs text-slate-400">{formatDate(u.createdAt)}</Td>
                 <Td>
                   <div className="flex justify-end gap-1">
-                    <button onClick={() => { setEditUser(u); setFormOpen(true); }} className="rounded-md px-2 py-1 text-xs font-semibold text-indigo-600 hover:bg-indigo-50">
+                    <button onClick={() => { setEditUser(u); setFormOpen(true); }} className="rounded-md px-2 py-1 text-xs font-semibold text-brand-600 hover:bg-brand-50">
                       Edit
                     </button>
                     {u.id !== me?.id && (

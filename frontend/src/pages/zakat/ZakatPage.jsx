@@ -439,7 +439,7 @@ export default function ZakatPage() {
         <button
           onClick={() => setTab('calculator')}
           className={`flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-            tab === 'calculator' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            tab === 'calculator' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
           }`}
         >
           <CalculatorIcon className="h-4 w-4" /> Calculator
@@ -450,7 +450,7 @@ export default function ZakatPage() {
             setHistoryKey((k) => k + 1);
           }}
           className={`flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-            tab === 'history' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            tab === 'history' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
           }`}
         >
           <HistoryIcon className="h-4 w-4" /> History

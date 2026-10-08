@@ -25,7 +25,7 @@ export default function DateRangeFilter({ range, onRangeChange, from, to, onFrom
               type="button"
               onClick={() => onRangeChange(p.value)}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                active ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+                active ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               {p.label}
@@ -35,10 +35,10 @@ export default function DateRangeFilter({ range, onRangeChange, from, to, onFrom
       </div>
       <div
         className={`flex flex-wrap items-center gap-2 rounded-xl border bg-white px-3 py-1.5 shadow-sm ${
-          custom ? 'border-indigo-300 ring-1 ring-indigo-100' : 'border-slate-200'
+          custom ? 'border-brand-300 ring-1 ring-brand-100' : 'border-slate-200'
         }`}
       >
-        <CalendarRange className={`h-4 w-4 ${custom ? 'text-indigo-600' : 'text-slate-400'}`} />
+        <CalendarRange className={`h-4 w-4 ${custom ? 'text-brand-600' : 'text-slate-400'}`} />
         <span className="text-sm text-slate-500">Custom</span>
         <Input type="date" value={from} onChange={(e) => onFromChange(e.target.value)} className="w-38! py-1!" aria-label="From date" />
         <span className="text-sm text-slate-400">to</span>

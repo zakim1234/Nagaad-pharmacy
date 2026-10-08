@@ -68,7 +68,7 @@ export default function StockAdjustmentsPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-bold text-slate-900">
-            <SlidersHorizontal className="h-5 w-5 text-indigo-600" /> Stock Adjustment
+            <SlidersHorizontal className="h-5 w-5 text-brand-600" /> Stock Adjustment
           </h1>
           <p className="mt-1 text-sm text-slate-500">Correct stock for damaged, expired or lost goods, or after a physical count.</p>
         </div>
@@ -358,7 +358,7 @@ function NewAdjustmentModal({ open, onClose, onSaved }) {
               <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
                 {matches.map((m) => (
                   <li key={m.id}>
-                    <button type="button" onClick={() => pick(m)} className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-indigo-50">
+                    <button type="button" onClick={() => pick(m)} className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-brand-50">
                       <span>
                         <span className="font-medium text-slate-800">{m.name}</span>
                         <span className="ml-2 text-xs text-slate-400">{m.itemCode}</span>
@@ -401,10 +401,10 @@ function NewAdjustmentModal({ open, onClose, onSaved }) {
                     setLotId('');
                   }}
                   className={`rounded-xl border p-3 text-left transition ${
-                    mode === key ? 'border-indigo-300 bg-indigo-50 ring-1 ring-indigo-200' : 'border-slate-200 hover:border-slate-300'
+                    mode === key ? 'border-brand-300 bg-brand-50 ring-1 ring-brand-200' : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
-                  <p className={`flex items-center gap-1.5 text-sm font-semibold ${mode === key ? 'text-indigo-700' : 'text-slate-700'}`}>
+                  <p className={`flex items-center gap-1.5 text-sm font-semibold ${mode === key ? 'text-brand-700' : 'text-slate-700'}`}>
                     <Icon className="h-4 w-4" /> {label}
                   </p>
                   <p className="mt-0.5 text-xs text-slate-400">{hint}</p>
@@ -477,10 +477,10 @@ function NewAdjustmentModal({ open, onClose, onSaved }) {
 }
 
 const TONES = {
-  rose: 'from-rose-500 to-pink-500',
-  emerald: 'from-emerald-500 to-teal-500',
-  amber: 'from-amber-400 to-orange-500',
-  indigo: 'from-indigo-500 to-violet-500',
+  rose: 'from-red-500 to-red-700',
+  emerald: 'from-neutral-700 to-neutral-950',
+  amber: 'from-neutral-400 to-neutral-600',
+  indigo: 'from-red-500 to-red-700',
 };
 
 function SummaryCard({ icon: Icon, tone, label, value, hint }) {
