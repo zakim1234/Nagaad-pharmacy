@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Ban, Printer, Search, Percent, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Ban, Printer, Search, Percent, Pencil, Trash2, Sheet } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -93,6 +93,9 @@ export default function PurchasesPage() {
         subtitle="Record invoices for goods purchased from suppliers"
         actions={
           <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => navigate('/purchases/vendor-balances')}>
+              <Sheet className="h-4 w-4" /> Vendor Balances
+            </Button>
             <Button variant="secondary" onClick={() => setBulkOpen(true)}>
               <Percent className="h-4 w-4" /> Bulk Payment
             </Button>
