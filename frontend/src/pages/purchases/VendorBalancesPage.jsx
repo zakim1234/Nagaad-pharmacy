@@ -239,72 +239,77 @@ export default function VendorBalancesPage() {
       </div>
 
       {/* Paper copy, laid out like the hand-made sheet. */}
-      <div id="print-area" className="hidden print:block">
-        <div className="mb-3 flex items-center gap-3 border-b-2 border-black pb-2">
-          <img src={logo} alt={BUSINESS.name} className="h-14 w-auto object-contain" />
-          <div className="flex-1">
-            <h1 className="text-lg font-bold uppercase tracking-wide">{BUSINESS.name}</h1>
-            <p className="text-xs">{BUSINESS.addressLine} · {BUSINESS.phone}</p>
-          </div>
-          <div className="text-right text-xs">
-            <p className="text-sm font-bold uppercase">Vendor Balance Summary</p>
-            <p>Date: {printDate}</p>
-            {data.plan && <p>{data.plan.planNumber}</p>}
-          </div>
+      <div id="print-area" className="hidden bg-white text-neutral-900 print:block" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+        <div className="flex flex-col items-center text-center">
+          <img src={logo} alt={BUSINESS.name} className="h-20 w-auto object-contain" />
+          <h1 className="mt-1 text-xl font-extrabold uppercase tracking-[0.2em]">{BUSINESS.name}</h1>
+          <p className="text-[11px] text-neutral-600">{BUSINESS.addressLine} · {BUSINESS.phone}</p>
         </div>
-        <table className="w-full border-collapse text-[12px]">
+
+        <div className="mt-4 h-1 bg-brand-600" />
+        <div className="flex items-center justify-between bg-neutral-950 px-4 py-2 text-white">
+          <p className="text-sm font-bold uppercase tracking-[0.25em]">Vendor Balance Summary</p>
+          <p className="text-[11px]">
+            Date: <span className="font-semibold">{printDate}</span>
+            {data.plan && <span className="ml-3 text-neutral-400">{data.plan.planNumber}</span>}
+          </p>
+        </div>
+
+        <table className="mt-4 w-full border-collapse text-[12px]">
           <thead>
-            <tr className="bg-neutral-200">
-              <th className="border border-black px-2 py-1 text-left">#</th>
-              <th className="border border-black px-2 py-1 text-left">Vendor</th>
-              <th className="border border-black px-2 py-1 text-right">Balance</th>
-              <th className="border border-black px-2 py-1 text-right">Allocation</th>
-              <th className="border border-black px-2 py-1 text-center">OK</th>
+            <tr className="border-b-2 border-neutral-900 text-[10px] uppercase tracking-wider text-neutral-500">
+              <th className="w-10 px-3 py-2 text-left font-semibold">#</th>
+              <th className="px-3 py-2 text-left font-semibold">Vendor</th>
+              <th className="px-3 py-2 text-right font-semibold">Balance</th>
+              <th className="px-3 py-2 text-right font-semibold">Allocation</th>
+              <th className="w-16 px-3 py-2 text-center font-semibold">OK</th>
             </tr>
           </thead>
           <tbody>
             {printRows.map((r, i) => (
-              <tr key={r.key}>
-                <td className="border border-black px-2 py-1">{i + 1}</td>
-                <td className="border border-black px-2 py-1">{r.name}</td>
-                <td className="border border-black px-2 py-1 text-right">{formatCurrency(r.owed)}</td>
-                <td className="border border-black px-2 py-1 text-right font-semibold">{r.allocation > 0 ? formatCurrency(r.allocation) : ''}</td>
-                <td className="border border-black px-2 py-1 text-center">{r.ok ? '✓' : ''}</td>
+              <tr key={r.key} className={`border-b border-neutral-200 ${i % 2 ? 'bg-neutral-50' : ''}`}>
+                <td className="px-3 py-2 text-neutral-500">{i + 1}</td>
+                <td className="px-3 py-2 font-medium">{r.name}</td>
+                <td className="px-3 py-2 text-right">{formatCurrency(r.owed)}</td>
+                <td className="px-3 py-2 text-right font-bold text-brand-700">{r.allocation > 0 ? formatCurrency(r.allocation) : '—'}</td>
+                <td className="px-3 py-2 text-center">
+                  <span className={`inline-flex h-4 w-4 items-center justify-center rounded-sm border text-[11px] font-bold leading-none ${r.ok ? 'border-brand-600 text-brand-600' : 'border-neutral-400'}`}>
+                    {r.ok ? '✓' : ''}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
           <tfoot>
-            <tr className="font-bold">
-              <td className="border border-black px-2 py-1.5" colSpan={2}>
-                TOTAL
+            <tr className="border-t-2 border-neutral-900 font-bold">
+              <td className="px-3 py-2.5 uppercase tracking-wider" colSpan={2}>
+                Total
               </td>
-              <td className="border border-black px-2 py-1.5 text-right">{formatCurrency(printOwed)}</td>
-              <td className="border border-black px-2 py-1.5 text-right">{formatCurrency(printAllocated)}</td>
-              <td className="border border-black px-2 py-1.5" />
+              <td className="px-3 py-2.5 text-right">{formatCurrency(printOwed)}</td>
+              <td className="px-3 py-2.5 text-right text-brand-700">{formatCurrency(printAllocated)}</td>
+              <td />
             </tr>
           </tfoot>
         </table>
-        <div className="mt-4 flex justify-end">
-          <table className="text-[12px]">
-            <tbody>
-              <tr>
-                <td className="pr-6">Total owed to all suppliers</td>
-                <td className="text-right font-bold">{formatCurrency(printOwed)}</td>
-              </tr>
-              <tr>
-                <td className="pr-6">Total {paidPlan && showPaid ? 'paid' : 'allocated'}</td>
-                <td className="text-right font-bold">{formatCurrency(printAllocated)}</td>
-              </tr>
-              <tr className="border-t border-black">
-                <td className="pr-6 pt-1">Remaining</td>
-                <td className="pt-1 text-right font-bold">{formatCurrency(round2(printOwed - printAllocated))}</td>
-              </tr>
-            </tbody>
-          </table>
+
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          <div className="rounded-lg border border-neutral-300 px-4 py-3 text-center">
+            <p className="text-[10px] uppercase tracking-wider text-neutral-500">Total owed to all suppliers</p>
+            <p className="mt-1 text-lg font-bold">{formatCurrency(printOwed)}</p>
+          </div>
+          <div className="rounded-lg bg-brand-600 px-4 py-3 text-center text-white">
+            <p className="text-[10px] uppercase tracking-wider text-white/80">Total {paidPlan && showPaid ? 'paid' : 'allocated'}</p>
+            <p className="mt-1 text-lg font-bold">{formatCurrency(printAllocated)}</p>
+          </div>
+          <div className="rounded-lg bg-neutral-950 px-4 py-3 text-center text-white">
+            <p className="text-[10px] uppercase tracking-wider text-neutral-400">Remaining</p>
+            <p className="mt-1 text-lg font-bold">{formatCurrency(round2(printOwed - printAllocated))}</p>
+          </div>
         </div>
-        <div className="mt-12 grid grid-cols-2 gap-16 text-xs">
-          <p className="border-t border-black pt-1 text-center">Prepared by</p>
-          <p className="border-t border-black pt-1 text-center">Approved by</p>
+
+        <div className="mt-16 grid grid-cols-2 gap-16 text-[11px] text-neutral-600">
+          <p className="border-t border-neutral-900 pt-1.5 text-center">Prepared by</p>
+          <p className="border-t border-neutral-900 pt-1.5 text-center">Approved by</p>
         </div>
       </div>
 
