@@ -21,7 +21,7 @@ const round2 = (n) => Math.round(n * 100) / 100;
 // Pay one supplier across several of their unpaid invoices at once. The
 // amount is usually a % of what the ticked invoices owe; the server applies
 // it oldest invoice first, as one transaction with one receipt.
-export default function BulkPaymentModal({ open, onClose, onPaid }) {
+export default function BulkPaymentModal({ open, onClose, onPaid, initialSupplierId = '' }) {
   const toast = useToast();
   const [suppliers, setSuppliers] = useState([]);
   const [supplierId, setSupplierId] = useState('');
@@ -39,7 +39,7 @@ export default function BulkPaymentModal({ open, onClose, onPaid }) {
 
   useEffect(() => {
     if (!open) return;
-    setSupplierId('');
+    setSupplierId(initialSupplierId || '');
     setInvoices([]);
     setVoided([]);
     setSelected(new Set());
@@ -54,7 +54,7 @@ export default function BulkPaymentModal({ open, onClose, onPaid }) {
   }, [open]);
 
   useEffect(() => {
-    if (!supplierId) return;
+    if (!supplierId || !open) return;
     client
       .get('/purchases/bulk-payments/outstanding', { params: { supplierId } })
       .then((r) => {
@@ -66,7 +66,7 @@ export default function BulkPaymentModal({ open, onClose, onPaid }) {
         setAmount('');
       })
       .catch((err) => toast.error(err.friendlyMessage || 'Could not load this supplier’s invoices.'));
-  }, [supplierId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [supplierId, open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const totalOwed = useMemo(() => round2(invoices.filter((i) => selected.has(i.id)).reduce((s, i) => s + i.balanceDue, 0)), [invoices, selected]);
 

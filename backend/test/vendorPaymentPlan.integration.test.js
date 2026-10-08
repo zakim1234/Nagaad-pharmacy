@@ -120,3 +120,25 @@ test('VENDOR BALANCES -- a failed payment rolls back every supplier', { timeout:
     await teardown(server);
   }
 });
+
+test('SUPPLIER SUMMARY -- one line per supplier, invoices kept together', { timeout: 90000 }, async () => {
+  const { server, request } = await setup('supplier_summary');
+  try {
+    const { alpha, invoices } = await suppliers(request);
+    await request(`/purchases/${invoices['Alpha Pharma'][0]}/payments`, { amount: 100, paymentAccountId: (await Account.findOne()).id });
+    await request(`/purchases/${invoices['Gamma Supplies'][0]}/void`, { reason: 'test' });
+    const sum = await request('/purchases/suppliers-summary');
+    assert.equal(sum.status, 200, JSON.stringify(sum));
+    assert.deepEqual(sum.data.map((s) => [s.name, s.invoiceCount, s.voidedCount, s.total, s.paid, s.owed]), [
+      ['Alpha Pharma', 2, 0, 800, 100, 700],
+      ['Beta Medical', 1, 0, 200, 0, 200],
+      ['Gamma Supplies', 0, 1, 0, 0, 0],
+    ]);
+    const grouped = await request('/purchases?sort=supplier');
+    assert.deepEqual(grouped.data.map((p) => p.supplierName), ['Alpha Pharma', 'Alpha Pharma', 'Beta Medical', 'Gamma Supplies']);
+    const onlyAlpha = await request(`/purchases?supplier=${alpha.id}`);
+    assert.equal(onlyAlpha.data.length, 2);
+  } finally {
+    await teardown(server);
+  }
+});

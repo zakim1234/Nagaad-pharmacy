@@ -3,6 +3,7 @@ import { requireAuth, requireRole, requirePermission } from '../middleware/auth.
 import {
   createPurchase,
   listPurchases,
+  listSupplierSummary,
   getPurchase,
   voidPurchase,
   updatePurchase,
@@ -25,6 +26,7 @@ router.use(requireAuth);
 router.use(requirePermission('purchases'));
 
 router.get('/', listPurchases);
+router.get('/suppliers-summary', listSupplierSummary);
 // Bulk payments -- before '/:id' so 'bulk-payments' is never read as an id.
 router.get('/bulk-payments/suppliers', listOwedSuppliers);
 router.get('/bulk-payments/outstanding', listSupplierOutstanding);

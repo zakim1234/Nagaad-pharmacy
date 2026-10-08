@@ -147,7 +147,7 @@ export default function VendorBalancesPage() {
           </div>
         </div>
 
-        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className={`mb-4 grid-cols-1 gap-3 sm:grid-cols-3 ${showPaid && paidPlan ? 'hidden' : 'grid'}`}>
           <Stat label="Total owed to suppliers" value={formatCurrency(totalOwed)} hint={`${rows.length} supplier${rows.length === 1 ? '' : 's'}`} />
           <Stat label="Allocated this round" value={formatCurrency(showPaid && paidPlan ? paidPlan.totalPaid : totalAllocated)} hint={showPaid && paidPlan ? 'Paid' : `${allocatedCount} supplier${allocatedCount === 1 ? '' : 's'}`} accent />
           <Stat label="Still owed after" value={formatCurrency(showPaid ? totalOwed : round2(totalOwed - totalAllocated))} hint={showPaid ? 'Current balances' : 'If allocations are paid'} />
@@ -340,60 +340,101 @@ function Stat({ label, value, hint, accent }) {
 }
 
 function PaidPlan({ plan }) {
+  const paidRows = plan.rows.filter((r) => r.paid > 0).length;
+  const owedBefore = round2(plan.rows.reduce((s, r) => s + r.owed, 0));
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-neutral-950 px-4 py-3 text-white">
-        <p className="flex items-center gap-2 text-sm font-semibold">
-          <CheckCircle2 className="h-4 w-4 text-brand-400" /> Paid {formatDate(plan.paymentDate)} from {plan.paymentAccountName}
-        </p>
-        <p className="text-xs text-neutral-400">
-          Recorded {formatDateTime(plan.paidAt)}
-          {plan.paidByName ? ` by ${plan.paidByName}` : ''}
-        </p>
+      <div className="bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 px-5 py-4 text-white">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-600">
+              <CheckCircle2 className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-base font-bold">Payments done · {formatDate(plan.paymentDate)}</p>
+              <p className="text-xs text-neutral-400">
+                From {plan.paymentAccountName} · recorded {formatDateTime(plan.paidAt)}
+                {plan.paidByName ? ` by ${plan.paidByName}` : ''}
+              </p>
+            </div>
+          </div>
+          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">
+            {paidRows} supplier{paidRows === 1 ? '' : 's'} paid
+          </span>
+        </div>
+        <div className="mt-4 grid grid-cols-3 divide-x divide-white/10 rounded-xl bg-white/5">
+          <div className="px-4 py-2.5">
+            <p className="text-[11px] uppercase tracking-wide text-neutral-400">Owed before</p>
+            <p className="text-lg font-bold">{formatCurrency(owedBefore)}</p>
+          </div>
+          <div className="px-4 py-2.5">
+            <p className="text-[11px] uppercase tracking-wide text-neutral-400">Paid</p>
+            <p className="text-lg font-bold text-brand-400">{formatCurrency(plan.totalPaid)}</p>
+          </div>
+          <div className="px-4 py-2.5">
+            <p className="text-[11px] uppercase tracking-wide text-neutral-400">Left after</p>
+            <p className="text-lg font-bold">{formatCurrency(round2(owedBefore - plan.totalPaid))}</p>
+          </div>
+        </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-              <th className="w-12 px-4 py-2.5 font-medium">#</th>
-              <th className="px-4 py-2.5 font-medium">Supplier</th>
-              <th className="px-4 py-2.5 text-right font-medium">Balance</th>
-              <th className="px-4 py-2.5 text-right font-medium">Allocation</th>
-              <th className="px-4 py-2.5 text-right font-medium">Paid</th>
-              <th className="px-4 py-2.5 font-medium">OK</th>
-            </tr>
-          </thead>
-          <tbody>
-            {plan.rows.map((r, i) => (
-              <tr key={String(r.supplier)} className="border-t border-slate-100">
-                <td className="px-4 py-2 text-slate-400">{i + 1}</td>
-                <td className="px-4 py-2 font-medium text-slate-800">{r.supplierName}</td>
-                <td className="whitespace-nowrap px-4 py-2 text-right text-slate-600">{formatCurrency(r.owed)}</td>
-                <td className="whitespace-nowrap px-4 py-2 text-right text-slate-600">{formatCurrency(r.allocation)}</td>
-                <td className="whitespace-nowrap px-4 py-2 text-right font-semibold text-slate-900">{formatCurrency(r.paid)}</td>
-                <td className="whitespace-nowrap px-4 py-2">
-                  {r.bulkPayment ? (
-                    <Link to={`/purchases/bulk-payments/${r.bulkPayment}`} className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> OK · {r.bulkNumber}
-                    </Link>
-                  ) : (
-                    <span className="text-xs text-slate-400">Nothing owed at payment</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="border-t-2 border-slate-900 bg-slate-50 font-bold text-slate-900">
-              <td className="px-4 py-3" colSpan={3}>
-                Total
-              </td>
-              <td className="whitespace-nowrap px-4 py-3 text-right">{formatCurrency(plan.totalAllocated)}</td>
-              <td className="whitespace-nowrap px-4 py-3 text-right text-brand-700">{formatCurrency(plan.totalPaid)}</td>
-              <td />
-            </tr>
-          </tfoot>
-        </table>
+
+      <ul className="divide-y divide-slate-100">
+        {plan.rows.map((r, i) => {
+          const pct = r.owed > 0 ? Math.min(100, Math.round((r.paid / r.owed) * 100)) : 0;
+          return (
+            <li key={String(r.supplier)} className="flex flex-wrap items-center gap-4 px-5 py-3.5 hover:bg-slate-50/60">
+              <span className="w-5 text-sm text-slate-400">{i + 1}</span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">
+                {r.supplierName
+                  .split(/\s+/)
+                  .slice(0, 2)
+                  .map((w) => w[0]?.toUpperCase())
+                  .join('')}
+              </span>
+              <div className="min-w-[180px] flex-1">
+                <p className="font-semibold text-slate-900">{r.supplierName}</p>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <div className="h-1.5 w-40 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full bg-brand-600" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="text-[11px] text-slate-400">{pct}% of balance</span>
+                </div>
+              </div>
+              <div className="w-24 text-right text-xs">
+                <p className="text-slate-400">Balance</p>
+                <p className="font-medium text-slate-700">{formatCurrency(r.owed)}</p>
+              </div>
+              <div className="w-24 text-right text-xs">
+                <p className="text-slate-400">Paid</p>
+                <p className="text-sm font-bold text-brand-700">{formatCurrency(r.paid)}</p>
+              </div>
+              <div className="w-24 text-right text-xs">
+                <p className="text-slate-400">Left</p>
+                <p className="font-medium text-slate-700">{formatCurrency(round2(r.owed - r.paid))}</p>
+              </div>
+              <div className="w-40 text-right">
+                {r.bulkPayment ? (
+                  <Link
+                    to={`/purchases/bulk-payments/${r.bulkPayment}`}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-600"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5 text-brand-600" /> Receipt {r.bulkNumber.replace(/^BPAY-\d{4}-0*/, '#')}
+                  </Link>
+                ) : (
+                  <span className="text-xs text-slate-400">Nothing owed at payment</span>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="flex items-center justify-between border-t-2 border-slate-900 bg-slate-50 px-5 py-3 text-sm font-bold text-slate-900">
+        <span>Total</span>
+        <span>
+          <span className="mr-4 text-xs font-medium text-slate-500">Allocated {formatCurrency(plan.totalAllocated)}</span>
+          Paid <span className="text-brand-700">{formatCurrency(plan.totalPaid)}</span>
+        </span>
       </div>
     </div>
   );

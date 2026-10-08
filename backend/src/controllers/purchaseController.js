@@ -207,6 +207,40 @@ export const createPurchase = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, data: toDTO(result) });
 });
 
+// GET /api/purchases/suppliers-summary -- one line per supplier we have
+// bought from: how many invoices, total bought, paid and still owed
+// (voided invoices are left out of the money and counted apart).
+export const listSupplierSummary = asyncHandler(async (req, res) => {
+  const rows = await Purchase.aggregate([
+    {
+      $group: {
+        _id: '$supplier',
+        name: { $last: '$supplierName' },
+        invoiceCount: { $sum: { $cond: [{ $eq: ['$status', 'voided'] }, 0, 1] } },
+        voidedCount: { $sum: { $cond: [{ $eq: ['$status', 'voided'] }, 1, 0] } },
+        totalCents: { $sum: { $cond: [{ $eq: ['$status', 'voided'] }, 0, '$totalCostCents'] } },
+        paidCents: { $sum: { $cond: [{ $eq: ['$status', 'voided'] }, 0, '$paidAmountCents'] } },
+        owedCents: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, '$balanceCents', 0] } },
+        lastPurchaseAt: { $max: '$createdAt' },
+      },
+    },
+    { $sort: { name: 1 } },
+  ]);
+  res.json({
+    success: true,
+    data: rows.map((r) => ({
+      id: r._id,
+      name: r.name,
+      invoiceCount: r.invoiceCount,
+      voidedCount: r.voidedCount,
+      total: fromCents(r.totalCents),
+      paid: fromCents(r.paidCents),
+      owed: fromCents(r.owedCents),
+      lastPurchaseAt: r.lastPurchaseAt,
+    })),
+  });
+});
+
 export const listPurchases = asyncHandler(async (req, res) => {
   const { page = 1, limit = 20, from, to, range, supplier, status, q, paymentStatus } = req.query;
   const filter = {};
@@ -235,7 +269,8 @@ export const listPurchases = asyncHandler(async (req, res) => {
   const [items, total] = await Promise.all([
     Purchase.find(filter)
       .populate('paymentAccount', 'name')
-      .sort({ createdAt: -1 })
+      // sort=supplier keeps each supplier's invoices together.
+      .sort(req.query.sort === 'supplier' ? { supplierName: 1, supplier: 1, createdAt: -1 } : { createdAt: -1 })
       .skip((pageNum - 1) * limitNum)
       .limit(limitNum),
     Purchase.countDocuments(filter),
