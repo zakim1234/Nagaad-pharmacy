@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   Plus,
-  Wallet,
   Pencil,
   Ban,
   CheckCircle2,
@@ -13,23 +12,26 @@ import {
   CircleDollarSign,
   Clock,
   ReceiptText,
+  Wallet,
   BarChart3,
 } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate } from '../../utils/format.js';
+import Button from '../../components/ui/Button.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import DateRangeFilter from '../../components/reports/DateRangeFilter.jsx';
 import AccountFormModal from './AccountFormModal.jsx';
 
+// A soft tint per account type -- just enough colour to tell them apart.
 const TYPES = {
-  MOBILE_MONEY: { label: 'Mobile Money', icon: Smartphone, card: 'from-emerald-500 to-teal-600' },
-  BANK: { label: 'Bank', icon: Landmark, card: 'from-indigo-500 to-blue-600' },
-  MERCHANT: { label: 'Merchant', icon: Store, card: 'from-amber-500 to-orange-600' },
-  OTHER: { label: 'Other', icon: CircleDollarSign, card: 'from-slate-500 to-slate-700' },
+  MOBILE_MONEY: { label: 'Mobile Money', icon: Smartphone, tint: 'bg-emerald-50 text-emerald-600' },
+  BANK: { label: 'Bank', icon: Landmark, tint: 'bg-blue-50 text-blue-600' },
+  MERCHANT: { label: 'Merchant', icon: Store, tint: 'bg-amber-50 text-amber-600' },
+  OTHER: { label: 'Other', icon: CircleDollarSign, tint: 'bg-slate-100 text-slate-500' },
 };
 const typeOf = (t) => TYPES[t] || TYPES.OTHER;
 
@@ -46,6 +48,8 @@ const TXN_LABELS = {
   PARTNER_WITHDRAWAL: 'Partner Withdrawal',
 };
 
+const RANGE_LABELS = { today: 'Today', yesterday: 'Yesterday', week: 'This week', month: 'This month', year: 'This year' };
+
 function timeOf(date) {
   return new Date(date).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
@@ -60,54 +64,13 @@ function dayHeading(date) {
   return d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-// One account as a wallet card, coloured by account type.
-function AccountCard({ account, active, onClick }) {
-  const t = typeOf(account.type);
-  const Icon = t.icon;
-  const negative = account.currentBalance < 0;
-  return (
-    <button
-      onClick={onClick}
-      className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${t.card} p-5 text-left text-white shadow-md transition duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
-        active ? 'ring-4 ring-indigo-300 ring-offset-2' : ''
-      } ${!account.isActive ? 'opacity-50 grayscale' : ''}`}
-    >
-      <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10" />
-      <div className="pointer-events-none absolute -bottom-12 -left-6 h-28 w-28 rounded-full bg-white/5" />
-      <div className="relative flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 ring-1 ring-white/30 backdrop-blur">
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="flex gap-1.5">
-          {!account.isActive && <span className="rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-semibold">Inactive</span>}
-          {active && <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-800">Selected</span>}
-        </div>
-      </div>
-      <p className="relative mt-4 text-xs font-medium uppercase tracking-wider text-white/75">{t.label}</p>
-      <p className="relative text-lg font-bold leading-tight">{account.name}</p>
-      <p className={`relative mt-3 text-[28px] font-bold leading-none tracking-tight tabular-nums ${negative ? 'text-rose-100' : ''}`}>
-        {formatCurrency(account.currentBalance)}
-      </p>
-      <div className="relative mt-2 min-h-[20px] space-y-1">
-        {negative && <span className="inline-block rounded-full bg-rose-600/90 px-2 py-0.5 text-[11px] font-semibold">Negative balance</span>}
-        {account.pendingToday !== 0 && (
-          <p className="flex items-center gap-1 text-[11px] text-white/85">
-            <Clock className="h-3 w-3" />
-            Pending today {account.pendingToday > 0 ? '+' : ''}
-            {formatCurrency(account.pendingToday)} · after close {formatCurrency(account.expectedAfterClose)}
-          </p>
-        )}
-      </div>
-    </button>
-  );
-}
-
 export default function AccountsPage() {
   const toast = useToast();
   const { user } = useAuth();
   const canManage = user?.role === 'admin' || user?.role === 'manager';
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('accounts');
   const [selectedId, setSelectedId] = useState(null);
   const [transactions, setTransactions] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -171,9 +134,9 @@ export default function AccountsPage() {
   const totals = report
     ? report.accounts.reduce((t, a) => ({ in: t.in + a.moneyIn, out: t.out + a.moneyOut, opening: t.opening + a.openingBalance, current: t.current + a.currentBalance }), { in: 0, out: 0, opening: 0, current: 0 })
     : null;
-  const maxFlow = report ? Math.max(1, ...report.accounts.map((a) => Math.max(a.moneyIn, a.moneyOut))) : 1;
+  const periodLabel = reportFrom || reportTo ? 'Selected period' : RANGE_LABELS[reportRange] || 'Period';
 
-  // Group the selected account's transactions by calendar day.
+  // The selected account's transactions, grouped by calendar day.
   const groups = [];
   for (const t of transactions?.transactions || []) {
     const key = new Date(t.createdAt).toDateString();
@@ -184,171 +147,195 @@ export default function AccountsPage() {
 
   return (
     <div className="space-y-5">
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-lg shadow-indigo-500/20 sm:p-7">
-        <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-fuchsia-400/30 blur-3xl" />
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25 backdrop-blur">
-              <Wallet className="h-7 w-7" />
-            </div>
-            <div>
-              <p className="text-sm text-indigo-100">Accounts · where money is received and paid</p>
-              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-indigo-100">Total balance</p>
-              <p className={`text-4xl font-bold leading-tight tabular-nums ${data.totalBalance < 0 ? 'text-rose-100' : ''}`}>{formatCurrency(data.totalBalance)}</p>
-              <p className="mt-1 text-sm text-indigo-100">
-                {activeCount} active account{activeCount === 1 ? '' : 's'}
-                {data.accounts.length > activeCount ? ` · ${data.accounts.length - activeCount} inactive` : ''}
-              </p>
-              {canManage && (
-                <button
-                  onClick={() => {
-                    setEditAccount(null);
-                    setFormOpen(true);
-                  }}
-                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-indigo-700 shadow-sm transition hover:bg-indigo-50"
-                >
-                  <Plus className="h-4 w-4" /> New Account
-                </button>
-              )}
-            </div>
-          </div>
-          {totals && (
-            <div className="grid shrink-0 grid-cols-2 gap-3 rounded-2xl bg-white/10 p-4 ring-1 ring-white/20 backdrop-blur sm:min-w-[340px]">
-              <div>
-                <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-indigo-100">
-                  <ArrowDownLeft className="h-3.5 w-3.5" /> Money in
-                </p>
-                <p className="mt-1 text-2xl font-bold tabular-nums">{formatCurrency(totals.in)}</p>
-              </div>
-              <div className="border-l border-white/20 pl-3">
-                <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-indigo-100">
-                  <ArrowUpRight className="h-3.5 w-3.5" /> Money out
-                </p>
-                <p className="mt-1 text-2xl font-bold tabular-nums">{formatCurrency(totals.out)}</p>
-              </div>
-              <p className="col-span-2 text-xs text-indigo-100">For the period chosen in the Accounts Report below</p>
-            </div>
-          )}
+      {/* Header */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-slate-900">Accounts</h1>
+          <p className="mt-0.5 text-sm text-slate-500">Where money is received and paid across the business</p>
         </div>
-      </section>
+        {canManage && (
+          <Button
+            onClick={() => {
+              setEditAccount(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" /> New Account
+          </Button>
+        )}
+      </div>
 
-      {/* Wallet cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {data.accounts.map((a) => (
-          <AccountCard key={a.id} account={a} active={a.id === selectedId} onClick={() => setSelectedId(a.id)} />
+      {/* Summary strip */}
+      <div className="grid grid-cols-2 divide-slate-100 rounded-2xl border border-slate-200/70 bg-white shadow-sm lg:grid-cols-4 lg:divide-x">
+        <Summary label="Total balance" value={formatCurrency(data.totalBalance)} valueClass={data.totalBalance < 0 ? 'text-rose-600' : 'text-slate-900'} icon={Wallet} tint="bg-indigo-50 text-indigo-600" />
+        <Summary label="Accounts" value={`${activeCount} active`} hint={data.accounts.length > activeCount ? `${data.accounts.length - activeCount} inactive` : null} icon={Landmark} tint="bg-sky-50 text-sky-600" />
+        <Summary label="Money in" value={totals ? formatCurrency(totals.in) : '—'} hint={periodLabel} icon={ArrowDownLeft} tint="bg-emerald-50 text-emerald-600" />
+        <Summary label="Money out" value={totals ? formatCurrency(totals.out) : '—'} hint={periodLabel} icon={ArrowUpRight} tint="bg-rose-50 text-rose-600" />
+      </div>
+
+      {/* Tabs */}
+      <div className="inline-flex gap-1 rounded-xl border border-slate-200 bg-slate-100/70 p-1">
+        {[
+          { key: 'accounts', label: 'Accounts', icon: ReceiptText },
+          { key: 'report', label: 'Report', icon: BarChart3 },
+        ].map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+              tab === key ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Icon className="h-4 w-4" /> {label}
+          </button>
         ))}
       </div>
 
-      {/* Transactions of the selected account */}
-      {selectedAccount && (
-        <section className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${typeOf(selectedAccount.type).card} text-white shadow-sm`}>
-                <ReceiptText className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="flex items-center gap-2 text-[15px] font-semibold text-slate-800">
-                  {selectedAccount.name} · Transactions
-                  {!selectedAccount.isActive && <Badge color="slate">Inactive</Badge>}
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Every change to this account's balance, with its reason
-                  {selectedAccount.accountNumber ? ` · No. ${selectedAccount.accountNumber}` : ''}
-                </p>
-              </div>
-            </div>
-            {canManage && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setEditAccount(selectedAccount);
-                    setFormOpen(true);
-                  }}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
-                >
-                  <Pencil className="h-3.5 w-3.5" /> Edit
-                </button>
-                <button
-                  onClick={() => setDeactivateAccount(selectedAccount)}
-                  className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold ${
-                    selectedAccount.isActive ? 'border-rose-200 text-rose-600 hover:bg-rose-50' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                  }`}
-                >
-                  {selectedAccount.isActive ? <Ban className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                  {selectedAccount.isActive ? 'Deactivate' : 'Reactivate'}
-                </button>
-              </div>
-            )}
-          </div>
+      {tab === 'accounts' ? (
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[320px_1fr]">
+          {/* Account list */}
+          <section className="h-fit overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
+            <ul className="divide-y divide-slate-100">
+              {data.accounts.map((a) => {
+                const t = typeOf(a.type);
+                const Icon = t.icon;
+                const active = a.id === selectedId;
+                return (
+                  <li key={a.id}>
+                    <button
+                      onClick={() => setSelectedId(a.id)}
+                      className={`relative flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors ${active ? 'bg-indigo-50/50' : 'hover:bg-slate-50/70'} ${
+                        !a.isActive ? 'opacity-60' : ''
+                      }`}
+                    >
+                      {active && <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-indigo-600" />}
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${t.tint}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-slate-800">{a.name}</p>
+                        <p className="truncate text-xs text-slate-400">
+                          {t.label}
+                          {!a.isActive ? ' · Inactive' : ''}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-sm font-bold tabular-nums ${a.currentBalance < 0 ? 'text-rose-600' : 'text-slate-900'}`}>{formatCurrency(a.currentBalance)}</p>
+                        {a.pendingToday !== 0 && (
+                          <p className="flex items-center justify-end gap-1 text-[11px] text-slate-400">
+                            <Clock className="h-3 w-3" />
+                            {a.pendingToday > 0 ? '+' : ''}
+                            {formatCurrency(a.pendingToday)} pending
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
 
-          <div className="p-5">
-            {!transactions ? (
-              <p className="py-8 text-center text-sm text-slate-400">Loading transactions...</p>
-            ) : groups.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-50 text-slate-300 ring-1 ring-slate-100">
-                  <ReceiptText className="h-5 w-5" />
-                </div>
-                <p className="text-sm text-slate-400">No transactions yet for this account.</p>
-              </div>
-            ) : (
-              <div className="space-y-5">
-                {groups.map((g) => (
-                  <div key={g.key}>
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{g.label}</p>
-                    <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
-                      {g.items.map((t) => {
-                        const isIn = t.direction === 'IN';
-                        return (
-                          <li key={t.id} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-slate-50/70">
-                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${isIn ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                              {isIn ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-800">
-                                {TXN_LABELS[t.type] || t.type}
-                                {t.status === 'PENDING' && <Badge color="amber">Pending</Badge>}
-                                {t.status === 'REVERSED' && <Badge color="slate">Reversed</Badge>}
-                              </p>
-                              <p className="truncate text-xs text-slate-400">{t.description}</p>
-                            </div>
-                            <div className="shrink-0 text-right">
-                              <p className={`text-sm font-semibold tabular-nums ${isIn ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                {isIn ? '+' : '−'}
-                                {formatCurrency(t.amount)}
-                              </p>
-                              <p className="text-xs text-slate-400">{timeOf(t.createdAt)}</p>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
+          {/* Selected account */}
+          {selectedAccount && (
+            <section className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <SelectedIcon type={selectedAccount.type} />
+                  <div className="min-w-0">
+                  <p className="flex items-center gap-2 text-base font-semibold text-slate-900">
+                    {selectedAccount.name}
+                    {!selectedAccount.isActive && <Badge color="slate">Inactive</Badge>}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {typeOf(selectedAccount.type).label}
+                    {selectedAccount.accountNumber ? ` · No. ${selectedAccount.accountNumber}` : ''}
+                  </p>
                   </div>
-                ))}
-                {transactions.transactions.length >= 30 && (
-                  <p className="text-center text-xs text-slate-400">Showing the latest 30 transactions.</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Balance</p>
+                    <p className={`text-xl font-bold tabular-nums ${selectedAccount.currentBalance < 0 ? 'text-rose-600' : 'text-slate-900'}`}>
+                      {formatCurrency(selectedAccount.currentBalance)}
+                    </p>
+                    {selectedAccount.pendingToday !== 0 && (
+                      <p className="text-[11px] text-slate-400">After close: {formatCurrency(selectedAccount.expectedAfterClose)}</p>
+                    )}
+                  </div>
+                  {canManage && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditAccount(selectedAccount);
+                          setFormOpen(true);
+                        }}
+                        className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Edit
+                      </button>
+                      <button
+                        onClick={() => setDeactivateAccount(selectedAccount)}
+                        className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                      >
+                        {selectedAccount.isActive ? <Ban className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                        {selectedAccount.isActive ? 'Deactivate' : 'Reactivate'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="max-h-140 flex-1 overflow-y-auto px-5 py-4">
+                {!transactions ? (
+                  <p className="py-8 text-center text-sm text-slate-400">Loading transactions...</p>
+                ) : groups.length === 0 ? (
+                  <p className="py-10 text-center text-sm text-slate-400">No transactions yet for this account.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {groups.map((g) => (
+                      <div key={g.key}>
+                        <p className="sticky top-0 z-10 -mx-5 bg-white/95 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 backdrop-blur">
+                          {g.label}
+                        </p>
+                        <ul className="divide-y divide-slate-100">
+                          {g.items.map((t) => {
+                            const isIn = t.direction === 'IN';
+                            return (
+                              <li key={t.id} className="flex items-center gap-3 py-2.5">
+                                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isIn ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                  {isIn ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-800">
+                                    {TXN_LABELS[t.type] || t.type}
+                                    {t.status === 'PENDING' && <Badge color="amber">Pending</Badge>}
+                                    {t.status === 'REVERSED' && <Badge color="slate">Reversed</Badge>}
+                                  </p>
+                                  <p className="truncate text-xs text-slate-400">{t.description}</p>
+                                </div>
+                                <div className="shrink-0 text-right">
+                                  <p className={`text-sm font-semibold tabular-nums ${isIn ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {isIn ? '+' : '−'}
+                                    {formatCurrency(t.amount)}
+                                  </p>
+                                  <p className="text-xs text-slate-400">{timeOf(t.createdAt)}</p>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ))}
+                    {transactions.transactions.length >= 30 && <p className="text-center text-xs text-slate-400">Showing the latest 30 transactions.</p>}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Report */}
-      <section className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
-        <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-            <BarChart3 className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="text-[15px] font-semibold text-slate-800">Accounts Report</h3>
-            <p className="text-xs text-slate-400">Money in and out of each account for the selected period</p>
-          </div>
+            </section>
+          )}
         </div>
-        <div className="p-5">
+      ) : (
+        <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">
           <DateRangeFilter
             range={reportRange}
             onRangeChange={(v) => {
@@ -364,61 +351,51 @@ export default function AccountsPage() {
           {!report ? (
             <p className="py-6 text-center text-sm text-slate-400">Loading report...</p>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-slate-100">
-              <table className="min-w-full text-sm">
-                <thead className="bg-slate-50/80">
-                  <tr className="text-left text-xs font-medium uppercase tracking-wide text-slate-400">
-                    <th className="px-4 py-3">Account</th>
-                    <th className="px-4 py-3 text-right">Opening</th>
-                    <th className="px-4 py-3 text-right">Money In</th>
-                    <th className="px-4 py-3 text-right">Money Out</th>
-                    <th className="hidden px-4 py-3 md:table-cell">In / Out</th>
-                    <th className="px-4 py-3 text-right">Current Balance</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {report.accounts.map((a) => (
-                    <tr key={a.id} className="hover:bg-slate-50/70">
-                      <td className="px-4 py-3 font-medium text-slate-800">{a.name}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-500">{formatCurrency(a.openingBalance)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-emerald-600">+{formatCurrency(a.moneyIn)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-rose-600">−{formatCurrency(a.moneyOut)}</td>
-                      <td className="hidden w-44 px-4 py-3 md:table-cell">
-                        <div className="space-y-1">
-                          <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-                            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${(a.moneyIn / maxFlow) * 100}%` }} />
-                          </div>
-                          <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-                            <div className="h-full rounded-full bg-rose-500" style={{ width: `${(a.moneyOut / maxFlow) * 100}%` }} />
-                          </div>
-                        </div>
-                      </td>
-                      <td className={`px-4 py-3 text-right font-semibold tabular-nums ${a.currentBalance < 0 ? 'text-rose-600' : 'text-slate-900'}`}>{formatCurrency(a.currentBalance)}</td>
+            <>
+              <div className="overflow-x-auto rounded-xl border border-slate-100">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-slate-50/80">
+                    <tr className="text-left text-xs font-medium uppercase tracking-wide text-slate-400">
+                      <th className="px-4 py-3">Account</th>
+                      <th className="px-4 py-3 text-right">Opening</th>
+                      <th className="px-4 py-3 text-right">Money In</th>
+                      <th className="px-4 py-3 text-right">Money Out</th>
+                      <th className="px-4 py-3 text-right">Current Balance</th>
                     </tr>
-                  ))}
-                </tbody>
-                {totals && (
-                  <tfoot className="bg-slate-50/80 font-semibold">
-                    <tr>
-                      <td className="px-4 py-3 text-slate-800">Total</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-600">{formatCurrency(totals.opening)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-emerald-700">+{formatCurrency(totals.in)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-rose-700">−{formatCurrency(totals.out)}</td>
-                      <td className="hidden px-4 py-3 md:table-cell" />
-                      <td className={`px-4 py-3 text-right tabular-nums ${totals.current < 0 ? 'text-rose-700' : 'text-slate-900'}`}>{formatCurrency(totals.current)}</td>
-                    </tr>
-                  </tfoot>
-                )}
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {report.accounts.map((a) => (
+                      <tr key={a.id} className="hover:bg-slate-50/70">
+                        <td className="px-4 py-3 font-medium text-slate-800">{a.name}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-slate-500">{formatCurrency(a.openingBalance)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-emerald-600">{formatCurrency(a.moneyIn)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-rose-600">{formatCurrency(a.moneyOut)}</td>
+                        <td className={`px-4 py-3 text-right font-semibold tabular-nums ${a.currentBalance < 0 ? 'text-rose-600' : 'text-slate-900'}`}>{formatCurrency(a.currentBalance)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  {totals && (
+                    <tfoot className="border-t border-slate-200 bg-slate-50/80 font-semibold">
+                      <tr>
+                        <td className="px-4 py-3 text-slate-800">Total</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-slate-600">{formatCurrency(totals.opening)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-slate-800">{formatCurrency(totals.in)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-slate-800">{formatCurrency(totals.out)}</td>
+                        <td className={`px-4 py-3 text-right tabular-nums ${totals.current < 0 ? 'text-rose-600' : 'text-slate-900'}`}>{formatCurrency(totals.current)}</td>
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+              {report.range && (
+                <p className="mt-2 text-xs text-slate-400">
+                  {formatDate(report.range.from)} – {formatDate(report.range.to)}
+                </p>
+              )}
+            </>
           )}
-          {report?.range && (
-            <p className="mt-2 text-xs text-slate-400">
-              {formatDate(report.range.from)} – {formatDate(report.range.to)}
-            </p>
-          )}
-        </div>
-      </section>
+        </section>
+      )}
 
       <AccountFormModal open={formOpen} onClose={() => setFormOpen(false)} onSaved={load} account={editAccount} />
       <ConfirmDialog
@@ -435,6 +412,31 @@ export default function AccountsPage() {
         onConfirm={handleToggleActive}
         onClose={() => setDeactivateAccount(null)}
       />
+    </div>
+  );
+}
+
+function SelectedIcon({ type }) {
+  const t = typeOf(type);
+  const Icon = t.icon;
+  return (
+    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${t.tint}`}>
+      <Icon className="h-5 w-5" />
+    </div>
+  );
+}
+
+function Summary({ label, value, hint, icon: Icon, tint = 'bg-slate-100 text-slate-500', valueClass = 'text-slate-900' }) {
+  return (
+    <div className="flex items-center gap-3 px-5 py-4">
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tint}`}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="truncate text-xs font-medium text-slate-500">{label}</p>
+        <p className={`text-lg font-bold leading-tight tabular-nums ${valueClass}`}>{value}</p>
+        {hint && <p className="text-[11px] text-slate-400">{hint}</p>}
+      </div>
     </div>
   );
 }
