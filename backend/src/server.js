@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import mongoose from 'mongoose';
 import app from './app.js';
 import { connectDB } from './config/db.js';
 import { migrateInventorySchema } from './utils/migrateInventoryV2.js';
@@ -28,6 +29,10 @@ async function start() {
     await migrateSalesSchema();
     await seedDefaultAccounts();
     await InventoryItem.syncIndexes();
+    // Build every model's indexes now, before serving. Otherwise the first
+    // use of a model builds them mid-request, and a payment transaction
+    // running at that moment is aborted and retried from the start.
+    await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
     // Bind to 0.0.0.0 (not just localhost) so a reverse proxy (Nginx, etc.)
     // running outside this process/container can reach the API.
     app.listen(PORT, '0.0.0.0', () => {

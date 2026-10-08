@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Ban, Printer, Search, Percent, Pencil, Trash2, Sheet, Users, Wallet } from 'lucide-react';
+import { Plus, Ban, Printer, Search, Percent, Pencil, Trash2, Sheet, Wallet } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -39,7 +39,6 @@ export default function PurchasesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const supplierId = searchParams.get('supplier') || '';
   const [suppliers, setSuppliers] = useState([]);
-  const [supplierQ, setSupplierQ] = useState('');
   const [items, setItems] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, limit: 20 });
   const [loading, setLoading] = useState(true);
@@ -97,9 +96,7 @@ export default function PurchasesPage() {
   const canVoid = user?.role === 'admin' || user?.role === 'manager';
   const bySupplier = useMemo(() => new Map(suppliers.map((s) => [String(s.id), s])), [suppliers]);
   const selected = supplierId ? bySupplier.get(supplierId) : null;
-  const allOwed = suppliers.reduce((s, x) => s + x.owed, 0);
   const allCount = suppliers.reduce((s, x) => s + x.invoiceCount, 0);
-  const shownSuppliers = supplierQ ? suppliers.filter((s) => s.name.toLowerCase().includes(supplierQ.toLowerCase())) : suppliers;
   const cols = 5;
 
   const handleVoid = async () => {
@@ -223,41 +220,7 @@ export default function PurchasesPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
-        {/* Supplier list */}
-        <aside className="self-start overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:sticky lg:top-4">
-          <div className="border-b border-slate-100 p-3">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Suppliers</p>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input className="py-2! pl-9" placeholder="Find supplier..." value={supplierQ} onChange={(e) => setSupplierQ(e.target.value)} />
-            </div>
-          </div>
-          <div className="max-h-[calc(100vh-260px)] overflow-y-auto p-2">
-            <SupplierItem
-              active={!supplierId}
-              onClick={() => pickSupplier('')}
-              avatar={<Users className="h-4 w-4" />}
-              name="All suppliers"
-              sub={`${allCount} invoice${allCount === 1 ? '' : 's'}`}
-              owed={allOwed}
-            />
-            {shownSuppliers.map((s) => (
-              <SupplierItem
-                key={s.id}
-                active={supplierId === String(s.id)}
-                onClick={() => pickSupplier(String(s.id))}
-                avatar={initials(s.name)}
-                name={s.name}
-                sub={`${s.invoiceCount} invoice${s.invoiceCount === 1 ? '' : 's'}`}
-                owed={s.owed}
-              />
-            ))}
-            {shownSuppliers.length === 0 && <p className="px-3 py-6 text-center text-sm text-slate-400">No supplier found.</p>}
-          </div>
-        </aside>
-
-        <section className="min-w-0">
+      <div>
           {selected && (
             <div className="mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 text-white shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4">
@@ -286,7 +249,7 @@ export default function PurchasesPage() {
             </div>
           )}
 
-          <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
             <div className="relative sm:col-span-2">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -296,6 +259,14 @@ export default function PurchasesPage() {
                 onChange={(e) => setQ(e.target.value)}
               />
             </div>
+            <Select value={supplierId} onChange={(e) => pickSupplier(e.target.value)}>
+              <option value="">All suppliers ({allCount} invoices)</option>
+              {suppliers.map((s) => (
+                <option key={s.id} value={String(s.id)}>
+                  {s.name} — {s.owed > 0 ? `owed ${formatCurrency(s.owed)}` : 'paid up'}
+                </option>
+              ))}
+            </Select>
             <Select value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)}>
               <option value="">All Payment Statuses</option>
               <option value="Unpaid">Unpaid</option>
@@ -327,7 +298,6 @@ export default function PurchasesPage() {
           <div className="rounded-b-xl border border-t-0 border-slate-200 bg-white">
             <Pagination {...pagination} onChange={setPage} />
           </div>
-        </section>
       </div>
 
       <PurchaseFormModal open={formOpen} onClose={() => setFormOpen(false)} onSaved={reload} />
@@ -361,32 +331,6 @@ export default function PurchasesPage() {
         onClose={() => setVoidItem(null)}
       />
     </div>
-  );
-}
-
-function SupplierItem({ active, onClick, avatar, name, sub, owed }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`mb-1 flex w-full items-center gap-3 rounded-xl border-l-4 px-3 py-2.5 text-left transition-colors ${
-        active ? 'border-brand-600 bg-brand-50' : 'border-transparent hover:bg-slate-50'
-      }`}
-    >
-      <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-          active ? 'bg-brand-600 text-white' : 'bg-neutral-900 text-white'
-        }`}
-      >
-        {avatar}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className={`block truncate text-sm font-semibold ${active ? 'text-brand-700' : 'text-slate-800'}`}>{name}</span>
-        <span className="block text-xs text-slate-400">{sub}</span>
-      </span>
-      <span className={`whitespace-nowrap text-right text-xs font-semibold ${owed > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
-        {owed > 0 ? formatCurrency(owed) : 'Paid up'}
-      </span>
-    </button>
   );
 }
 
