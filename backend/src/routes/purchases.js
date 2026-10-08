@@ -5,6 +5,8 @@ import {
   listPurchases,
   getPurchase,
   voidPurchase,
+  updatePurchase,
+  deletePurchase,
   addPurchasePayment,
   listPurchasePayments,
   reversePurchasePayment,
@@ -29,6 +31,8 @@ router.post('/bulk-payments', createBulkPayment);
 router.get('/bulk-payments/:bulkId', getBulkPayment);
 router.post('/', createPurchase);
 router.get('/:id', getPurchase);
+router.put('/:id', requireRole('admin', 'manager'), updatePurchase);
+router.delete('/:id', requireRole('admin', 'manager'), deletePurchase);
 router.post('/:id/void', requireRole('admin', 'manager'), voidPurchase);
 router.get('/:id/payments', listPurchasePayments);
 router.post('/:id/payments', addPurchasePayment);

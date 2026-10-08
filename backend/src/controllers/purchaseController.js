@@ -345,6 +345,99 @@ export const voidPurchase = asyncHandler(async (req, res) => {
   res.json({ success: true, data: toDTO(result) });
 });
 
+// PUT /api/purchases/:id -- corrects an invoice's supplier, supplier
+// invoice number, total, date and notes (admin/manager, enforced at the
+// route). Money already paid is never touched: the total cannot go below
+// what has been paid, and the balance / payment status follow the new
+// total. The supplier's running "total spent" moves with the invoice.
+export const updatePurchase = asyncHandler(async (req, res) => {
+  const { supplierId, supplierInvoiceNumber = '', notes = '' } = req.body;
+  if (typeof supplierInvoiceNumber !== 'string' || supplierInvoiceNumber.length > 100) throw new ApiError(400, 'Supplier invoice number must be text of at most 100 characters.');
+  if (String(notes).length > 1000) throw new ApiError(400, 'Notes are too long (1000 characters max).');
+  if (!supplierId) throw new ApiError(400, 'Please select a supplier.');
+  if (!Number.isFinite(Number(req.body.amount)) || toCents(req.body.amount) <= 0) throw new ApiError(400, 'Total amount must be greater than zero.');
+  const totalCostCents = toCents(req.body.amount);
+  const purchaseDate = req.body.purchaseDate ? parsePaymentDate(req.body.purchaseDate) : null;
+
+  const result = await runInTransaction(async (session) => {
+    const purchase = await Purchase.findById(req.params.id).session(session);
+    if (!purchase) throw new ApiError(404, 'Purchase not found.');
+    if (purchase.status === 'voided') throw new ApiError(409, 'A voided purchase cannot be edited.');
+    if (totalCostCents < purchase.paidAmountCents) {
+      throw new ApiError(400, `Total cannot be less than what has already been paid (${fromCents(purchase.paidAmountCents).toFixed(2)}).`);
+    }
+    const supplier = await Supplier.findById(supplierId).session(session);
+    if (!supplier) throw new ApiError(404, 'Supplier not found.');
+
+    const before = { supplier: purchase.supplierName, supplierInvoiceNumber: purchase.supplierInvoiceNumber, total: fromCents(purchase.totalCostCents) };
+    // Keep each supplier's "total spent" in step with the invoice.
+    const oldSupplier = String(purchase.supplier) === String(supplier._id) ? supplier : await Supplier.findById(purchase.supplier).session(session);
+    if (oldSupplier) {
+      oldSupplier.totalSpentCents -= purchase.totalCostCents;
+      if (oldSupplier !== supplier) await oldSupplier.save({ session });
+    }
+    supplier.totalSpentCents += totalCostCents;
+    await supplier.save({ session });
+
+    purchase.supplier = supplier._id;
+    purchase.supplierName = supplier.name;
+    purchase.supplierInvoiceNumber = supplierInvoiceNumber.trim();
+    purchase.totalCostCents = totalCostCents;
+    purchase.balanceCents = totalCostCents - purchase.paidAmountCents;
+    purchase.notes = String(notes).trim();
+    if (purchaseDate) purchase.purchaseDate = purchaseDate;
+    await purchase.save({ session });
+    return { purchase, before };
+  });
+
+  await logAudit({
+    user: req.user,
+    action: 'purchase.edit',
+    entityType: 'Purchase',
+    entityId: result.purchase._id,
+    details: { purchaseNumber: result.purchase.purchaseNumber, before: result.before, after: { supplier: result.purchase.supplierName, supplierInvoiceNumber: result.purchase.supplierInvoiceNumber, total: fromCents(result.purchase.totalCostCents) } },
+  });
+  res.json({ success: true, data: toDTO(result.purchase) });
+});
+
+// DELETE /api/purchases/:id -- permanently removes an invoice
+// (admin/manager). Only allowed when no money and no stock depend on it:
+// any active payment must be deleted first (that refunds its account), or
+// the invoice voided instead. Deleted payment records left on it are
+// removed with it; the audit log keeps what was deleted.
+export const deletePurchase = asyncHandler(async (req, res) => {
+  const result = await runInTransaction(async (session) => {
+    const purchase = await Purchase.findById(req.params.id).session(session);
+    if (!purchase) throw new ApiError(404, 'Purchase not found.');
+    const activePayments = await PurchasePayment.countDocuments({ purchase: purchase._id, status: 'POSTED' }).session(session);
+    if (activePayments > 0) {
+      throw new ApiError(409, `This invoice has ${activePayments} payment(s). Delete them in its Payment History first (the money goes back to the account), or Void the invoice instead.`);
+    }
+    if (await InventoryLot.exists({ purchase: purchase._id }).session(session)) {
+      throw new ApiError(409, 'Stock was received on this invoice, so it cannot be deleted. Void it instead.');
+    }
+    if (purchase.status !== 'voided') {
+      const supplier = await Supplier.findById(purchase.supplier).session(session);
+      if (supplier) {
+        supplier.totalSpentCents -= purchase.totalCostCents;
+        await supplier.save({ session });
+      }
+    }
+    await PurchasePayment.deleteMany({ purchase: purchase._id }, { session });
+    await purchase.deleteOne({ session });
+    return purchase;
+  });
+
+  await logAudit({
+    user: req.user,
+    action: 'purchase.delete',
+    entityType: 'Purchase',
+    entityId: result._id,
+    details: { purchaseNumber: result.purchaseNumber, supplier: result.supplierName, supplierInvoiceNumber: result.supplierInvoiceNumber, total: fromCents(result.totalCostCents), status: result.status },
+  });
+  res.json({ success: true, data: { id: result._id } });
+});
+
 // POST /api/purchases/:id/payments -- records an additional payment toward
 // an Unpaid/Partial purchase's balance. Money leaves the selected Account
 // exactly like the initial payment does.

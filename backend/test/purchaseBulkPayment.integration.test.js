@@ -150,3 +150,50 @@ test('PAYMENT EDIT + DELETE -- corrections move money between accounts and recal
     await teardown(server);
   }
 });
+
+test('PURCHASE EDIT + DELETE -- total never below paid, supplier totals follow, delete only without payments/stock', { timeout: 90000 }, async () => {
+  const { server, request, asCashier } = await setup('pur_edit');
+  try {
+    const { supplier, evc, ids } = await abcPharma(request);
+    const other = await Supplier.create({ name: 'Other Supplier' });
+    const spentBefore = (await Supplier.findById(supplier.id)).totalSpentCents; // 1000 + 1000 + 4000 (voided one removed)
+
+    // Cashiers cannot edit or delete.
+    assert.equal((await asCashier(`/purchases/${ids[0]}`, { supplierId: supplier.id, amount: 10 }, 'PUT')).status, 403);
+    assert.equal((await asCashier(`/purchases/${ids[0]}`, null, 'DELETE')).status, 403);
+
+    // Edit: new supplier, total, number, date; supplier totals move with it.
+    const edited = await request(`/purchases/${ids[0]}`, { supplierId: other.id, supplierInvoiceNumber: 'NEW-1', amount: 1500, purchaseDate: '2026-10-01', notes: 'fixed' }, 'PUT');
+    assert.equal(edited.status, 200, JSON.stringify(edited));
+    assert.equal(edited.data.supplierName, 'Other Supplier');
+    assert.equal(edited.data.supplierInvoiceNumber, 'NEW-1');
+    assert.equal(edited.data.balanceDue, 1500);
+    assert.equal(edited.data.purchaseDate.slice(0, 10), '2026-10-01');
+    assert.equal((await Supplier.findById(supplier.id)).totalSpentCents, spentBefore - 100000);
+    assert.equal((await Supplier.findById(other.id)).totalSpentCents, 150000);
+
+    // Total can't go below what has been paid; voided invoices can't be edited.
+    const paid = await request(`/purchases/${ids[3]}/payments`, { amount: 500, paymentAccountId: evc.id });
+    assert.equal(paid.status, 201);
+    assert.equal((await request(`/purchases/${ids[3]}`, { supplierId: supplier.id, amount: 499 }, 'PUT')).status, 400);
+    const lowered = await request(`/purchases/${ids[3]}`, { supplierId: supplier.id, amount: 500 }, 'PUT');
+    assert.equal(lowered.data.paymentStatus, 'Paid');
+    assert.equal((await request(`/purchases/${ids[2]}`, { supplierId: supplier.id, amount: 10 }, 'PUT')).status, 409);
+
+    // Delete is refused while a payment is active; allowed once it is deleted.
+    const blocked = await request(`/purchases/${ids[3]}`, null, 'DELETE');
+    assert.equal(blocked.status, 409);
+    assert.match(blocked.message, /Payment History/);
+    await request(`/purchases/${ids[3]}/payments/${paid.data.payment.id}/reverse`, { reason: 'test' });
+    assert.equal((await request(`/purchases/${ids[3]}`, null, 'DELETE')).status, 200);
+    assert.equal(await Purchase.countDocuments({ _id: ids[3] }), 0);
+    assert.equal(await PurchasePayment.countDocuments({ purchase: ids[3] }), 0, 'its deleted payment records go with it');
+    assert.equal((await Supplier.findById(supplier.id)).totalSpentCents, spentBefore - 100000 - 400000);
+
+    // A voided invoice can be deleted too (its total was already taken off the supplier).
+    assert.equal((await request(`/purchases/${ids[2]}`, null, 'DELETE')).status, 200);
+    assert.equal((await Supplier.findById(supplier.id)).totalSpentCents, spentBefore - 100000 - 400000);
+  } finally {
+    await teardown(server);
+  }
+});

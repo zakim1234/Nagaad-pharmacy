@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Ban, Printer, Search, Percent } from 'lucide-react';
+import { Plus, Ban, Printer, Search, Percent, Pencil, Trash2 } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
-import { formatCurrency, formatDateTime } from '../../utils/format.js';
+import { formatCurrency, formatDate } from '../../utils/format.js';
 import PageHeader from '../../components/ui/PageHeader.jsx';
 import Button from '../../components/ui/Button.jsx';
 import { Input, Select } from '../../components/ui/Field.jsx';
@@ -15,8 +15,11 @@ import Badge from '../../components/ui/Badge.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import PurchaseFormModal from './PurchaseFormModal.jsx';
 import BulkPaymentModal from './BulkPaymentModal.jsx';
+import PurchaseEditModal from './PurchaseEditModal.jsx';
 
 const PAYMENT_STATUS_COLOR = { Unpaid: 'slate', Partial: 'amber', Paid: 'green' };
+const ACTION = 'flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50';
+const ACTION_DANGER = 'flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50';
 
 export default function PurchasesPage() {
   const toast = useToast();
@@ -33,6 +36,9 @@ export default function PurchasesPage() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [voidItem, setVoidItem] = useState(null);
   const [voiding, setVoiding] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [deleteItem, setDeleteItem] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -63,6 +69,20 @@ export default function PurchasesPage() {
       toast.error(err.friendlyMessage || 'Could not void this purchase.');
     } finally {
       setVoiding(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await client.delete(`/purchases/${deleteItem.id}`);
+      toast.success(`${deleteItem.purchaseNumber} deleted.`);
+      setDeleteItem(null);
+      load();
+    } catch (err) {
+      toast.error(err.friendlyMessage || 'Could not delete this invoice.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -118,7 +138,7 @@ export default function PurchasesPage() {
             items.map((p) => (
               <tr key={p.id} className="hover:bg-slate-50">
                 <Td>
-                  <Link to={`/purchases/${p.id}`} className="font-medium text-indigo-600 hover:underline">{p.purchaseNumber}</Link>
+                  <Link to={`/purchases/${p.id}`} className="whitespace-nowrap font-medium text-indigo-600 hover:underline">{p.purchaseNumber}</Link>
                 </Td>
                 <Td>{p.supplierInvoiceNumber || '—'}</Td>
                 <Td>{p.supplierName}</Td>
@@ -129,18 +149,28 @@ export default function PurchasesPage() {
                 <Td>
                   <Badge color={PAYMENT_STATUS_COLOR[p.paymentStatus]}>{p.paymentStatus}</Badge>
                 </Td>
-                <Td>{formatDateTime(p.createdAt)}</Td>
+                <Td className="whitespace-nowrap">{formatDate(p.createdAt)}</Td>
                 <Td>
                   <Badge color={p.status === 'voided' ? 'red' : 'green'}>{p.status === 'voided' ? 'Voided' : 'Completed'}</Badge>
                 </Td>
                 <Td>
-                  <div className="flex justify-end gap-1">
-                    <Link to={`/purchases/${p.id}/receipt`} className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600" title="Print">
-                      <Printer className="h-4 w-4" />
+                  <div className="flex justify-end gap-1.5">
+                    <Link to={`/purchases/${p.id}/receipt`} className={ACTION} title="Print">
+                      <Printer className="h-3.5 w-3.5" /> Print
                     </Link>
                     {canVoid && p.status !== 'voided' && (
-                      <button onClick={() => setVoidItem(p)} className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600" title="Void purchase">
-                        <Ban className="h-4 w-4" />
+                      <button onClick={() => setEditItem(p)} className={ACTION}>
+                        <Pencil className="h-3.5 w-3.5" /> Edit
+                      </button>
+                    )}
+                    {canVoid && p.status !== 'voided' && (
+                      <button onClick={() => setVoidItem(p)} className={ACTION} title="Void: reverses the invoice and refunds what was paid">
+                        <Ban className="h-3.5 w-3.5" /> Void
+                      </button>
+                    )}
+                    {canVoid && (
+                      <button onClick={() => setDeleteItem(p)} className={ACTION_DANGER}>
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
                       </button>
                     )}
                   </div>
@@ -155,6 +185,17 @@ export default function PurchasesPage() {
       </div>
 
       <PurchaseFormModal open={formOpen} onClose={() => setFormOpen(false)} onSaved={load} />
+      <PurchaseEditModal purchase={editItem} onClose={() => setEditItem(null)} onSaved={load} />
+      <ConfirmDialog
+        open={!!deleteItem}
+        title="Delete Purchase Invoice"
+        message={`Ma hubtaa inaad tirtirto ${deleteItem?.purchaseNumber} (${formatCurrency(deleteItem?.totalCost)})? Falkan dib looma celin karo. (Only possible when it has no active payments; otherwise delete its payments first or use Void.)`}
+        confirmLabel="Confirm Delete"
+        variant="danger"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onClose={() => setDeleteItem(null)}
+      />
       <BulkPaymentModal
         open={bulkOpen}
         onClose={() => setBulkOpen(false)}
