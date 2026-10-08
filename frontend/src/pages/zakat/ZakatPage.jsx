@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Calculator as CalculatorIcon, History as HistoryIcon, CheckCircle2, Pencil, Trash2 } from 'lucide-react';
+import { Calculator as CalculatorIcon, History as HistoryIcon, CheckCircle2, Pencil, Trash2, Moon, Wallet, Package, Users, Building2, Truck } from 'lucide-react';
 import client from '../../api/client.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
@@ -18,17 +18,6 @@ import { Table, THead, Th, TBody, Td, TableEmpty, TableLoading } from '../../com
 function today() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-function SummaryRow({ label, value, tone = '', bold = false, indent = false, negative = false }) {
-  return (
-    <div className={`flex items-center justify-between border-b border-slate-100 py-2 text-sm ${bold ? 'font-bold' : ''}`}>
-      <span className={indent ? 'pl-5 text-slate-500' : 'text-slate-700'}>{label}</span>
-      <span className={`tabular-nums ${tone || 'text-slate-900'}`}>
-        {negative ? `− ${value}` : value}
-      </span>
-    </div>
-  );
 }
 
 function ZakatCalculator({ onConfirmed }) {
@@ -76,111 +65,184 @@ function ZakatCalculator({ onConfirmed }) {
     }
   };
 
+  const modeCard = (value, title, text) => (
+    <button
+      type="button"
+      onClick={() => setDeductionMode(value)}
+      className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors ${
+        deductionMode === value ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-slate-200 hover:bg-slate-50'
+      }`}
+    >
+      <span
+        className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
+          deductionMode === value ? 'border-brand-600' : 'border-slate-300'
+        }`}
+      >
+        {deductionMode === value && <span className="h-2 w-2 rounded-full bg-brand-600" />}
+      </span>
+      <span>
+        <span className="block text-sm font-semibold text-slate-900">{title}</span>
+        <span className="block text-xs text-slate-500">{text}</span>
+      </span>
+    </button>
+  );
+
   return (
     <div className="space-y-4">
-      <Card>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormField label="Zakat Calculation Date">
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </FormField>
-          <FormField label="Zakat Rate (%)">
-            <Input type="number" min="0" max="100" step="0.1" value={rate} onChange={(e) => setRate(e.target.value)} />
-          </FormField>
-          <div className="flex items-end pb-2.5">
-            <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input type="checkbox" checked={includeFixedAssets} onChange={(e) => setIncludeFixedAssets(e.target.checked)} />
-              Include Fixed Assets in Zakat calculation
-            </label>
+      {/* Hero: the answer first, with the settings that change it. */}
+      <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 text-white shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-6 px-6 pt-5">
+          <div>
+            <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-neutral-400">
+              <Moon className="h-3.5 w-3.5" /> Zakat due{preview ? ` · ${preview.hijriYear} AH` : ''}
+            </p>
+            <p className="mt-1 text-4xl font-bold tracking-tight">{preview ? formatCurrency(preview.zakatDue) : '—'}</p>
+            <p className="mt-1 text-sm text-neutral-400">
+              {preview ? (
+                <>
+                  {preview.ratePct}% of net zakatable wealth <span className="font-semibold text-white">{formatCurrency(preview.netZakatableWealth)}</span>
+                </>
+              ) : (
+                'Calculating…'
+              )}
+            </p>
           </div>
+          {loading && preview && <span className="text-xs text-neutral-400">Updating…</span>}
         </div>
-      </Card>
+        <div className="mt-5 grid grid-cols-1 gap-3 border-t border-white/10 bg-white/5 px-6 py-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+          <label className="block">
+            <span className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-neutral-400">Calculation date</span>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none [color-scheme:dark] focus:border-brand-400"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-neutral-400">Zakat rate (%)</span>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+              className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none focus:border-brand-400"
+            />
+          </label>
+          <label className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-white/15 px-3 py-2 text-sm">
+            <input type="checkbox" className="h-4 w-4 accent-brand-600" checked={includeFixedAssets} onChange={(e) => setIncludeFixedAssets(e.target.checked)} />
+            Include Fixed Assets
+          </label>
+        </div>
+      </div>
 
       {loading && !preview ? (
         <PageSpinner />
       ) : preview ? (
-        <>
-          <Card title="Zakatable Assets">
-            <div className="max-w-lg">
-              <SummaryRow label="Cash & Bank Balances (Accounts)" value={formatCurrency(preview.assets.cash)} />
-              <SummaryRow label="Inventory Value (Stock)" value={formatCurrency(preview.assets.inventory)} />
-              <SummaryRow label="Accounts Receivable (Customer Debt)" value={formatCurrency(preview.assets.receivable)} />
-              {includeFixedAssets && <SummaryRow label="Fixed Assets" value={formatCurrency(preview.assets.fixedAssets)} />}
-              <SummaryRow label="Total Zakatable Assets" value={formatCurrency(preview.assets.total)} bold />
-              <div className="pt-2" />
-              <SummaryRow label="Accounts Payable (Supplier Debt)" value={formatCurrency(preview.liabilities.payable)} negative tone="text-rose-600" />
-              <SummaryRow label="Net Zakatable Wealth" value={formatCurrency(preview.netZakatableWealth)} bold />
-              <div className="pt-2" />
-              <SummaryRow label={`Zakat Due (${preview.ratePct}%)`} value={formatCurrency(preview.zakatDue)} bold tone="text-emerald-700" />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+          {/* How it was worked out */}
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-5 py-3.5">
+              <h3 className="text-sm font-semibold text-slate-900">How it is calculated</h3>
+              <p className="text-xs text-slate-400">What the business owns, minus what it owes, times the rate.</p>
             </div>
-            <p className="mt-2 text-xs text-slate-400">
-              Approximate Hijri year for this date: {preview.hijriYear} AH. Fixed Assets aren't included by default -- most fatwas treat trade goods
-              only.
+            <div className="space-y-1 p-3">
+              <p className="px-2 pt-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Zakatable assets</p>
+              <CalcLine icon={Wallet} label="Cash & bank balances" hint="All accounts" value={preview.assets.cash} />
+              <CalcLine icon={Package} label="Inventory value" hint="Stock at cost" value={preview.assets.inventory} />
+              <CalcLine icon={Users} label="Accounts receivable" hint="Customer debt" value={preview.assets.receivable} />
+              {includeFixedAssets && <CalcLine icon={Building2} label="Fixed assets" hint="Included by choice" value={preview.assets.fixedAssets} />}
+              <div className="mx-2 flex items-center justify-between border-t border-slate-200 pt-2 pb-1 text-sm font-bold text-slate-900">
+                <span>Total zakatable assets</span>
+                <span className="tabular-nums">{formatCurrency(preview.assets.total)}</span>
+              </div>
+
+              <p className="px-2 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Less what is owed</p>
+              <CalcLine icon={Truck} label="Accounts payable" hint="Supplier debt" value={preview.liabilities.payable} minus />
+
+              <div className="mt-3 flex items-center justify-between rounded-xl bg-neutral-100 px-4 py-3">
+                <span className="text-sm font-semibold text-slate-700">Net zakatable wealth</span>
+                <span className="text-lg font-bold tabular-nums text-slate-900">{formatCurrency(preview.netZakatableWealth)}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl bg-brand-600 px-4 py-3 text-white">
+                <span className="text-sm font-semibold">× {preview.ratePct}% = Zakat due</span>
+                <span className="text-xl font-bold tabular-nums">{formatCurrency(preview.zakatDue)}</span>
+              </div>
+            </div>
+            <p className="border-t border-slate-100 px-5 py-2.5 text-[11px] text-slate-400">
+              Approximate Hijri year for this date: {preview.hijriYear} AH. Fixed Assets aren't included by default — most fatwas treat trade goods only.
             </p>
-          </Card>
+          </div>
 
-          {preview.breakdown.length > 0 && (
-            <Card title="Zakat Breakdown by Partner">
-              <Table>
-                <THead>
-                  <tr>
-                    <Th>Partner</Th>
-                    <Th>Equity %</Th>
-                    <Th>Zakat Share</Th>
-                  </tr>
-                </THead>
-                <TBody>
-                  {preview.breakdown.map((b) => (
-                    <tr key={b.partnerId}>
-                      <Td className="font-medium text-slate-900">{b.partnerName}</Td>
-                      <Td>{b.equityPct}%</Td>
-                      <Td>{formatCurrency(b.share)}</Td>
-                    </tr>
-                  ))}
-                  <tr className="font-bold">
-                    <Td>Total Zakat Due</Td>
-                    <Td />
-                    <Td>{formatCurrency(preview.zakatDue)}</Td>
-                  </tr>
-                </TBody>
-              </Table>
-            </Card>
-          )}
-
-          <Card title="Confirm Zakat">
-            <div className="max-w-xl space-y-4">
-              <fieldset>
-                <legend className="text-sm font-medium text-slate-700">How will Zakat be paid?</legend>
-                <div className="mt-2 space-y-2 text-sm text-slate-700">
-                  <label className="flex items-start gap-2">
-                    <input type="radio" name="mode" className="mt-0.5" checked={deductionMode === 'AUTO'} onChange={() => setDeductionMode('AUTO')} />
-                    <span>
-                      <strong>Deduct automatically</strong> from an account, as an Expense (category "Zakat").
-                    </span>
-                  </label>
-                  <label className="flex items-start gap-2">
-                    <input type="radio" name="mode" className="mt-0.5" checked={deductionMode === 'MANUAL'} onChange={() => setDeductionMode('MANUAL')} />
-                    <span>
-                      <strong>Just record it</strong> -- each partner pays their own share separately; no money moves in the system.
-                    </span>
-                  </label>
+          <div className="space-y-4">
+            {preview.breakdown.length > 0 && (
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="border-b border-slate-100 px-5 py-3.5">
+                  <h3 className="text-sm font-semibold text-slate-900">Share by partner</h3>
                 </div>
-              </fieldset>
-              {deductionMode === 'AUTO' && (
-                <FormField label="Payment Account" required>
-                  <AccountSelect value={paymentAccountId} onChange={setPaymentAccountId} placeholder="Select account..." />
+                <ul className="divide-y divide-slate-100">
+                  {preview.breakdown.map((b) => (
+                    <li key={b.partnerId} className="px-5 py-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-slate-800">{b.partnerName}</span>
+                        <span className="font-bold tabular-nums text-slate-900">{formatCurrency(b.share)}</span>
+                      </div>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+                          <div className="h-full rounded-full bg-neutral-900" style={{ width: `${Math.min(100, b.equityPct)}%` }} />
+                        </div>
+                        <span className="w-12 text-right text-xs text-slate-500">{b.equityPct}%</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 px-5 py-3.5">
+                <h3 className="text-sm font-semibold text-slate-900">Confirm Zakat</h3>
+                <p className="text-xs text-slate-400">How will it be paid?</p>
+              </div>
+              <div className="space-y-3 p-5">
+                {modeCard('AUTO', 'Deduct automatically', 'Taken from an account as an Expense (category "Zakat").')}
+                {modeCard('MANUAL', 'Just record it', 'Each partner pays their own share; no money moves in the system.')}
+                {deductionMode === 'AUTO' && (
+                  <FormField label="Payment Account" required>
+                    <AccountSelect value={paymentAccountId} onChange={setPaymentAccountId} placeholder="Select account..." />
+                  </FormField>
+                )}
+                <FormField label="Note">
+                  <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" />
                 </FormField>
-              )}
-              <FormField label="Note">
-                <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" />
-              </FormField>
-              <Button size="lg" loading={confirming} disabled={!(preview.zakatDue > 0)} onClick={confirm}>
-                <CheckCircle2 className="h-4 w-4" /> Confirm {formatCurrency(preview.zakatDue)} Zakat
-              </Button>
-              {!(preview.zakatDue > 0) && <p className="text-xs text-slate-400">Zakat due is zero -- nothing to confirm for this date/rate.</p>}
+                <Button size="lg" className="w-full justify-center" loading={confirming} disabled={!(preview.zakatDue > 0)} onClick={confirm}>
+                  <CheckCircle2 className="h-4 w-4" /> Confirm {formatCurrency(preview.zakatDue)} Zakat
+                </Button>
+                {!(preview.zakatDue > 0) && <p className="text-center text-xs text-slate-400">Zakat due is zero — nothing to confirm for this date/rate.</p>}
+              </div>
             </div>
-          </Card>
-        </>
+          </div>
+        </div>
       ) : null}
+    </div>
+  );
+}
+
+function CalcLine({ icon: Icon, label, hint, value, minus = false }) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-slate-50">
+      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${minus ? 'bg-brand-50 text-brand-600' : 'bg-neutral-100 text-neutral-700'}`}>
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium text-slate-800">{label}</span>
+        <span className="block text-xs text-slate-400">{hint}</span>
+      </span>
+      <span className={`text-sm font-semibold tabular-nums ${minus ? 'text-brand-600' : value < 0 ? 'text-brand-600' : 'text-slate-900'}`}>
+        {minus ? `− ${formatCurrency(value)}` : formatCurrency(value)}
+      </span>
     </div>
   );
 }
