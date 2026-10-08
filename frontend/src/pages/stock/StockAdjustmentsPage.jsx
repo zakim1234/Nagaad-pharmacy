@@ -77,7 +77,7 @@ export default function StockAdjustmentsPage() {
         {canAdjust && (
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setCountOpen(true)}>
-              <ClipboardCheck className="h-4 w-4" /> Count All Items
+              <ClipboardCheck className="h-4 w-4" /> Adjust All Items
             </Button>
             <Button onClick={() => setModalOpen(true)}>
               <Plus className="h-4 w-4" /> New Adjustment

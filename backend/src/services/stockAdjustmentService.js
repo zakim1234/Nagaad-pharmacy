@@ -127,9 +127,9 @@ export async function createStockAdjustment(session, { itemId, direction, quanti
   return adjustment;
 }
 
-// A whole-stock count: many items adjusted in one go. Each row gives the
-// quantity actually counted; rows whose count equals the system quantity
-// are skipped. Every changed item gets its own adjustment (same rules as a
+// A whole-stock adjustment: many items adjusted in one go. Each row is
+// either a counted quantity (rows matching the system are skipped) or an
+// exact decrease/increase. Every changed item gets its own adjustment (same rules as a
 // single one: pending-invoice units are protected, batches are tracked),
 // all sharing one count number, inside the caller's transaction -- so one
 // bad row means nothing at all is saved.
@@ -149,23 +149,37 @@ export async function createStockCount(session, { rows, note = '', user }) {
   const countNumber = `BADJ-${new Date().getFullYear()}-${String(seq).padStart(6, '0')}`;
   const adjustments = [];
   for (const row of rows) {
-    const counted = Number(row.countedQuantity);
     const item = await InventoryItem.findById(row.itemId).session(session);
-    if (!item) throw new ApiError(404, 'One of the counted items no longer exists.');
-    if (!Number.isSafeInteger(counted) || counted < 0) throw new ApiError(400, `"${item.name}": the counted quantity must be a whole number, 0 or more.`);
-    const diff = counted - item.quantity;
-    if (diff === 0) continue;
-    const direction = diff < 0 ? 'DECREASE' : 'INCREASE';
-    const reason = row.reason || 'COUNT_CORRECTION';
+    if (!item) throw new ApiError(404, 'One of the items no longer exists.');
+    // Two kinds of row: a counted quantity (the difference is applied), or an
+    // explicit decrease/increase of an exact quantity (applied as typed, even
+    // if the stock moved while the sheet was open).
+    let direction;
+    let quantity;
+    if (row.direction) {
+      if (!['DECREASE', 'INCREASE'].includes(row.direction)) throw new ApiError(400, `"${item.name}": choose decrease or increase.`);
+      quantity = Number(row.quantity);
+      if (!Number.isSafeInteger(quantity) || quantity < 0) throw new ApiError(400, `"${item.name}": the quantity must be a whole number.`);
+      if (quantity === 0) continue;
+      direction = row.direction;
+    } else {
+      const counted = Number(row.countedQuantity);
+      if (!Number.isSafeInteger(counted) || counted < 0) throw new ApiError(400, `"${item.name}": the counted quantity must be a whole number, 0 or more.`);
+      const diff = counted - item.quantity;
+      if (diff === 0) continue;
+      direction = diff < 0 ? 'DECREASE' : 'INCREASE';
+      quantity = Math.abs(diff);
+    }
+    const reason = row.reason || (row.direction === 'DECREASE' ? 'DAMAGED' : row.direction === 'INCREASE' ? 'FOUND' : 'COUNT_CORRECTION');
     const allowed = direction === 'DECREASE' ? DECREASE_REASONS : INCREASE_REASONS;
     if (!allowed.includes(reason)) throw new ApiError(400, `"${item.name}": that reason does not fit ${direction === 'DECREASE' ? 'a decrease' : 'an increase'}.`);
     const rowNote = String(row.note ?? '').trim() || cleanNote;
     if (reason === 'OTHER' && !rowNote) throw new ApiError(400, `"${item.name}": write a note explaining "Other".`);
     adjustments.push(
-      await createStockAdjustment(session, { itemId: item._id, direction, quantity: Math.abs(diff), reason, note: rowNote, user, countNumber })
+      await createStockAdjustment(session, { itemId: item._id, direction, quantity, reason, note: rowNote, user, countNumber })
     );
   }
-  if (adjustments.length === 0) throw new ApiError(400, 'Every counted quantity matches the system -- nothing to adjust.');
+  if (adjustments.length === 0) throw new ApiError(400, 'Nothing to adjust: every row is empty or matches the system.');
   return { countNumber, adjustments };
 }
 

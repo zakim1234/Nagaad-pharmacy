@@ -207,3 +207,37 @@ test('STOCK COUNT -- many items in one go, unchanged skipped, all-or-nothing, on
     await teardown(server);
   }
 });
+
+test('STOCK COUNT -- bulk decrease and increase apply exact quantities to many items', { timeout: 90000 }, async () => {
+  const { server, request } = await setup('adj_bulk_dirs');
+  try {
+    const { item: a } = await stockedItem(); // 15 units
+    const b = await InventoryItem.create({ name: 'Biotin', itemCode: 'BIO-D', quantity: 10, costPriceCents: 50, sellingPriceCents: 100 });
+
+    const dec = await request('/stock-adjustments/count', {
+      rows: [
+        { itemId: a.id, direction: 'DECREASE', quantity: 3, reason: 'EXPIRED' },
+        { itemId: b.id, direction: 'DECREASE', quantity: 2 }, // default reason: Damaged
+      ],
+    });
+    assert.equal(dec.status, 201, JSON.stringify(dec));
+    assert.equal(dec.data.adjusted, 2);
+    assert.equal((await InventoryItem.findById(a.id)).quantity, 12);
+    assert.equal((await InventoryItem.findById(b.id)).quantity, 8);
+    assert.deepEqual(dec.data.adjustments.map((x) => x.reason).sort(), ['DAMAGED', 'EXPIRED']);
+
+    const inc = await request('/stock-adjustments/count', { rows: [{ itemId: a.id, direction: 'INCREASE', quantity: 4 }, { itemId: b.id, direction: 'INCREASE', quantity: 0 }] });
+    assert.equal(inc.status, 201, JSON.stringify(inc));
+    assert.equal(inc.data.adjusted, 1, 'zero rows are skipped');
+    assert.equal(inc.data.adjustments[0].reason, 'FOUND');
+    assert.equal((await InventoryItem.findById(a.id)).quantity, 16);
+
+    // More than is free -> refused, nothing saved.
+    const tooMuch = await request('/stock-adjustments/count', { rows: [{ itemId: a.id, direction: 'DECREASE', quantity: 1 }, { itemId: b.id, direction: 'DECREASE', quantity: 9 }] });
+    assert.equal(tooMuch.status, 409);
+    assert.equal((await InventoryItem.findById(a.id)).quantity, 16);
+    assert.equal((await request('/stock-adjustments/count', { rows: [{ itemId: a.id, direction: 'SIDEWAYS', quantity: 1 }] })).status, 400);
+  } finally {
+    await teardown(server);
+  }
+});
