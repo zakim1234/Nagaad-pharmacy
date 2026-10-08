@@ -12,16 +12,25 @@ export const DEFAULT_EXPENSE_CATEGORIES = [
   'Office Supplies',
   'Security & Hygiene',
   'Refreshments',
+  'Water',
+  'Electric',
   'Other',
 ];
 
 const COLLATION = { locale: 'en', strength: 2 }; // case-insensitive
 
+// Seeds the defaults on first use, and adds any default introduced later
+// (e.g. Water, Electric) to a database that was seeded before it existed.
+// Categories are never deleted, so this can never bring back one an admin
+// removed. When something was added, the defaults are put back in their
+// listed order, always ahead of custom categories (which keep their own
+// order after them, as before).
 async function ensureSeeded() {
-  if (await ExpenseCategory.estimatedDocumentCount()) return;
+  const existing = await ExpenseCategory.find({ name: { $in: DEFAULT_EXPENSE_CATEGORIES } }).collation(COLLATION).select('name');
+  if (existing.length === DEFAULT_EXPENSE_CATEGORIES.length) return;
   await ExpenseCategory.bulkWrite(
     DEFAULT_EXPENSE_CATEGORIES.map((name, i) => ({
-      updateOne: { filter: { name }, update: { $setOnInsert: { name, sortOrder: i } }, upsert: true, collation: COLLATION },
+      updateOne: { filter: { name }, update: { $setOnInsert: { name }, $set: { sortOrder: i - 1000 } }, upsert: true, collation: COLLATION },
     }))
   );
 }

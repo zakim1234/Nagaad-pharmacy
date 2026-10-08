@@ -246,3 +246,28 @@ test('PRODUCT FIELDS -- generic name, manufacturer, batch, barcode and Minimum S
     await teardown(server);
   }
 });
+
+test('EXPENSE CATEGORIES -- Water and Electric appear on new and already-seeded databases, Other last, custom ones after', { timeout: 60000 }, async () => {
+  const { listExpenseCategories } = await import('../src/services/expenseCategoryService.js');
+  const ExpenseCategory = (await import('../src/models/ExpenseCategory.js')).default;
+  await mongoose.connect(`mongodb://127.0.0.1:27028/expense_cats_${Date.now()}?replicaSet=stocktest`);
+  try {
+    await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
+    const expected = ['Rent', 'Salaries', 'Labor', 'Transport', 'Fuel', 'Office Supplies', 'Security & Hygiene', 'Refreshments', 'Water', 'Electric', 'Other'];
+
+    // Brand-new database.
+    assert.deepEqual(await listExpenseCategories(), expected);
+
+    // A database seeded before Water/Electric existed, plus a custom category.
+    await ExpenseCategory.deleteMany({});
+    const old = ['Rent', 'Salaries', 'Labor', 'Transport', 'Fuel', 'Office Supplies', 'Security & Hygiene', 'Refreshments', 'Other'];
+    await ExpenseCategory.insertMany(old.map((name, i) => ({ name, sortOrder: i })));
+    await ExpenseCategory.create({ name: 'Zakat', sortOrder: 9 });
+    assert.deepEqual(await listExpenseCategories(), [...expected, 'Zakat']);
+    assert.equal(await ExpenseCategory.countDocuments(), 12, 'nothing duplicated');
+    assert.deepEqual(await listExpenseCategories(), [...expected, 'Zakat'], 'stable on the next read');
+  } finally {
+    await mongoose.connection.dropDatabase();
+    await mongoose.disconnect();
+  }
+});
