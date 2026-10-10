@@ -6,7 +6,8 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 import { printReport } from '../../utils/printReport.js';
 import { BUSINESS } from '../../constants/business.js';
-import logo from '../../images/logo.png';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
+import DocHeader, { DocInfo, DocSummary, DocFooter, DOC_TH, DOC_THEAD_ROW, docRow } from '../../components/docs/DocHeader.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Card from '../../components/ui/Card.jsx';
 import PageHeader from '../../components/ui/PageHeader.jsx';
@@ -72,7 +73,7 @@ export default function QuotationDetailPage() {
     <Link className="text-sm text-brand-700 no-print" to="/quotations">← Quotations</Link>
     <div className="no-print"><PageHeader title={id ? quotation?.quotationNumber : 'New Quotation'} actions={<div className="flex flex-wrap gap-2">
       {editing ? <><Button onClick={save} loading={busy}>Save Quotation</Button>{id && <Button variant="secondary" disabled={busy} onClick={() => { fill(quotation); setEditing(false); }}>Cancel Edit</Button>}</> : <>
-        <Button variant="secondary" onClick={() => printReport('portrait')}>Print</Button>
+        <SharePdfButton fileName={`Quotation-${quotation?.quotationNumber}`} phone={quotation?.customerPhone} message={`${BUSINESS.name} — Quotation ${quotation?.quotationNumber}: ${formatCurrency(quotation?.grandTotal || 0)}`} /><Button variant="secondary" onClick={() => printReport('portrait')}>Print</Button>
         {quotation?.status === 'Pending' && <><Button variant="secondary" disabled={busy} onClick={() => setEditing(true)}>Edit</Button><Button disabled={busy} onClick={() => changeStatus('Accepted')}>Accept</Button></>}
         {['Pending', 'Accepted'].includes(quotation?.status) && <Button variant="secondary" disabled={busy} onClick={() => changeStatus('Rejected')}>Reject</Button>}
         {quotation?.status === 'Accepted' && <Link to={`/pos/new?quotation=${id}`}><Button>Convert to Invoice</Button></Link>}
@@ -86,14 +87,43 @@ export default function QuotationDetailPage() {
         <QuotationItemsGrid items={items} onAddLine={addLine} onChangeLine={changeLine} onRemoveLine={itemId => setItems(rows => rows.filter(r => r.itemId !== itemId))} subtotal={subtotal} discount={discount} onDiscountChange={setDiscount} totalDiscount={totalDiscount} />
         <FormField label="Notes"><Textarea maxLength={4000} value={notes} onChange={e => setNotes(e.target.value)} /></FormField>
       </div></Card>
-    </> : quotation && <div id="print-area" className="mx-auto max-w-4xl rounded-lg border border-slate-200 bg-white p-4 sm:p-8 print:border-0 print:p-0">
-      <div className="text-center"><img src={logo} alt={BUSINESS.name} className="mx-auto h-16 w-auto" /><h1 className="font-bold">{BUSINESS.name}</h1><p className="text-xs">{BUSINESS.addressLine} · {BUSINESS.phone}</p><h2 className="my-4 text-xl font-bold">QUOTATION</h2></div>
-      <div className="mb-4 flex flex-wrap justify-between gap-4 text-sm"><div><strong>{quotation.customerName}</strong><p>{quotation.customerPhone}</p></div><div><strong>{quotation.quotationNumber}</strong><p>Date: {formatDate(quotation.date)}</p><p>Expiry Date: {formatDate(quotation.expiryDate)}</p><p>Status: {quotation.status}</p></div></div>
-      <div className="overflow-x-auto print:overflow-visible"><table className="w-full text-left text-xs sm:text-sm"><thead><tr className="border-y border-slate-300">{['NO', 'ITEM', 'QTY', 'UNIT PRICE', 'DISCOUNT', 'AMOUNT'].map(h => <th className="p-2" key={h}>{h}</th>)}</tr></thead><tbody>{quotation.items.map((i, index) => <tr key={i.itemId} className="border-b border-slate-100"><td className="p-2">{index + 1}</td><td className="p-2">{i.name}</td><td className="p-2">{i.quantity}</td><td className="p-2">{formatCurrency(i.unitPrice)}</td><td className="p-2">{formatCurrency(i.discount)}</td><td className="p-2">{formatCurrency(i.lineTotal)}</td></tr>)}</tbody></table></div>
-      <div className="ml-auto mt-4 max-w-xs space-y-2 text-sm"><p className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(quotation.subtotal)}</span></p><p className="flex justify-between"><span>Total Discount</span><span>{formatCurrency(quotation.totalDiscount)}</span></p><p className="flex justify-between border-t pt-2 font-bold"><span>Grand Total</span><span>{formatCurrency(quotation.grandTotal)}</span></p></div>
-      {quotation.notes && <p className="mt-6 whitespace-pre-wrap break-words text-sm">Notes: {quotation.notes}</p>}
-      {quotation.convertedInvoice && <p className="mt-4 text-sm">Converted to: <Link className="text-brand-700 underline" to={`/receipt/${quotation.convertedInvoice}`}>{quotation.convertedInvoiceNumber}</Link></p>}
-      <p className="mt-8 border-t pt-3 text-center text-xs text-slate-500">Thank you for your business. This quotation is valid through its expiry date and is not a payment receipt.</p>
+    </> : quotation && <div id="print-area" className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+      <DocHeader title="Quotation" meta={<span className="font-semibold">{quotation.quotationNumber}</span>} />
+      <DocInfo
+        left={['Prepared for', quotation.customerName, quotation.customerPhone]}
+        right={['Date', formatDate(quotation.date), `Valid until ${formatDate(quotation.expiryDate)}`, `Status: ${quotation.status}`]}
+      />
+      <table className="mt-4 w-full border-collapse text-xs sm:text-sm">
+        <thead>
+          <tr className={`${DOC_THEAD_ROW} text-left`}>
+            <th className={`${DOC_TH} w-10`}>#</th>
+            <th className={DOC_TH}>Item</th>
+            <th className={`${DOC_TH} text-center`}>Qty</th>
+            <th className={`${DOC_TH} text-right`}>Unit price</th>
+            <th className={`${DOC_TH} text-right`}>Discount</th>
+            <th className={`${DOC_TH} text-right`}>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {quotation.items.map((i, index) => (
+            <tr key={i.itemId} className={docRow(index)}>
+              <td className="px-2 py-2 text-neutral-500">{index + 1}</td>
+              <td className="px-2 py-2 font-medium">{i.name}</td>
+              <td className="px-2 py-2 text-center">{i.quantity}</td>
+              <td className="px-2 py-2 text-right tabular-nums">{formatCurrency(i.unitPrice)}</td>
+              <td className="px-2 py-2 text-right tabular-nums">{i.discount > 0 ? formatCurrency(i.discount) : '—'}</td>
+              <td className="px-2 py-2 text-right font-semibold tabular-nums">{formatCurrency(i.lineTotal)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <DocSummary
+        lines={[['Subtotal', formatCurrency(quotation.subtotal)], quotation.totalDiscount > 0 && ['Total discount', `-${formatCurrency(quotation.totalDiscount)}`]]}
+        grand={['Grand Total', formatCurrency(quotation.grandTotal)]}
+      />
+      {quotation.notes && <p className="mt-5 whitespace-pre-wrap break-words rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-600"><span className="font-semibold">Notes:</span> {quotation.notes}</p>}
+      {quotation.convertedInvoice && <p className="mt-4 text-sm no-print">Converted to: <Link className="text-brand-700 underline" to={`/receipt/${quotation.convertedInvoice}`}>{quotation.convertedInvoiceNumber}</Link></p>}
+      <DocFooter>This quotation is valid until {formatDate(quotation.expiryDate)} and is not a payment receipt. Thank you for your business.</DocFooter>
     </div>}
   </div>;
 }

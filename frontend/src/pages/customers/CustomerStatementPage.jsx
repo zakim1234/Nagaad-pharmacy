@@ -9,7 +9,8 @@ import { BUSINESS } from '../../constants/business.js';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import Button from '../../components/ui/Button.jsx';
 import { FormField, Input } from '../../components/ui/Field.jsx';
-import logo from '../../images/logo.png';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
+import DocHeader, { DocInfo, DocTotals, DocFooter, DOC_TH, DOC_THEAD_ROW } from '../../components/docs/DocHeader.jsx';
 
 const TYPE_LABEL = { SALE: 'Sale', SALE_PAYMENT: 'Payment', PAYMENT: 'Payment' };
 
@@ -63,9 +64,16 @@ export default function CustomerStatementPage() {
         <Link to={`/customers/${id}`} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
           <ArrowLeft className="h-4 w-4" /> Back to Customer
         </Link>
-        <Button onClick={() => printReport('portrait')}>
-          <Printer className="h-4 w-4" /> Print Statement
-        </Button>
+        <div className="flex gap-2">
+          <SharePdfButton
+            fileName={`Statement-${customer.name.replace(/\s+/g, '-')}`}
+            phone={customer.phone}
+            message={`${BUSINESS.name} — account statement. Balance: ${formatCurrency(summary.currentOutstandingBalance)}`}
+          />
+          <Button onClick={() => printReport('portrait')}>
+            <Printer className="h-4 w-4" /> Print Statement
+          </Button>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap items-end gap-3 no-print">
@@ -83,27 +91,19 @@ export default function CustomerStatementPage() {
         </Button>
       </div>
 
-      <div id="print-area" className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
-        <div className="flex flex-col items-center text-center">
-          <img src={logo} alt={BUSINESS.name} className="h-16 w-auto object-contain" />
-          <h1 className="mt-1 text-base font-bold tracking-wide text-slate-900">{BUSINESS.name}</h1>
-          <p className="text-xs text-slate-500">{BUSINESS.addressLine}</p>
-          <p className="text-xs text-slate-500">{BUSINESS.phone}</p>
-        </div>
-
-        <div className="my-4 border-t border-dashed border-slate-300" />
-        <p className="text-center text-lg font-bold uppercase tracking-wide text-slate-900">Customer Account Statement</p>
-        <p className="text-center text-xs text-slate-400">
-          Statement Period: {formatDate(data.range.from)} - {formatDate(data.range.to)}
-        </p>
-
-        <div className="my-4 flex flex-wrap items-start justify-between gap-4 border-t border-dashed border-slate-300 pt-4">
-          <div>
-            <p className="text-sm font-bold text-slate-900">{customer.name}</p>
-            {customer.phone && <p className="text-xs text-slate-500">{customer.phone}</p>}
-            <p className="mt-1 text-xs text-slate-400">Customer Since {formatDate(summary.customerSince)}</p>
-          </div>
-        </div>
+      <div id="print-area" className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+        <DocHeader
+          title="Customer Statement"
+          meta={
+            <span>
+              <span className="font-semibold">{formatDate(data.range.from)}</span> – <span className="font-semibold">{formatDate(data.range.to)}</span>
+            </span>
+          }
+        />
+        <DocInfo
+          left={['Customer', customer.name, customer.phone, `Customer since ${formatDate(summary.customerSince)}`]}
+          right={['Balance owed', formatCurrency(summary.currentOutstandingBalance), `${summary.numberOfFinalizedInvoices} invoice(s)`]}
+        />
 
         {pendingToday.length > 0 && (
           <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 no-print">
@@ -120,16 +120,16 @@ export default function CustomerStatementPage() {
         )}
 
         <div className="mt-6">
-          <p className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-700">Transaction Ledger</p>
-          <table className="w-full text-xs">
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-500">Transactions</p>
+          <table className="w-full border-collapse text-xs">
             <thead className="table-header-group">
-              <tr className="border-b border-slate-300 text-left uppercase text-slate-400">
-                <th className="py-1.5 pr-2 font-medium">Date</th>
-                <th className="py-1.5 pr-2 font-medium">Reference</th>
-                <th className="py-1.5 pr-2 font-medium">Type</th>
-                <th className="py-1.5 pr-2 text-right font-medium">Debit</th>
-                <th className="py-1.5 pr-2 text-right font-medium">Credit</th>
-                <th className="py-1.5 text-right font-medium">Balance</th>
+              <tr className={`${DOC_THEAD_ROW} text-left`}>
+                <th className={DOC_TH}>Date</th>
+                <th className={DOC_TH}>Reference</th>
+                <th className={DOC_TH}>Type</th>
+                <th className={`${DOC_TH} text-right`}>Debit</th>
+                <th className={`${DOC_TH} text-right`}>Credit</th>
+                <th className={`${DOC_TH} text-right`}>Balance</th>
               </tr>
             </thead>
             <tbody>
@@ -144,13 +144,13 @@ export default function CustomerStatementPage() {
                   const invoice = e.type === 'SALE' && invoices.find((inv) => inv.receiptNumber === e.reference);
                   const expanded = invoice && expandedInvoiceIds.has(invoice.id);
                   return <Fragment key={`${e.type}-${e.reference}`}>
-                  <tr className="border-b border-slate-100">
-                    <td className="py-1.5 pr-2 text-slate-500">{formatDateTime(e.date)}</td>
-                    <td className="py-1.5 pr-2 font-medium text-slate-700">{invoice ? <button type="button" className="cursor-pointer text-brand-700 hover:underline focus-visible:outline-2" aria-expanded={!!expanded} aria-controls={`invoice-${invoice.id}`} onClick={() => toggleInvoice(invoice.id)}><span className="no-print">{expanded ? '▾' : '▸'} </span>{e.reference}</button> : e.reference}</td>
-                    <td className="py-1.5 pr-2 text-slate-600">{TYPE_LABEL[e.type] || e.type}</td>
-                    <td className="py-1.5 pr-2 text-right text-slate-700">{e.debit > 0 ? formatCurrency(e.debit) : '-'}</td>
-                    <td className="py-1.5 pr-2 text-right text-slate-700">{e.credit > 0 ? formatCurrency(e.credit) : '-'}</td>
-                    <td className="py-1.5 text-right font-semibold text-slate-900">{formatCurrency(e.runningBalance)}</td>
+                  <tr className="border-b border-neutral-200">
+                    <td className="px-2 py-2 text-neutral-500">{formatDateTime(e.date)}</td>
+                    <td className="px-2 py-2 font-medium">{invoice ? <button type="button" className="cursor-pointer text-brand-700 hover:underline focus-visible:outline-2" aria-expanded={!!expanded} aria-controls={`invoice-${invoice.id}`} onClick={() => toggleInvoice(invoice.id)}><span className="no-print">{expanded ? '▾' : '▸'} </span>{e.reference}</button> : e.reference}</td>
+                    <td className="px-2 py-2">{TYPE_LABEL[e.type] || e.type}</td>
+                    <td className="px-2 py-2 text-right tabular-nums">{e.debit > 0 ? formatCurrency(e.debit) : '—'}</td>
+                    <td className="px-2 py-2 text-right font-semibold tabular-nums text-brand-700">{e.credit > 0 ? formatCurrency(e.credit) : '—'}</td>
+                    <td className="px-2 py-2 text-right font-semibold tabular-nums">{formatCurrency(e.runningBalance)}</td>
                   </tr>
                   {invoice && <tr id={`invoice-${invoice.id}`} className={`${expanded ? '' : 'hidden'} no-print`}><td colSpan={6} className="bg-slate-50 p-3">
                     <p className="mb-2 font-semibold">Invoice Items</p>
@@ -205,32 +205,21 @@ export default function CustomerStatementPage() {
         )}
 
         <div className="mt-6 border-t border-dashed border-slate-300 pt-4" style={{ pageBreakInside: 'avoid' }}>
-          <p className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-700">Final Customer Summary</p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <SummaryTile label="Finalized Invoices" value={summary.numberOfFinalizedInvoices} />
-            <SummaryTile label="Total Purchased" value={formatCurrency(summary.totalAmountPurchased)} />
-            <SummaryTile label="Total Paid" value={formatCurrency(summary.totalPayments)} />
-            <SummaryTile label="Credit Generated" value={formatCurrency(summary.totalCreditGenerated)} />
-          </div>
-          <div className="mt-3 rounded-lg bg-rose-50 px-4 py-3 text-center">
-            <p className="text-xs uppercase tracking-wide text-rose-500">Outstanding / Debt Balance</p>
-            <p className="text-xl font-bold text-rose-700">{formatCurrency(summary.currentOutstandingBalance)}</p>
-          </div>
+          <DocTotals
+            items={[
+              ['Total purchased', formatCurrency(summary.totalAmountPurchased)],
+              ['Total paid', formatCurrency(summary.totalPayments)],
+              ['Balance owed', formatCurrency(summary.currentOutstandingBalance)],
+            ]}
+          />
+          <p className="mt-2 text-center text-[11px] text-neutral-500">
+            {summary.numberOfFinalizedInvoices} finalized invoice(s) · credit generated {formatCurrency(summary.totalCreditGenerated)}
+          </p>
         </div>
 
-        <div className="mt-6 border-t border-dashed border-slate-300 pt-3">
-          <p className="text-center text-[11px] text-slate-400">Thank you for your business!</p>
-        </div>
+        <DocFooter>Thank you for your business!</DocFooter>
       </div>
     </div>
   );
 }
 
-function SummaryTile({ label, value }) {
-  return (
-    <div className="rounded-lg bg-slate-50 px-3 py-2 text-center">
-      <p className="text-[10px] uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="text-base font-bold text-slate-800">{value}</p>
-    </div>
-  );
-}

@@ -7,9 +7,12 @@ import { printA5 } from '../../utils/printA5.js';
 import { BUSINESS } from '../../constants/business.js';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import Button from '../../components/ui/Button.jsx';
-import Badge from '../../components/ui/Badge.jsx';
-import logo from '../../images/logo.png';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
+import DocHeader, { DocInfo, DocSummary, DOC_TH, DOC_THEAD_ROW, docRow } from '../../components/docs/DocHeader.jsx';
 
+// A goods invoice from a supplier. What we owe is tracked against the
+// supplier's total (see their Statement), so only the invoice amount is
+// shown here.
 export default function PurchaseReceiptPage() {
   const { id } = useParams();
   const [purchase, setPurchase] = useState(null);
@@ -26,116 +29,68 @@ export default function PurchaseReceiptPage() {
 
   if (error) return <div className="rounded-lg bg-rose-50 p-4 text-sm text-rose-700">{error}</div>;
   if (!purchase) return <PageSpinner />;
+  const voided = purchase.status === 'voided';
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between no-print">
-        <Link to="/purchases" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
-          <ArrowLeft className="h-4 w-4" /> Back to Purchase Invoices
+        <Link to={`/purchases?supplier=${purchase.supplier}`} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+          <ArrowLeft className="h-4 w-4" /> Back to {purchase.supplierName}
         </Link>
-        <Button onClick={printA5}>
-          <Printer className="h-4 w-4" /> Print
-        </Button>
+        <div className="flex gap-2">
+          <SharePdfButton
+            fileName={`Purchase-${purchase.purchaseNumber}`}
+            message={`${BUSINESS.name} — goods invoice ${purchase.supplierInvoiceNumber || purchase.purchaseNumber}: ${formatCurrency(purchase.totalCost)}`}
+          />
+          <Button onClick={printA5}>
+            <Printer className="h-4 w-4" /> Print
+          </Button>
+        </div>
       </div>
 
       <div
         id="print-area"
-        className="mx-auto max-w-[148mm] rounded-2xl border border-slate-200 bg-white p-6 text-[13px] shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
+        className="mx-auto max-w-[148mm] rounded-2xl border border-slate-200 bg-white p-6 text-[13px] text-neutral-900 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
       >
-        <div className="flex flex-col items-center text-center">
-          <img src={logo} alt={BUSINESS.name} className="h-16 w-auto object-contain" />
-          <h1 className="mt-1 text-base font-bold tracking-wide text-slate-900">{BUSINESS.name}</h1>
-          <p className="text-xs text-slate-500">{BUSINESS.addressLine}</p>
-          <p className="text-xs text-slate-500">{BUSINESS.phone}</p>
-        </div>
+        <DocHeader compact title={voided ? 'Purchase Invoice · Voided' : 'Purchase Invoice'} meta={<span className="font-semibold">{purchase.purchaseNumber}</span>} />
 
-        <div className="my-3 border-t border-dashed border-slate-300" />
+        <DocInfo
+          left={['Supplier', purchase.supplierName, purchase.supplierInvoiceNumber && `Their invoice No. ${purchase.supplierInvoiceNumber}`]}
+          right={['Date', formatDate(purchase.purchaseDate || purchase.createdAt), formatTime(purchase.createdAt)]}
+        />
 
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-bold uppercase tracking-wide text-slate-800">Purchase Invoice</p>
-          {purchase.status === 'voided' && <Badge color="red">VOIDED</Badge>}
-        </div>
-
-        <div className="my-3 border-t border-dashed border-slate-300" />
-
-        <div className="flex justify-between text-xs">
-          <div>
-            <p className="text-slate-400">Supplier</p>
-            <p className="font-semibold text-slate-800">{purchase.supplierName}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-slate-400">Internal Invoice No.</p>
-            <p className="font-semibold text-slate-800">{purchase.purchaseNumber}</p>
-            <p className="text-slate-500">
-              {formatDate(purchase.createdAt)}, {formatTime(purchase.createdAt)}
-            </p>
-          </div>
-        </div>
-        {purchase.supplierInvoiceNumber && (
-          <div className="mt-2 flex justify-between text-xs">
-            <span className="text-slate-400">Supplier Invoice No.</span>
-            <span className="font-semibold text-slate-800">{purchase.supplierInvoiceNumber}</span>
-          </div>
+        {purchase.items.length > 0 && (
+          <table className="mt-4 w-full border-collapse text-xs">
+            <thead>
+              <tr className={DOC_THEAD_ROW}>
+                <th className={`${DOC_TH} w-8 text-left`}>#</th>
+                <th className={`${DOC_TH} text-left`}>Description</th>
+                <th className={`${DOC_TH} text-center`}>Qty</th>
+                <th className={`${DOC_TH} text-right`}>Unit cost</th>
+                <th className={`${DOC_TH} text-right`}>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {purchase.items.map((item, i) => (
+                <tr key={i} className={docRow(i)}>
+                  <td className="px-2 py-2 text-neutral-500">{i + 1}</td>
+                  <td className="px-2 py-2 font-medium">{item.name}</td>
+                  <td className="px-2 py-2 text-center">{item.quantity}</td>
+                  <td className="px-2 py-2 text-right tabular-nums">{formatCurrency(item.unitCost)}</td>
+                  <td className="px-2 py-2 text-right font-semibold tabular-nums">{formatCurrency(item.subtotal)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
 
-        <div className="my-3 border-t border-dashed border-slate-300" />
+        <DocSummary grand={['Invoice amount', formatCurrency(purchase.totalCost)]} />
 
-        {purchase.items.length > 0 && <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-slate-200 text-left uppercase text-slate-400">
-              <th className="w-6 py-1 font-medium">No</th>
-              <th className="py-1 font-medium">Description</th>
-              <th className="py-1 text-center font-medium">Qty</th>
-              <th className="py-1 text-right font-medium">Unit Cost</th>
-              <th className="py-1 text-right font-medium">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {purchase.items.map((item, i) => (
-              <tr key={i} className="border-b border-slate-50">
-                <td className="py-1.5 text-slate-500">{i + 1}</td>
-                <td className="py-1.5 text-slate-700">{item.name}</td>
-                <td className="py-1.5 text-center text-slate-600">{item.quantity}</td>
-                <td className="py-1.5 text-right text-slate-600">{formatCurrency(item.unitCost)}</td>
-                <td className="py-1.5 text-right font-medium text-slate-800">{formatCurrency(item.subtotal)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>}
-
-        <div className="my-3 border-t border-dashed border-slate-300" />
-
-        <div className="space-y-1 text-xs">
-          <div className="flex justify-between text-sm font-bold text-slate-900">
-            <span>Total Amount</span>
-            <span>{formatCurrency(purchase.totalCost)}</span>
-          </div>
-          <div className="flex justify-between text-slate-600">
-            <span>Paid</span>
-            <span>{formatCurrency(purchase.paidAmount)}</span>
-          </div>
-          {purchase.paymentAccountName && (
-            <div className="flex justify-between text-slate-500">
-              <span>Payment Account</span>
-              <span>{purchase.paymentAccountName}</span>
-            </div>
-          )}
-          {purchase.balance > 0 && (
-            <div className="flex justify-between rounded-md bg-rose-50 px-2 py-1.5 font-bold text-rose-700">
-              <span>Balance Owed to Supplier</span>
-              <span>{formatCurrency(purchase.balance)}</span>
-            </div>
-          )}
-        </div>
-
+        {voided && <p className="mt-3 text-center text-xs font-semibold text-brand-600">This invoice was voided and is not owed.</p>}
         {purchase.notes && (
-          <>
-            <div className="my-3 border-t border-dashed border-slate-300" />
-            <p className="text-xs text-slate-500">
-              <span className="text-slate-400">Notes: </span>
-              {purchase.notes}
-            </p>
-          </>
+          <p className="mt-4 rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
+            <span className="font-semibold">Notes:</span> {purchase.notes}
+          </p>
         )}
       </div>
     </div>

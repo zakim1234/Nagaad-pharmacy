@@ -10,7 +10,8 @@ import { useToast } from '../../context/ToastContext.jsx';
 
 import { BUSINESS } from '../../constants/business.js';
 
-import logo from '../../images/logo.png';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
+import DocHeader, { DocInfo, DocSummary, DOC_TH, DOC_THEAD_ROW, docRow } from '../../components/docs/DocHeader.jsx';
 
 import { printPage } from '../../utils/print.js';
 
@@ -150,7 +151,39 @@ export default function StockPage() {
 
     </section>
 
-    {selected && <><div className="no-print"><Button onClick={() => printPage('A4')}>Print Stock Entry</Button></div><section id="print-area" className="rounded border bg-white p-6"><header className="text-center"><img src={logo} alt={BUSINESS.name} className="mx-auto h-16" /><h2>{BUSINESS.name}</h2><p>{BUSINESS.addressLine}</p><p>{BUSINESS.phone}</p></header><h2 className="my-4 text-xl font-semibold">Stock Entry {selected.stockSerial}</h2>{selected.externalSerialNumber && <p>Shop/Supplier Serial: <strong>{selected.externalSerialNumber}</strong></p>}{selected.supplier && <p>Supplier: <strong>{selected.supplier.name}</strong></p>}<p>{formatDateTime(selected.createdAt)}</p><table className="my-4 w-full text-sm"><thead><tr>{['No', 'Item', 'Qty', 'Cost', 'Selling', 'Expiry'].map(h => <th key={h} className="p-2 text-left">{h}</th>)}</tr></thead><tbody>{selected.rows.map((r, i) => <tr key={i} className="border-t"><td className="p-2">{i + 1}</td><td><Link to={`/inventory/${r.item}/print`}>{r.itemName}</Link></td><td>{r.quantity}</td><td>{formatCurrency(r.costPriceCents / 100)}</td><td>{formatCurrency(r.sellingPriceCents / 100)}</td><td>{r.expiryDate?.slice(0, 10) || '—'}</td></tr>)}</tbody></table><p>Total Cost: {formatCurrency(selected.rows.reduce((s, r) => s + r.quantity * r.costPriceCents, 0) / 100)}</p></section></>}
+    {selected && <>
+      <div className="no-print flex gap-2">
+        <SharePdfButton fileName={`Stock-Entry-${selected.stockSerial}`} message={`${BUSINESS.name} — stock entry ${selected.stockSerial}`} />
+        <Button onClick={() => printPage('A4')}>Print Stock Entry</Button>
+      </div>
+      <section id="print-area" className="mt-3 rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none">
+        <DocHeader title="Stock Entry" meta={<span className="font-semibold">{selected.stockSerial}</span>} />
+        <DocInfo
+          left={['Supplier', selected.supplier?.name || '—', selected.externalSerialNumber && `Shop/Supplier serial: ${selected.externalSerialNumber}`]}
+          right={['Date', formatDateTime(selected.createdAt)]}
+        />
+        <table className="mt-4 w-full border-collapse text-xs">
+          <thead>
+            <tr className={DOC_THEAD_ROW + ' text-left'}>
+              {['#', 'Item', 'Qty', 'Cost', 'Selling', 'Expiry'].map((h, i) => <th key={h} className={DOC_TH + (i >= 2 && i <= 4 ? ' text-right' : '')}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {selected.rows.map((r, i) => (
+              <tr key={i} className={docRow(i)}>
+                <td className="px-2 py-2 text-neutral-500">{i + 1}</td>
+                <td className="px-2 py-2 font-medium"><Link to={`/inventory/${r.item}/print`}>{r.itemName}</Link></td>
+                <td className="px-2 py-2 text-right">{r.quantity}</td>
+                <td className="px-2 py-2 text-right tabular-nums">{formatCurrency(r.costPriceCents / 100)}</td>
+                <td className="px-2 py-2 text-right tabular-nums">{formatCurrency(r.sellingPriceCents / 100)}</td>
+                <td className="px-2 py-2">{r.expiryDate?.slice(0, 10) || '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <DocSummary grand={['Total cost', formatCurrency(selected.rows.reduce((s, r) => s + r.quantity * r.costPriceCents, 0) / 100)]} />
+      </section>
+    </>}
 
   </div>;
 

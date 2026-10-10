@@ -9,8 +9,7 @@ import client from '../../api/client.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate, formatTime } from '../../utils/format.js';
 import { printA5 } from '../../utils/printA5.js';
-import { BUSINESS } from '../../constants/business.js';
-import logo from '../../images/logo.png';
+import DocHeader, { DocInfo, DocSummary, DocFooter, DOC_TH, DOC_THEAD_ROW, docRow } from '../../components/docs/DocHeader.jsx';
 
 // Partial (or full, multi-item) return for a CONFIRMED invoice: pick how
 // many units of each line are coming back. Stock is restored into the exact
@@ -243,64 +242,34 @@ export default function ReturnItemsModal({ open, onClose, sale, onReturned }) {
 function ReturnPreviewReceipt({ sale, items, reason, total }) {
   const now = new Date();
   return (
-    <div className="mx-auto max-w-[148mm] p-6 text-[13px]">
-      <div className="flex flex-col items-center text-center">
-        <img src={logo} alt={BUSINESS.name} className="h-16 w-auto object-contain" />
-        <h1 className="mt-1 text-base font-bold tracking-wide text-slate-900">{BUSINESS.name}</h1>
-        <p className="text-xs text-slate-500">{BUSINESS.addressLine}</p>
-        <p className="text-xs text-slate-500">{BUSINESS.phone}</p>
-      </div>
-      <div className="my-3 border-t border-dashed border-slate-300" />
-      <p className="text-center text-sm font-bold uppercase tracking-wide text-slate-800">Return Preview</p>
-      <p className="text-center text-[11px] text-slate-400">Not yet confirmed -- for reference only</p>
-      <div className="my-3 border-t border-dashed border-slate-300" />
-      <div className="flex justify-between text-xs">
-        <div>
-          <p className="text-slate-400">Customer</p>
-          <p className="font-semibold text-slate-800">{sale.customerName}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-slate-400">Original Invoice</p>
-          <p className="font-semibold text-slate-800">{sale.receiptNumber}</p>
-          <p className="text-slate-500">{formatDate(now)}, {formatTime(now)}</p>
-        </div>
-      </div>
-      <div className="my-3 border-t border-dashed border-slate-300" />
-      <table className="w-full text-xs">
+    <div className="mx-auto max-w-[148mm] bg-white p-6 text-[13px] text-neutral-900">
+      <DocHeader compact title="Return Preview" meta={<span className="font-semibold">Invoice {sale.receiptNumber}</span>} />
+      <p className="mt-2 text-center text-[11px] font-semibold text-brand-600">Not yet confirmed — for reference only</p>
+      <DocInfo left={['Customer', sale.customerName]} right={['Date', formatDate(now), formatTime(now)]} />
+      <table className="mt-4 w-full border-collapse text-xs">
         <thead>
-          <tr className="border-b border-slate-200 text-left uppercase text-slate-400">
-            <th className="w-6 py-1 font-medium">No</th>
-            <th className="py-1 font-medium">Item</th>
-            <th className="py-1 text-center font-medium">Qty</th>
-            <th className="py-1 text-right font-medium">Price</th>
-            <th className="py-1 text-right font-medium">Value</th>
+          <tr className={DOC_THEAD_ROW}>
+            <th className={DOC_TH + ' w-8 text-left'}>#</th>
+            <th className={DOC_TH + ' text-left'}>Item</th>
+            <th className={DOC_TH + ' text-center'}>Qty</th>
+            <th className={DOC_TH + ' text-right'}>Price</th>
+            <th className={DOC_TH + ' text-right'}>Value</th>
           </tr>
         </thead>
         <tbody>
           {items.map((item, i) => (
-            <tr key={item.itemId} className="border-b border-slate-50">
-              <td className="py-1.5 text-slate-500">{i + 1}</td>
-              <td className="py-1.5 text-slate-700">{item.name}</td>
-              <td className="py-1.5 text-center text-slate-600">{item.quantity}</td>
-              <td className="py-1.5 text-right text-slate-600">{formatCurrency(item.unitPrice)}</td>
-              <td className="py-1.5 text-right font-medium text-slate-800">{formatCurrency(item.quantity * item.unitPrice)}</td>
+            <tr key={item.itemId} className={docRow(i)}>
+              <td className="px-2 py-2 text-neutral-500">{i + 1}</td>
+              <td className="px-2 py-2 font-medium">{item.name}</td>
+              <td className="px-2 py-2 text-center">{item.quantity}</td>
+              <td className="px-2 py-2 text-right tabular-nums">{formatCurrency(item.unitPrice)}</td>
+              <td className="px-2 py-2 text-right font-semibold tabular-nums">{formatCurrency(item.quantity * item.unitPrice)}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <div className="my-3 border-t border-dashed border-slate-300" />
-      <div className="flex justify-between text-sm font-bold text-slate-900">
-        <span>Return Value</span>
-        <span>{formatCurrency(total)}</span>
-      </div>
-      {reason && (
-        <div className="mt-1 flex justify-between text-xs text-slate-600">
-          <span>Reason</span>
-          <span>{reason}</span>
-        </div>
-      )}
-      <div className="my-3 border-t border-dashed border-slate-300" />
-      <p className="text-center text-[11px] text-slate-400">This is a preview only. Confirm the return to generate the final receipt.</p>
+      <DocSummary lines={[reason && ['Reason', reason]]} grand={['Return value', formatCurrency(total)]} />
+      <DocFooter>This is a preview only. Confirm the return to generate the final receipt.</DocFooter>
     </div>
   );
 }

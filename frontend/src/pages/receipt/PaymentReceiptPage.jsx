@@ -7,7 +7,8 @@ import { printA5 } from '../../utils/printA5.js';
 import { BUSINESS } from '../../constants/business.js';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import Button from '../../components/ui/Button.jsx';
-import logo from '../../images/logo.png';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
+import DocHeader, { DocInfo, DocSummary, DocFooter, DOC_TH, DOC_THEAD_ROW, docRow } from '../../components/docs/DocHeader.jsx';
 
 export default function PaymentReceiptPage() {
   const { id } = useParams();
@@ -30,80 +31,63 @@ export default function PaymentReceiptPage() {
         <Link to="/customers" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
           <ArrowLeft className="h-4 w-4" /> Back to Customers
         </Link>
-        <Button onClick={printA5}>
-          <Printer className="h-4 w-4" /> Print Receipt
-        </Button>
+        <div className="flex gap-2">
+          <SharePdfButton
+            fileName={`Receipt-${payment.receiptNumber}`}
+            phone={payment.customerPhone}
+            message={`${BUSINESS.name} — Payment received ${formatCurrency(payment.amount)} (${payment.receiptNumber})`}
+          />
+          <Button onClick={printA5}>
+            <Printer className="h-4 w-4" /> Print Receipt
+          </Button>
+        </div>
       </div>
 
       <div
         id="print-area"
-        className="mx-auto max-w-[148mm] rounded-2xl border border-slate-200 bg-white p-6 text-[13px] shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
+        className="mx-auto max-w-[148mm] rounded-2xl border border-slate-200 bg-white p-6 text-[13px] text-neutral-900 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
       >
-        <div className="flex flex-col items-center text-center">
-          <img src={logo} alt={BUSINESS.name} className="h-16 w-auto object-contain" />
-          <h1 className="mt-1 text-base font-bold tracking-wide text-slate-900">{BUSINESS.name}</h1>
-          <p className="text-xs text-slate-500">{BUSINESS.addressLine}</p>
-          <p className="text-xs text-slate-500">{BUSINESS.phone}</p>
+        <DocHeader compact title="Payment Receipt" meta={<span className="font-semibold">{payment.receiptNumber}</span>} />
+
+        <DocInfo
+          left={['Received from', payment.customerName, payment.customerPhone]}
+          right={['Date', formatDate(payment.createdAt), formatTime(payment.createdAt)]}
+        />
+
+        <div className="mt-4 border-2 border-neutral-900 px-4 py-3 text-center" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+          <p className="text-[10px] uppercase tracking-wider text-neutral-500">Amount received</p>
+          <p className="text-3xl font-extrabold tabular-nums text-brand-600">{formatCurrency(payment.amount)}</p>
+          <p className="mt-0.5 text-[11px] text-neutral-500">into {payment.paymentAccountName || 'account not recorded (historical payment)'}</p>
         </div>
 
-        <div className="my-3 border-t border-dashed border-slate-300" />
-
-        <p className="text-center text-sm font-bold uppercase tracking-widest text-emerald-700">Payment Receipt</p>
-
-        <div className="mt-3 flex justify-between text-xs">
-          <div>
-            <p className="text-slate-400">Customer</p>
-            <p className="font-semibold text-slate-800">{payment.customerName}</p>
-            {payment.customerPhone && <p className="text-slate-500">{payment.customerPhone}</p>}
-          </div>
-          <div className="text-right">
-            <p className="text-slate-400">Receipt No.</p>
-            <p className="font-semibold text-slate-800">{payment.receiptNumber}</p>
-            <p className="text-slate-500">{formatDate(payment.createdAt)}, {formatTime(payment.createdAt)}</p>
-          </div>
-        </div>
-
-        <div className="my-3 border-t border-dashed border-slate-300" />
-
-        <div className="rounded-lg bg-emerald-50 px-3 py-2.5 text-center">
-          <p className="text-xs text-emerald-700">Amount Received</p>
-          <p className="text-2xl font-bold text-emerald-700">{formatCurrency(payment.amount)}</p>
-        </div>
-
-        <p className="mt-3 text-sm">Payment Account: <strong>{payment.paymentAccountName || 'Not recorded (historical payment)'}</strong></p>
         {payment.allocations.length > 0 && (
-          <div className="mt-3">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Applied To</p>
-            <table className="w-full text-xs">
-              <tbody>
-                {payment.allocations.map((a, i) => (
-                  <tr key={i} className="border-b border-slate-50">
-                    <td className="py-1 text-slate-700">{a.receiptNumber}</td>
-                    <td className="py-1 text-right font-medium text-slate-800">{formatCurrency(a.amount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <table className="mt-4 w-full border-collapse text-xs">
+            <thead>
+              <tr className={DOC_THEAD_ROW}>
+                <th className={`${DOC_TH} text-left`}>Applied to invoice</th>
+                <th className={`${DOC_TH} text-right`}>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payment.allocations.map((a, i) => (
+                <tr key={i} className={docRow(i)}>
+                  <td className="px-2 py-2 font-medium">{a.receiptNumber}</td>
+                  <td className="px-2 py-2 text-right font-semibold tabular-nums">{formatCurrency(a.amount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
 
-        <div className="my-3 border-t border-dashed border-slate-300" />
+        <DocSummary
+          lines={[['Previous balance', formatCurrency(payment.previousBalance)], ['Paid now', `-${formatCurrency(payment.amount)}`]]}
+          {...(payment.newBalance > 0
+            ? { owed: ['Balance still owed', formatCurrency(payment.newBalance)] }
+            : { grand: ['New balance', formatCurrency(payment.newBalance)] })}
+        />
 
-        <div className="space-y-1 text-xs">
-          <div className="flex justify-between text-slate-500">
-            <span>Previous Balance</span>
-            <span>{formatCurrency(payment.previousBalance)}</span>
-          </div>
-          <div className="flex justify-between rounded-md bg-slate-50 px-2 py-1.5 font-bold text-slate-800">
-            <span>New Balance</span>
-            <span className={payment.newBalance > 0 ? 'text-rose-600' : 'text-emerald-600'}>{formatCurrency(payment.newBalance)}</span>
-          </div>
-        </div>
-
-        {payment.notes && <p className="mt-3 rounded-md bg-slate-50 p-2 text-xs text-slate-600">{payment.notes}</p>}
-
-        <div className="my-3 border-t border-dashed border-slate-300" />
-        <p className="text-center text-[11px] text-slate-400">Thank you for your payment!</p>
+        {payment.notes && <p className="mt-4 rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-600">{payment.notes}</p>}
+        <DocFooter>Thank you for your payment!</DocFooter>
       </div>
     </div>
   );

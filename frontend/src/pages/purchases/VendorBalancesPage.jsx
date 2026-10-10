@@ -9,6 +9,7 @@ import Badge from '../../components/ui/Badge.jsx';
 import { printReport } from '../../utils/printReport.js';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import Button from '../../components/ui/Button.jsx';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
 import Modal from '../../components/ui/Modal.jsx';
 import { FormField, Input, Select } from '../../components/ui/Field.jsx';
 import { PlanPrintSheet, PaidPlan, planPrintRows, round2 } from './VendorPlanShared.jsx';
@@ -155,6 +156,7 @@ export default function VendorBalancesPage() {
                 <Save className="h-4 w-4" /> Save
               </Button>
             )}
+            <SharePdfButton fileName={`Vendor-Balances_${data.plan?.planNumber || new Date().toISOString().slice(0, 10)}`} message="Vendor Balance Summary" />
             <Button variant="secondary" onClick={() => printReport('portrait')}>
               <Printer className="h-4 w-4" /> Print
             </Button>

@@ -8,7 +8,8 @@ import { printPage } from '../../utils/print.js';
 import { BUSINESS } from '../../constants/business.js';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import Button from '../../components/ui/Button.jsx';
-import logo from '../../images/logo.png';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
+import DocHeader, { DocInfo, DocFooter } from '../../components/docs/DocHeader.jsx';
 
 export default function InventoryPrintPage() {
   const { id } = useParams();
@@ -42,9 +43,12 @@ export default function InventoryPrintPage() {
         <Link to="/inventory" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
           <ArrowLeft className="h-4 w-4" /> Back to Inventory
         </Link>
-        <Button onClick={() => printPage(pageSize)}>
-          <Printer className="h-4 w-4" /> Print
-        </Button>
+        <div className="flex gap-2">
+          <SharePdfButton fileName={`Item-${item.itemCode}`} message={`${BUSINESS.name} — ${item.name} (${item.itemCode})`} />
+          <Button onClick={() => printPage(pageSize)}>
+            <Printer className="h-4 w-4" /> Print
+          </Button>
+        </div>
       </div>
 
       <div
@@ -53,72 +57,52 @@ export default function InventoryPrintPage() {
           hasLongHistory ? 'max-w-[210mm] print:max-w-none' : 'max-w-[148mm] print:max-w-none'
         }`}
       >
-        <div className="flex flex-col items-center text-center">
-          <img src={logo} alt={BUSINESS.name} className="h-16 w-auto object-contain" />
-          <h1 className="mt-1 text-base font-bold tracking-wide text-slate-900">{BUSINESS.name}</h1>
-          <p className="text-xs text-slate-500">{BUSINESS.addressLine}</p>
-          <p className="text-xs text-slate-500">{BUSINESS.phone}</p>
-        </div>
+        <DocHeader compact title="Inventory Item" meta={<span className="font-semibold">{item.itemCode}</span>} />
+        <DocInfo left={['Item', item.name, item.serialNumber && `SN: ${item.serialNumber}`]} right={['Printed', formatDateTime(new Date())]} />
 
-        <div className="my-3 border-t border-dashed border-slate-300" />
-
-        <div className="flex justify-between text-xs">
-          <div>
-            <p className="text-slate-400">Document</p>
-            <p className="font-semibold text-slate-800">Inventory Item Record</p>
-          </div>
-          <div className="text-right">
-            <p className="text-slate-400">Item ID</p>
-            <p className="font-semibold text-slate-800">{item.itemCode}</p>
-            <p className="text-slate-500">Printed {formatDateTime(new Date())}</p>
-          </div>
-        </div>
-
-        <div className="my-3 border-t border-dashed border-slate-300" />
-
-        <table className="w-full text-xs">
+        <table className="mt-4 w-full border-collapse text-xs">
           <tbody>
-            <tr className="border-b border-slate-50">
-              <td className="w-1/3 py-1.5 text-slate-400">Item Name</td>
+            <tr className="border-b border-neutral-200">
+              <td className="w-1/3 px-2 py-1.5 text-neutral-500">Item Name</td>
               <td className="py-1.5 font-medium text-slate-800">{item.name}</td>
             </tr>
-            <tr className="border-b border-slate-50">
-              <td className="py-1.5 text-slate-400">Serial Number</td>
+            <tr className="border-b border-neutral-200">
+              <td className="px-2 py-1.5 text-neutral-500">Serial Number</td>
               <td className="py-1.5 font-medium text-slate-800">{item.serialNumber || '—'}</td>
             </tr>
-            <tr className="border-b border-slate-50">
-              <td className="py-1.5 text-slate-400">Category</td>
+            <tr className="border-b border-neutral-200">
+              <td className="px-2 py-1.5 text-neutral-500">Category</td>
               <td className="py-1.5 text-slate-700">{item.category?.name || 'Uncategorized'}</td>
             </tr>
-            <tr className="border-b border-slate-50">
-              <td className="py-1.5 text-slate-400">Supplier</td>
+            <tr className="border-b border-neutral-200">
+              <td className="px-2 py-1.5 text-neutral-500">Supplier</td>
               <td className="py-1.5 text-slate-700">{item.supplier?.name || '—'}</td>
             </tr>
-            <tr className="border-b border-slate-50">
-              <td className="py-1.5 text-slate-400">Quantity In Stock</td>
+            <tr className="border-b border-neutral-200">
+              <td className="px-2 py-1.5 text-neutral-500">Quantity In Stock</td>
               <td className="py-1.5 text-slate-700">
                 {item.quantity} {item.unit}
               </td>
             </tr>
-            <tr className="border-b border-slate-50">
-              <td className="py-1.5 text-slate-400">Average Cost</td>
+            <tr className="border-b border-neutral-200">
+              <td className="px-2 py-1.5 text-neutral-500">Average Cost</td>
               <td className="py-1.5 text-slate-700">{formatCurrency(item.costPrice)}</td>
             </tr>
-            <tr className="border-b border-slate-50">
-              <td className="py-1.5 text-slate-400">Selling Price</td>
+            <tr className="border-b border-neutral-200">
+              <td className="px-2 py-1.5 text-neutral-500">Selling Price</td>
               <td className="py-1.5 text-slate-700">{formatCurrency(item.sellingPrice)}</td>
             </tr>
-            <tr className="border-b border-slate-50">
-              <td className="py-1.5 text-slate-400">Stock Value (Qty × Avg Cost)</td>
+            <tr className="border-b border-neutral-200">
+              <td className="px-2 py-1.5 text-neutral-500">Stock Value (Qty × Avg Cost)</td>
               <td className="py-1.5 font-semibold text-slate-800">{formatCurrency(totalCostValue)}</td>
             </tr>
-            <tr className="border-b border-slate-50">
-              <td className="py-1.5 text-slate-400">Created / Entry Date</td>
+            <tr className="border-b border-neutral-200">
+              <td className="px-2 py-1.5 text-neutral-500">Created / Entry Date</td>
               <td className="py-1.5 text-slate-700">{formatDateTime(item.createdAt)}</td>
             </tr>
             {item.expiryDate && (
-              <tr className="border-b border-slate-50">
-                <td className="py-1.5 text-slate-400">Expiry Date</td>
+              <tr className="border-b border-neutral-200">
+                <td className="px-2 py-1.5 text-neutral-500">Expiry Date</td>
                 <td className="py-1.5 text-slate-700">{formatDate(item.expiryDate)}</td>
               </tr>
             )}
@@ -129,10 +113,10 @@ export default function InventoryPrintPage() {
         {history.length > 0 && (
           <>
             <div className="my-3 border-t border-dashed border-slate-300" />
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Purchase History</p>
-            <table className="w-full text-xs">
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-500">Purchase History</p>
+            <table className="w-full border-collapse text-xs">
               <thead>
-                <tr className="border-b border-slate-200 text-left uppercase text-slate-400">
+                <tr className="border-b-2 border-neutral-900 text-left text-[10px] uppercase tracking-wider text-neutral-500">
                   <th className="py-1 font-medium">Purchase No.</th>
                   <th className="py-1 font-medium">Supplier</th>
                   <th className="py-1 text-center font-medium">Qty</th>
@@ -157,8 +141,7 @@ export default function InventoryPrintPage() {
           </>
         )}
 
-        <div className="my-3 border-t border-dashed border-slate-300" />
-        <p className="text-center text-[11px] text-slate-400">This is an internal inventory record, not a customer receipt.</p>
+        <DocFooter>This is an internal inventory record, not a customer receipt.</DocFooter>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import { printReport } from '../../utils/printReport.js';
 import { BUSINESS } from '../../constants/business.js';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import Button from '../../components/ui/Button.jsx';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
 import logo from '../../images/logo.png';
 
 const FILTERS = [
@@ -56,6 +57,7 @@ export default function SupplierStatementPage() {
               </button>
             ))}
           </div>
+          <SharePdfButton fileName={`Statement-${supplier.name.replace(/\s+/g, '-')}`} phone={supplier.phone} message={`${BUSINESS.name} — statement: still owed ${formatCurrency(totals.remaining)}`} />
           <Button onClick={() => printReport('portrait')}>
             <Printer className="h-4 w-4" /> Print
           </Button>

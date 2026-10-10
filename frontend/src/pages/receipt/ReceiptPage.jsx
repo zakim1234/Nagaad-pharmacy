@@ -5,11 +5,12 @@ import client from '../../api/client.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate, formatTime } from '../../utils/format.js';
 import { printA5 } from '../../utils/printA5.js';
-import { BUSINESS } from '../../constants/business.js';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import Button from '../../components/ui/Button.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
-import logo from '../../images/logo.png';
+import DocHeader, { DocInfo, DocSummary, DocFooter, DOC_TH, DOC_THEAD_ROW, docRow } from '../../components/docs/DocHeader.jsx';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
+import { BUSINESS } from '../../constants/business.js';
 
 export default function ReceiptPage() {
   const { id } = useParams();
@@ -65,6 +66,7 @@ export default function ReceiptPage() {
               </Button>
             </>
           )}
+          <SharePdfButton fileName={`Invoice-${sale.receiptNumber}`} phone={sale.customerPhone} message={`${BUSINESS.name} — Invoice ${sale.receiptNumber}: ${formatCurrency(sale.total)}`} />
           <Button onClick={printA5}>
             <Printer className="h-4 w-4" /> Print Invoice
           </Button>
@@ -83,125 +85,74 @@ export default function ReceiptPage() {
 
       <div
         id="print-area"
-        className="mx-auto max-w-[148mm] rounded-2xl border border-slate-200 bg-white p-6 text-[13px] shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
+        className="mx-auto max-w-[148mm] rounded-2xl border border-slate-200 bg-white p-6 text-[13px] text-neutral-900 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
       >
-        <div className="flex flex-col items-center text-center">
-          <img src={logo} alt={BUSINESS.name} className="h-16 w-auto object-contain" />
-          <h1 className="mt-1 text-base font-bold tracking-wide text-slate-900">{BUSINESS.name}</h1>
-          <p className="text-xs text-slate-500">{BUSINESS.addressLine}</p>
-          <p className="text-xs text-slate-500">{BUSINESS.phone}</p>
-        </div>
-
-        <div className="my-3 border-t border-dashed border-slate-300" />
-
-        <p className="text-center text-sm font-bold uppercase tracking-wide text-slate-800">Sales Invoice</p>
+        <DocHeader
+          compact
+          title={sale.status === 'CANCELLED' ? 'Sales Invoice · Cancelled' : 'Sales Invoice'}
+          meta={<span className="font-semibold">{sale.receiptNumber}</span>}
+        />
         {sale.status === 'DRAFT' && (
-          <p className="mt-1 text-center text-[11px] font-medium text-amber-600 no-print">
+          <p className="mt-2 text-center text-[11px] font-medium text-amber-600 no-print">
             This invoice is PENDING and will only become final when the business day is closed.
           </p>
         )}
         {sale.status === 'CANCELLED' && sale.cancelledReason && (
-          <p className="mt-1 text-center text-[11px] font-medium text-rose-600 no-print">Reason: {sale.cancelledReason}</p>
+          <p className="mt-2 text-center text-[11px] font-medium text-rose-600 no-print">Reason: {sale.cancelledReason}</p>
         )}
 
-        <div className="my-3 border-t border-dashed border-slate-300" />
+        <DocInfo
+          left={['Bill to', sale.customerName, sale.customerPhone]}
+          right={['Date', formatDate(sale.createdAt), formatTime(sale.createdAt)]}
+        />
 
-        <div className="flex justify-between text-xs">
-          <div>
-            <p className="text-slate-400">Customer</p>
-            <p className="font-semibold text-slate-800">{sale.customerName}</p>
-            {sale.customerPhone && <p className="text-slate-500">{sale.customerPhone}</p>}
-          </div>
-          <div className="text-right">
-            <p className="text-slate-400">Invoice No.</p>
-            <p className="font-semibold text-slate-800">{sale.receiptNumber}</p>
-            <p className="text-slate-500">{formatDate(sale.createdAt)}, {formatTime(sale.createdAt)}</p>
-          </div>
-        </div>
-
-        <div className="my-3 border-t border-dashed border-slate-300" />
-
-        <table className="w-full text-xs">
+        <table className="mt-4 w-full border-collapse text-xs">
           <thead>
-            <tr className="border-b border-slate-200 text-left uppercase text-slate-400">
-              <th className="w-6 py-1 font-medium">No</th>
-              <th className="py-1 font-medium">Description</th>
-              <th className="py-1 text-center font-medium">Qty</th>
-              <th className="py-1 text-right font-medium">Price</th>
-              <th className="py-1 text-right font-medium">Total</th>
+            <tr className={DOC_THEAD_ROW}>
+              <th className={`${DOC_TH} w-8 text-left`}>#</th>
+              <th className={`${DOC_TH} text-left`}>Description</th>
+              <th className={`${DOC_TH} text-center`}>Qty</th>
+              <th className={`${DOC_TH} text-right`}>Price</th>
+              <th className={`${DOC_TH} text-right`}>Total</th>
             </tr>
           </thead>
           <tbody>
             {sale.items.map((item, i) => (
-              <tr key={i} className="border-b border-slate-50">
-                <td className="py-1.5 text-slate-500">{i + 1}</td>
-                <td className="py-1.5 text-slate-700">{item.name}</td>
-                <td className="py-1.5 text-center text-slate-600">{item.quantity}</td>
-                <td className="py-1.5 text-right text-slate-600">{formatCurrency(item.unitPrice)}</td>
-                <td className="py-1.5 text-right font-medium text-slate-800">{formatCurrency(item.subtotal)}</td>
+              <tr key={i} className={docRow(i)}>
+                <td className="px-2 py-2 text-neutral-500">{i + 1}</td>
+                <td className="px-2 py-2 font-medium">{item.name}</td>
+                <td className="px-2 py-2 text-center">{item.quantity}</td>
+                <td className="px-2 py-2 text-right tabular-nums">{formatCurrency(item.unitPrice)}</td>
+                <td className="px-2 py-2 text-right font-semibold tabular-nums">{formatCurrency(item.subtotal)}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        <div className="my-3 border-t border-dashed border-slate-300" />
-
-        <div className="space-y-1 text-xs">
-          <div className="flex justify-between text-slate-600">
-            <span>Subtotal</span>
-            <span>{formatCurrency(sale.subtotal)}</span>
-          </div>
-          {sale.discount > 0 && (
-            <div className="flex justify-between text-slate-600">
-              <span>Discount</span>
-              <span>-{formatCurrency(sale.discount)}</span>
-            </div>
-          )}
-          <div className="flex justify-between text-sm font-bold text-slate-900">
-            <span>Grand Total</span>
-            <span>{formatCurrency(sale.total)}</span>
-          </div>
-          <div className="flex justify-between text-slate-600">
-            <span>Paid</span>
-            <span>{formatCurrency(sale.paidAmount)}</span>
-          </div>
-          {sale.paidAmount > 0 && (
-            <div className="flex justify-between text-slate-500">
-              <span>Payment Method</span>
-              <span>{sale.paymentAccountName || '—'}</span>
-            </div>
-          )}
-          {sale.total - sale.paidAmount > 0 && (
-            <div className="flex justify-between text-slate-500">
-              <span>Balance</span>
-              <span>{formatCurrency(sale.total - sale.paidAmount)}</span>
-            </div>
-          )}
-
-          <div className="my-1.5 border-t border-dotted border-slate-200" />
-
-          <div className="flex justify-between text-slate-500">
-            <span>Previous Balance</span>
-            <span>{formatCurrency(sale.previousBalance)}</span>
-          </div>
-          <div className="flex justify-between text-slate-500">
-            <span>Balance From This Sale</span>
-            <span>{formatCurrency(sale.balanceAdded)}</span>
-          </div>
-          <div className="flex justify-between rounded-md bg-rose-50 px-2 py-1.5 font-bold text-rose-700">
-            <span>Current Outstanding Balance</span>
-            <span>{formatCurrency(currentOutstanding)}</span>
-          </div>
-        </div>
+        <DocSummary
+          lines={[
+            ['Subtotal', formatCurrency(sale.subtotal)],
+            sale.discount > 0 && ['Discount', `-${formatCurrency(sale.discount)}`],
+          ]}
+          grand={['Grand Total', formatCurrency(sale.total)]}
+        />
+        <DocSummary
+          lines={[
+            ['Paid', formatCurrency(sale.paidAmount)],
+            sale.paidAmount > 0 && ['Payment method', sale.paymentAccountName || '—'],
+            sale.total - sale.paidAmount > 0 && ['Balance on this invoice', formatCurrency(sale.total - sale.paidAmount)],
+            ['Previous balance', formatCurrency(sale.previousBalance)],
+            ['Balance from this sale', formatCurrency(sale.balanceAdded)],
+          ]}
+          owed={['Current outstanding balance', formatCurrency(currentOutstanding)]}
+        />
 
         {sale.notes && (
-          <>
-            <div className="my-3 border-t border-dashed border-slate-300" />
-            <p className="text-xs text-slate-600"><span className="font-semibold">Notes:</span> {sale.notes}</p>
-          </>
+          <p className="mt-4 rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
+            <span className="font-semibold">Notes:</span> {sale.notes}
+          </p>
         )}
-        <div className="my-3 border-t border-dashed border-slate-300" />
-        <p className="text-center text-[11px] text-slate-400">Thank you for your business!</p>
+        <DocFooter>Thank you for your business!</DocFooter>
       </div>
 
       {sale.returns?.length > 0 && (

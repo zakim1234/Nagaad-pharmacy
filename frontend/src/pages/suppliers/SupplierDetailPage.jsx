@@ -9,6 +9,7 @@ import { printReport } from '../../utils/printReport.js';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
 import StatCard from '../../components/ui/StatCard.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import { Table, THead, Th, TBody, Td, TableEmpty } from '../../components/ui/Table.jsx';
@@ -50,6 +51,7 @@ export default function SupplierDetailPage() {
         <Link to="/suppliers" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
           <ArrowLeft className="h-4 w-4" /> Back to Suppliers
         </Link>
+        <SharePdfButton fileName={`Supplier-${supplier.name.replace(/\s+/g, '-')}`} phone={supplier.phone} message={`Supplier report — ${supplier.name}`} orientation="landscape" />
         <Button variant="secondary" onClick={() => printReport('landscape')}>
           <Printer className="h-4 w-4" /> Print Report
         </Button>

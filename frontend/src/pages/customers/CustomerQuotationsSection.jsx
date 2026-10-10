@@ -11,7 +11,8 @@ import Button from '../../components/ui/Button.jsx';
 import Badge, { quotationStatusBadge } from '../../components/ui/Badge.jsx';
 import { FormField, Select } from '../../components/ui/Field.jsx';
 import Pagination from '../../components/ui/Pagination.jsx';
-import logo from '../../images/logo.png';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
+import DocHeader, { DocInfo } from '../../components/docs/DocHeader.jsx';
 
 const STATUSES = ['Pending', 'Accepted', 'Rejected', 'Expired', 'Converted'];
 
@@ -52,6 +53,7 @@ export default function CustomerQuotationsSection({ customerId, customer }) {
             ))}
           </Select>
         </FormField>
+        <SharePdfButton fileName={`Quotations-${(customer?.name || 'customer').replace(/\s+/g, '-')}`} phone={customer?.phone} message={`${BUSINESS.name} — your quotations`} />
         <Button variant="secondary" onClick={() => printReport('portrait')} disabled={quotations.length === 0}>
           <Printer className="h-4 w-4" /> Print
         </Button>
@@ -104,26 +106,8 @@ export default function CustomerQuotationsSection({ customerId, customer }) {
             summary list above. Reuses the same branding as every other
             printed document in the app. */}
         <div className="hidden print:block">
-          <div className="flex flex-col items-center text-center">
-            <img src={logo} alt={BUSINESS.name} className="h-14 w-auto object-contain" />
-            <h1 className="mt-1 text-base font-bold tracking-wide text-slate-900">{BUSINESS.name}</h1>
-            <p className="text-xs text-slate-500">{BUSINESS.addressLine}</p>
-            <p className="text-xs text-slate-500">{BUSINESS.phone}</p>
-          </div>
-          <div className="my-3 border-t border-dashed border-slate-300" />
-          <p className="text-center text-base font-bold uppercase tracking-wide text-slate-900">Customer Quotation Statement</p>
-          <div className="my-3 flex flex-wrap items-start justify-between gap-4 text-xs">
-            <div>
-              <p className="text-slate-400">Customer</p>
-              <p className="font-semibold text-slate-800">{customer?.name}</p>
-              {customer?.phone && <p className="text-slate-500">{customer.phone}</p>}
-            </div>
-            <div className="text-right">
-              <p className="text-slate-400">Status Filter</p>
-              <p className="font-semibold text-slate-800">{status || 'All'}</p>
-            </div>
-          </div>
-          <div className="border-t border-dashed border-slate-300" />
+          <DocHeader title="Customer Quotations" meta={<span className="font-semibold">{status || 'All statuses'}</span>} />
+          <DocInfo left={['Customer', customer?.name, customer?.phone]} right={['Quotations', String(quotations.length)]} />
 
           {quotations.map((q) => (
             <div key={q.id} className="mt-4" style={{ breakInside: 'avoid' }}>

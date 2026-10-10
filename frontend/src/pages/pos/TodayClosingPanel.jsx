@@ -10,7 +10,8 @@ import Button from '../../components/ui/Button.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import Modal from '../../components/ui/Modal.jsx';
 import Spinner from '../../components/ui/Spinner.jsx';
-import logo from '../../images/logo.png';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
+import DocHeader, { docRow } from '../../components/docs/DocHeader.jsx';
 
 // Today's Close Day, inside Daily Closing: the business day's status, the
 // pending (Draft) invoices that closing will confirm, and the Close Day /
@@ -218,6 +219,7 @@ export default function TodayClosingPanel({ onChanged, refreshKey = 0 }) {
           <Button variant="secondary" onClick={() => setResult(null)}>
             Done
           </Button>
+          {result && <SharePdfButton fileName={`Day-Closing_${String(result.businessDate).slice(0, 10)}`} message={`${BUSINESS.name} — Day closing ${formatDate(result.businessDate)}: revenue ${formatCurrency(result.revenue)}`} />}
           <Button onClick={() => printReport('portrait')}>
             <Printer className="h-4 w-4" /> Print Day Summary
           </Button>
@@ -264,20 +266,10 @@ function Breakdown({ title, icon: Icon, rows }) {
 // The printable summary shown right after closing.
 function DaySummary({ result }) {
   return (
-    <div id="print-area" className="text-sm">
-      <div className="flex flex-col items-center text-center">
-        <img src={logo} alt={BUSINESS.name} className="h-14 w-auto object-contain" />
-        <p className="mt-1 text-base font-bold tracking-wide text-slate-900">{BUSINESS.name}</p>
-        <p className="text-xs text-slate-500">{BUSINESS.addressLine}</p>
-        <p className="text-xs text-slate-500">{BUSINESS.phone}</p>
-      </div>
-      <div className="my-4 flex items-center justify-center gap-2 border-y border-dashed border-slate-300 py-3">
-        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-        <p className="text-lg font-bold text-slate-900">Day Closed Successfully</p>
-      </div>
-      <p className="text-center text-slate-500">{formatDate(result.businessDate)}</p>
-      <p className="text-center text-xs text-slate-400">
-        Closed by {result.closedByName} at {formatDateTime(result.closedAt)}
+    <div id="print-area" className="bg-white text-sm text-neutral-900">
+      <DocHeader title="Day Closing" meta={<span className="font-semibold">{formatDate(result.businessDate)}</span>} />
+      <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-neutral-500">
+        <CheckCircle2 className="h-4 w-4 text-brand-600" /> Closed by {result.closedByName} at {formatDateTime(result.closedAt)}
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
@@ -310,28 +302,29 @@ function DaySummary({ result }) {
 
 function SummaryRow({ label, value, highlight }) {
   return (
-    <div className={`rounded-lg px-3 py-2 ${highlight ? 'bg-emerald-50' : 'bg-slate-50'}`}>
-      <p className="text-xs uppercase text-slate-400">{label}</p>
-      <p className={`text-lg font-bold ${highlight ? 'text-emerald-700' : 'text-slate-800'}`}>{value}</p>
+    <div
+      className={`rounded-lg px-3 py-2 ${highlight ? 'bg-neutral-950 text-white' : 'border border-neutral-200 bg-white'}`}
+      style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
+    >
+      <p className={`text-[10px] uppercase tracking-wider ${highlight ? 'text-white/70' : 'text-neutral-500'}`}>{label}</p>
+      <p className={`text-lg font-bold tabular-nums ${highlight ? 'text-white' : 'text-neutral-900'}`}>{value}</p>
     </div>
   );
 }
 
 function SummaryList({ title, empty, rows }) {
   return (
-    <div className="mt-5 border-t border-dashed border-slate-300 pt-3">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</p>
+    <div className="mt-5">
+      <p className="border-b-2 border-neutral-900 pb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">{title}</p>
       {rows.length === 0 ? (
-        <p className="text-slate-400">{empty}</p>
+        <p className="py-2 text-neutral-400">{empty}</p>
       ) : (
-        <div className="space-y-1.5">
-          {rows.map((r) => (
-            <div key={r.key} className="flex justify-between">
-              <span className="text-slate-600">{r.name}</span>
-              <span className="font-semibold text-slate-800">{r.value}</span>
-            </div>
-          ))}
-        </div>
+        rows.map((r, i) => (
+          <div key={r.key} className={`flex justify-between px-2 py-1.5 ${docRow(i)}`}>
+            <span className="text-neutral-700">{r.name}</span>
+            <span className="font-semibold tabular-nums">{r.value}</span>
+          </div>
+        ))
       )}
     </div>
   );

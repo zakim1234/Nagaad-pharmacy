@@ -9,6 +9,7 @@ import { formatCurrency, formatDate } from '../../utils/format.js';
 import { printReport } from '../../utils/printReport.js';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import Button from '../../components/ui/Button.jsx';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import { PlanPrintSheet, PaidPlan, planPrintRows, round2 } from './VendorPlanShared.jsx';
 
@@ -74,6 +75,7 @@ export default function VendorPlanPage() {
                 <Undo2 className="h-4 w-4" /> Cancel payments
               </Button>
             )}
+            <SharePdfButton fileName={`Vendor-Balances_${plan.planNumber}`} message={`Vendor Balance Summary ${plan.planNumber}`} />
             <Button variant="secondary" onClick={() => printReport('portrait')}>
               <Printer className="h-4 w-4" /> Print
             </Button>
