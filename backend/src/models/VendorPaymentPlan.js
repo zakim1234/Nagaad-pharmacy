@@ -11,6 +11,7 @@ const rowSchema = new mongoose.Schema(
     supplierName: { type: String, required: true },
     owedCents: { type: Number, required: true, min: 0 }, // balance when the row was last saved / paid
     allocationCents: { type: Number, required: true, min: 0 },
+    receiptNo: { type: String, default: '', maxlength: 60, trim: true }, // supplier's receipt serial
     paidCents: { type: Number, default: 0 },
     bulkPayment: { type: mongoose.Schema.Types.ObjectId, ref: 'BulkPurchasePayment', default: null },
     bulkNumber: { type: String, default: '' },

@@ -24,7 +24,7 @@ async function generateBulkNumber(session) {
 // invoice of theirs when omitted. One account transaction, one
 // PurchasePayment per invoice reached, one BulkPurchasePayment receipt.
 // Runs inside the caller's transaction; returns the receipt document.
-export async function paySupplier(session, { supplierId, purchaseIds = null, amountCents, paymentAccountId, paymentDate, note = '', percentage = null, user }) {
+export async function paySupplier(session, { supplierId, purchaseIds = null, amountCents, paymentAccountId, paymentDate, note = '', percentage = null, receiptNo = '', user }) {
   const supplier = await Supplier.findById(supplierId).session(session);
   if (!supplier) throw new ApiError(404, 'Supplier not found.');
   const account = await Account.findById(paymentAccountId).session(session);
@@ -78,6 +78,7 @@ export async function paySupplier(session, { supplierId, purchaseIds = null, amo
         accountTransaction: txn?._id || null,
         paymentDate,
         note: String(note).trim(),
+        receiptNo: String(receiptNo || '').trim(),
         allocations: [],
         createdBy: user?._id || null,
         createdByName: user?.name || '',
@@ -109,6 +110,7 @@ export async function paySupplier(session, { supplierId, purchaseIds = null, amo
           newBalanceCents: purchase.balanceCents,
           note: `Part of bulk payment ${bulkNumber}${bulk.note ? ` — ${bulk.note}` : ''}`,
           paymentDate,
+          receiptNo: bulk.receiptNo,
           bulkPayment: bulk._id,
           createdBy: user?._id,
         },

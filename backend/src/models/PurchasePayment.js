@@ -15,6 +15,8 @@ const schema = new mongoose.Schema(
     previousBalanceCents: { type: Number, required: true }, // Purchase.balanceCents immediately before this payment
     newBalanceCents: { type: Number, required: true },
     note: { type: String, default: '', maxlength: 500 },
+    // Serial number on the supplier's own (often handwritten) payment receipt.
+    receiptNo: { type: String, default: '', maxlength: 60, trim: true },
     // The business date of the payment (editable); defaults to when it was
     // recorded. createdAt stays the moment it was entered.
     paymentDate: { type: Date, default: null },

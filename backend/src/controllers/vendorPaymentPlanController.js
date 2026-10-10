@@ -24,6 +24,7 @@ function planToDTO(plan) {
       supplierName: r.supplierName,
       owed: fromCents(r.owedCents),
       allocation: fromCents(r.allocationCents),
+      receiptNo: r.receiptNo || '',
       paid: fromCents(r.paidCents),
       bulkPayment: r.bulkPayment,
       bulkNumber: r.bulkNumber,
@@ -85,7 +86,9 @@ export const savePaymentPlan = asyncHandler(async (req, res) => {
       throw new ApiError(400, `${s?.name || 'A supplier'} is not owed anything right now.`);
     }
     if (cents > current.owedCents) throw new ApiError(400, `${current.name}: allocation is more than the ${fromCents(current.owedCents).toFixed(2)} owed.`);
-    built.push({ supplier: current._id, supplierName: current.name, owedCents: current.owedCents, allocationCents: cents });
+    const receiptNo = String(row.receiptNo || '').trim();
+    if (receiptNo.length > 60) throw new ApiError(400, `${current.name}: receipt number is too long (60 characters max).`);
+    built.push({ supplier: current._id, supplierName: current.name, owedCents: current.owedCents, allocationCents: cents, receiptNo });
   }
 
   let plan = await VendorPaymentPlan.findOne({ status: 'OPEN' }).sort({ createdAt: -1 });
@@ -127,6 +130,7 @@ export const payPaymentPlan = asyncHandler(async (req, res) => {
         paymentAccountId: account._id,
         paymentDate,
         note: `Vendor payment plan ${open.planNumber}`,
+        receiptNo: row.receiptNo,
         user: req.user,
       });
       row.paidCents = amountCents;

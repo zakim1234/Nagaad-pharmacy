@@ -8,7 +8,7 @@ export const round2 = (n) => Math.round(n * 100) / 100;
 
 // Rows of a saved plan in the shape the printed sheet takes.
 export const planPrintRows = (plan) =>
-  plan.rows.map((r) => ({ key: String(r.supplier), name: r.supplierName, owed: r.owed, allocation: r.allocation, ok: r.paid > 0 }));
+  plan.rows.map((r) => ({ key: String(r.supplier), name: r.supplierName, owed: r.owed, allocation: r.allocation, receiptNo: r.receiptNo || '', ok: r.paid > 0 }));
 
 // The paper copy of a Vendor Balance Summary, laid out like the hand-made
 // sheet. Hidden on screen; only shown when printing.
@@ -39,6 +39,7 @@ export function PlanPrintSheet({ rows, date, planNumber, paid }) {
             <th className="px-3 py-2 text-left font-semibold">Vendor</th>
             <th className="px-3 py-2 text-right font-semibold">Balance</th>
             <th className="px-3 py-2 text-right font-semibold">Allocation</th>
+            <th className="px-3 py-2 text-left font-semibold">Receipt No.</th>
             <th className="w-16 px-3 py-2 text-center font-semibold">OK</th>
           </tr>
         </thead>
@@ -49,6 +50,7 @@ export function PlanPrintSheet({ rows, date, planNumber, paid }) {
               <td className="px-3 py-2 font-medium">{r.name}</td>
               <td className="px-3 py-2 text-right">{formatCurrency(r.owed)}</td>
               <td className="px-3 py-2 text-right font-bold text-brand-700">{r.allocation > 0 ? formatCurrency(r.allocation) : '—'}</td>
+              <td className="px-3 py-2">{r.receiptNo || <span className="inline-block w-20 border-b border-dotted border-neutral-400">&nbsp;</span>}</td>
               <td className="px-3 py-2 text-center">
                 <span className={`inline-flex h-4 w-4 items-center justify-center rounded-sm border text-[11px] font-bold leading-none ${r.ok ? 'border-brand-600 text-brand-600' : 'border-neutral-400'}`}>
                   {r.ok ? '✓' : ''}
@@ -64,6 +66,7 @@ export function PlanPrintSheet({ rows, date, planNumber, paid }) {
             </td>
             <td className="px-3 py-2.5 text-right">{formatCurrency(printOwed)}</td>
             <td className="px-3 py-2.5 text-right text-brand-700">{formatCurrency(printAllocated)}</td>
+            <td />
             <td />
           </tr>
         </tfoot>
@@ -146,7 +149,10 @@ export function PaidPlan({ plan }) {
                   .join('')}
               </span>
               <div className="min-w-[180px] flex-1">
-                <p className="font-semibold text-slate-900">{r.supplierName}</p>
+                <p className="font-semibold text-slate-900">
+                  {r.supplierName}
+                  {r.receiptNo && <span className="ml-2 rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] font-medium text-neutral-600">Receipt No. {r.receiptNo}</span>}
+                </p>
                 <div className="mt-1.5 flex items-center gap-2">
                   <div className="h-1.5 w-40 overflow-hidden rounded-full bg-slate-100">
                     <div className="h-full rounded-full bg-brand-600" style={{ width: `${pct}%` }} />

@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Ban, Printer, Search, Percent, Pencil, Trash2, Sheet, Wallet } from 'lucide-react';
+import { Ban, Printer, Search, Pencil, Trash2, Sheet, Wallet, FileText } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -13,11 +13,9 @@ import { Table, THead, Th, TBody, Td, TableEmpty, TableLoading } from '../../com
 import Pagination from '../../components/ui/Pagination.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
-import PurchaseFormModal from './PurchaseFormModal.jsx';
 import BulkPaymentModal from './BulkPaymentModal.jsx';
 import PurchaseEditModal from './PurchaseEditModal.jsx';
 
-const PAYMENT_STATUS_COLOR = { Unpaid: 'slate', Partial: 'amber', Paid: 'green' };
 const ACTION = 'flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50';
 const ACTION_DANGER = 'flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50';
 
@@ -45,8 +43,6 @@ export default function PurchasesPage() {
   const [page, setPage] = useState(1);
   const [q, setQ] = useState('');
   const debouncedQ = useDebounce(q, 300);
-  const [paymentStatus, setPaymentStatus] = useState('');
-  const [formOpen, setFormOpen] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [voidItem, setVoidItem] = useState(null);
   const [voiding, setVoiding] = useState(false);
@@ -69,7 +65,6 @@ export default function PurchasesPage() {
           page,
           limit: 20,
           q: debouncedQ || undefined,
-          paymentStatus: paymentStatus || undefined,
           supplier: supplierId || undefined,
           sort: supplierId ? undefined : 'supplier',
         },
@@ -80,9 +75,9 @@ export default function PurchasesPage() {
       })
       .catch((err) => toast.error(err.friendlyMessage || 'Failed to load purchases.'))
       .finally(() => setLoading(false));
-  }, [page, debouncedQ, paymentStatus, supplierId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [page, debouncedQ, supplierId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => setPage(1), [debouncedQ, paymentStatus, supplierId]);
+  useEffect(() => setPage(1), [debouncedQ, supplierId]);
   useEffect(() => load(), [load]);
   useEffect(() => loadSuppliers(), [loadSuppliers]);
 
@@ -97,7 +92,7 @@ export default function PurchasesPage() {
   const bySupplier = useMemo(() => new Map(suppliers.map((s) => [String(s.id), s])), [suppliers]);
   const selected = supplierId ? bySupplier.get(supplierId) : null;
   const allCount = suppliers.reduce((s, x) => s + x.invoiceCount, 0);
-  const cols = 5;
+  const cols = 4;
 
   const handleVoid = async () => {
     setVoiding(true);
@@ -136,11 +131,12 @@ export default function PurchasesPage() {
         {p.supplierInvoiceNumber && <div className="text-xs text-slate-400">Supplier #{p.supplierInvoiceNumber}</div>}
       </Td>
       <Td className="whitespace-nowrap">
-        {formatCurrency(p.totalCost)}
-        {p.balance > 0 && p.status !== 'voided' && <div className="text-xs font-semibold text-rose-600">Owed {formatCurrency(p.balance)}</div>}
-      </Td>
-      <Td>
-        {p.status === 'voided' ? <Badge color="red">Voided</Badge> : <Badge color={PAYMENT_STATUS_COLOR[p.paymentStatus]}>{p.paymentStatus}</Badge>}
+        <span className={p.status === 'voided' ? 'text-slate-400 line-through' : 'font-medium text-slate-900'}>{formatCurrency(p.totalCost)}</span>
+        {p.status === 'voided' && (
+          <span className="ml-2">
+            <Badge color="red">Voided</Badge>
+          </span>
+        )}
       </Td>
       <Td className="whitespace-nowrap">{formatDate(p.createdAt)}</Td>
       <Td>
@@ -210,12 +206,6 @@ export default function PurchasesPage() {
             <Button variant="secondary" onClick={() => navigate('/purchases/vendor-balances')}>
               <Sheet className="h-4 w-4" /> Vendor Balances
             </Button>
-            <Button variant="secondary" onClick={() => setBulkOpen(true)}>
-              <Percent className="h-4 w-4" /> Bulk Payment
-            </Button>
-            <Button onClick={() => setFormOpen(true)}>
-              <Plus className="h-4 w-4" /> New Purchase Invoice
-            </Button>
           </div>
         }
       />
@@ -235,11 +225,16 @@ export default function PurchasesPage() {
                     </p>
                   </div>
                 </div>
+                <div className="flex flex-wrap gap-2">
+                <Button variant="secondary" onClick={() => navigate(`/purchases/suppliers/${selected.id}/statement`)}>
+                  <FileText className="h-4 w-4" /> Statement
+                </Button>
                 {selected.owed > 0 && (
                   <Button onClick={() => setBulkOpen(true)}>
                     <Wallet className="h-4 w-4" /> Pay this supplier
                   </Button>
                 )}
+                </div>
               </div>
               <div className="mt-4 grid grid-cols-3 divide-x divide-white/10 border-t border-white/10">
                 <HeroStat label="Total bought" value={formatCurrency(selected.total)} />
@@ -249,7 +244,7 @@ export default function PurchasesPage() {
             </div>
           )}
 
-          <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
+          <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="relative sm:col-span-2">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -267,20 +262,13 @@ export default function PurchasesPage() {
                 </option>
               ))}
             </Select>
-            <Select value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)}>
-              <option value="">All Payment Statuses</option>
-              <option value="Unpaid">Unpaid</option>
-              <option value="Partial">Partial</option>
-              <option value="Paid">Paid</option>
-            </Select>
           </div>
 
           <Table>
             <THead>
               <tr>
                 <Th>Invoice</Th>
-                <Th>Total / Owed</Th>
-                <Th>Payment</Th>
+                <Th>Amount</Th>
                 <Th>Date</Th>
                 <Th className="text-right">Actions</Th>
               </tr>
@@ -300,7 +288,6 @@ export default function PurchasesPage() {
           </div>
       </div>
 
-      <PurchaseFormModal open={formOpen} onClose={() => setFormOpen(false)} onSaved={reload} />
       <PurchaseEditModal purchase={editItem} onClose={() => setEditItem(null)} onSaved={reload} />
       <ConfirmDialog
         open={!!deleteItem}

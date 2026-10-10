@@ -11,7 +11,7 @@ import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Modal from '../../components/ui/Modal.jsx';
 import { FormField, Input, Select } from '../../components/ui/Field.jsx';
-import { PlanPrintSheet, PaidPlan, round2 } from './VendorPlanShared.jsx';
+import { PlanPrintSheet, PaidPlan, planPrintRows, round2 } from './VendorPlanShared.jsx';
 
 
 function todayString() {
@@ -28,6 +28,7 @@ export default function VendorBalancesPage() {
   const canPay = user?.role === 'admin' || user?.role === 'manager';
   const [data, setData] = useState(null);
   const [alloc, setAlloc] = useState({}); // supplierId -> typed text
+  const [receipt, setReceipt] = useState({}); // supplierId -> supplier's receipt serial
   const [dirty, setDirty] = useState(false);
   const [q, setQ] = useState('');
   const [saving, setSaving] = useState(false);
@@ -47,6 +48,7 @@ export default function VendorBalancesPage() {
         setData(d);
         const open = d.plan?.status === 'OPEN' ? d.plan : null;
         setAlloc(Object.fromEntries((open?.rows || []).map((r) => [String(r.supplier), String(r.allocation)])));
+        setReceipt(Object.fromEntries((open?.rows || []).map((r) => [String(r.supplier), r.receiptNo || ''])));
         setShowPaid(d.plan?.status === 'PAID');
         setDirty(false);
       })
@@ -65,15 +67,20 @@ export default function VendorBalancesPage() {
         let error = '';
         if (text !== '' && (!Number.isFinite(Number(text)) || Number(text) < 0)) error = 'Invalid amount';
         else if (value > b.owed) error = `More than ${formatCurrency(b.owed)} owed`;
-        return { ...b, text, value: error ? 0 : value, error };
+        return { ...b, text, value: error ? 0 : value, error, receiptNo: receipt[String(b.supplierId)] ?? '' };
       }),
-    [data, alloc]
+    [data, alloc, receipt]
   );
   const totalOwed = data?.totalOwed || 0;
   const totalAllocated = round2(rows.reduce((s, r) => s + r.value, 0));
   const hasErrors = rows.some((r) => r.error);
   const allocatedCount = rows.filter((r) => r.value > 0).length;
   const visible = q ? rows.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())) : rows;
+
+  const setReceiptNo = (id, text) => {
+    setReceipt((prev) => ({ ...prev, [String(id)]: text }));
+    setDirty(true);
+  };
 
   const setOne = (id, text) => {
     setAlloc((prev) => ({ ...prev, [String(id)]: text }));
@@ -88,7 +95,7 @@ export default function VendorBalancesPage() {
     setSaving(true);
     try {
       const res = await client.put('/purchases/payment-plan', {
-        rows: rows.filter((r) => r.value > 0).map((r) => ({ supplierId: r.supplierId, allocation: r.value })),
+        rows: rows.filter((r) => r.value > 0).map((r) => ({ supplierId: r.supplierId, allocation: r.value, receiptNo: r.receiptNo.trim() })),
       });
       setData((d) => ({ ...d, plan: res.data.data }));
       setDirty(false);
@@ -110,8 +117,8 @@ export default function VendorBalancesPage() {
   // What goes on paper: the paid plan when viewing it, otherwise the sheet being prepared.
   const printRows =
     paidPlan && showPaid
-      ? paidPlan.rows.map((r) => ({ key: String(r.supplier), name: r.supplierName, owed: r.owed, allocation: r.allocation, ok: r.paid > 0 }))
-      : rows.map((r) => ({ key: String(r.supplierId), name: r.name, owed: r.owed, allocation: r.value, ok: false }));
+      ? planPrintRows(paidPlan)
+      : rows.map((r) => ({ key: String(r.supplierId), name: r.name, owed: r.owed, allocation: r.value, receiptNo: r.value > 0 ? r.receiptNo : '', ok: false }));
 
   return (
     <div>
@@ -174,13 +181,14 @@ export default function VendorBalancesPage() {
                     <th className="px-4 py-2.5 font-medium">Supplier</th>
                     <th className="px-4 py-2.5 text-right font-medium">Balance</th>
                     <th className="w-56 px-4 py-2.5 text-right font-medium">Allocation</th>
+                    <th className="w-44 px-4 py-2.5 font-medium">Receipt No.</th>
                     <th className="px-4 py-2.5 text-right font-medium">Left after</th>
                   </tr>
                 </thead>
                 <tbody>
                   {visible.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-slate-400">
+                      <td colSpan={6} className="px-4 py-10 text-center text-slate-400">
                         {rows.length ? 'No supplier matches your search.' : 'No supplier is owed money right now.'}
                       </td>
                     </tr>
@@ -190,9 +198,6 @@ export default function VendorBalancesPage() {
                       <td className="px-4 py-2 text-slate-400">{rows.indexOf(r) + 1}</td>
                       <td className="px-4 py-2">
                         <p className="font-medium text-slate-800">{r.name}</p>
-                        <p className="text-xs text-slate-400">
-                          {r.invoiceCount} unpaid invoice{r.invoiceCount === 1 ? '' : 's'}
-                        </p>
                       </td>
                       <td className="whitespace-nowrap px-4 py-2 text-right font-semibold text-slate-900">{formatCurrency(r.owed)}</td>
                       <td className="px-4 py-2">
@@ -218,6 +223,16 @@ export default function VendorBalancesPage() {
                         </div>
                         {r.error && <p className="mt-0.5 text-right text-xs text-rose-600">{r.error}</p>}
                       </td>
+                      <td className="px-4 py-2">
+                        <Input
+                          className="w-40!"
+                          maxLength={60}
+                          placeholder={r.value > 0 ? 'Their receipt serial' : '—'}
+                          disabled={!(r.value > 0)}
+                          value={r.receiptNo}
+                          onChange={(e) => setReceiptNo(r.supplierId, e.target.value)}
+                        />
+                      </td>
                       <td className="whitespace-nowrap px-4 py-2 text-right text-slate-500">{formatCurrency(round2(r.owed - r.value))}</td>
                     </tr>
                   ))}
@@ -230,6 +245,7 @@ export default function VendorBalancesPage() {
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">{formatCurrency(totalOwed)}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right text-brand-700">{formatCurrency(totalAllocated)}</td>
+                      <td />
                       <td className="whitespace-nowrap px-4 py-3 text-right">{formatCurrency(round2(totalOwed - totalAllocated))}</td>
                     </tr>
                   </tfoot>

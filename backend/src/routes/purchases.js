@@ -19,6 +19,7 @@ import {
   getBulkPayment,
   updatePurchasePayment,
 } from '../controllers/purchasePaymentController.js';
+import { getSupplierStatement } from '../controllers/supplierStatementController.js';
 import { getPaymentPlan, savePaymentPlan, payPaymentPlan, listPaymentPlans, getPaymentPlanById } from '../controllers/vendorPaymentPlanController.js';
 
 const router = Router();
@@ -27,6 +28,7 @@ router.use(requirePermission('purchases'));
 
 router.get('/', listPurchases);
 router.get('/suppliers-summary', listSupplierSummary);
+router.get('/suppliers/:supplierId/statement', getSupplierStatement);
 // Bulk payments -- before '/:id' so 'bulk-payments' is never read as an id.
 router.get('/bulk-payments/suppliers', listOwedSuppliers);
 router.get('/bulk-payments/outstanding', listSupplierOutstanding);

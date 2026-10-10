@@ -13,7 +13,6 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import { FormField, Input, Select, Textarea } from '../../components/ui/Field.jsx';
 import Modal from '../../components/ui/Modal.jsx';
 
-const STATUS_COLOR = { Unpaid: 'slate', Partial: 'amber', Paid: 'green' };
 
 function dayString(date = new Date()) {
   const d = new Date(date);
@@ -39,6 +38,7 @@ function PaymentModal({ open, onClose, purchase, payment, onSaved }) {
   const [accountId, setAccountId] = useState('');
   const [paymentDate, setPaymentDate] = useState(dayString());
   const [note, setNote] = useState('');
+  const [receiptNo, setReceiptNo] = useState('');
   const [saving, setSaving] = useState(false);
   const accounts = useActiveAccounts(open);
 
@@ -48,6 +48,7 @@ function PaymentModal({ open, onClose, purchase, payment, onSaved }) {
     setAccountId(editing ? String(payment.paymentAccount) : '');
     setPaymentDate(dayString(editing ? payment.paymentDate : new Date()));
     setNote(editing ? payment.note || '' : '');
+    setReceiptNo(editing ? payment.receiptNo || '' : '');
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const maxAmount = editing ? purchase.balanceDue + payment.amount : purchase.balanceDue;
@@ -60,7 +61,7 @@ function PaymentModal({ open, onClose, purchase, payment, onSaved }) {
     if (!accountId) return toast.error('Select a payment account.');
     setSaving(true);
     try {
-      const body = { amount: amt, paymentAccountId: accountId, paymentDate, note };
+      const body = { amount: amt, paymentAccountId: accountId, paymentDate, note, receiptNo };
       if (editing) await client.put(`/purchases/${purchase.id}/payments/${payment.id}`, body);
       else await client.post(`/purchases/${purchase.id}/payments`, body);
       toast.success(editing ? 'Payment updated.' : 'Payment recorded.');
@@ -97,6 +98,9 @@ function PaymentModal({ open, onClose, purchase, payment, onSaved }) {
         </FormField>
         <FormField label="Date">
           <Input type="date" value={paymentDate} max={dayString()} onChange={(e) => setPaymentDate(e.target.value)} />
+        </FormField>
+        <FormField label="Receipt No. (their receipt serial)">
+          <Input value={receiptNo} onChange={(e) => setReceiptNo(e.target.value)} maxLength={60} placeholder="e.g. 0457" />
         </FormField>
         <FormField label="Note / Reference">
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" maxLength={500} />
@@ -185,7 +189,6 @@ export default function PurchaseDetailPage() {
           </div>
           <div className="flex gap-2">
             {voided && <Badge color="red">Voided</Badge>}
-            <Badge color={STATUS_COLOR[purchase.paymentStatus]}>{purchase.paymentStatus}</Badge>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-3 gap-4 text-center">
@@ -277,6 +280,7 @@ function PaymentRow({ payment: p, actions, faded = false }) {
         </p>
         <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
           <span>{p.paymentNumber}</span>
+          {p.receiptNo && <span className="rounded bg-neutral-100 px-1.5 py-0.5 font-medium text-neutral-600">Receipt No. {p.receiptNo}</span>}
           {p.bulkPayment && (
             <Link to={`/purchases/bulk-payments/${p.bulkPayment}`} className="inline-flex items-center gap-1 font-medium text-brand-600 hover:underline">
               <Layers className="h-3 w-3" /> Bulk payment receipt

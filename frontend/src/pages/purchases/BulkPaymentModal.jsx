@@ -35,6 +35,7 @@ export default function BulkPaymentModal({ open, onClose, onPaid, initialSupplie
   const [accountId, setAccountId] = useState('');
   const [paymentDate, setPaymentDate] = useState(todayString());
   const [note, setNote] = useState('');
+  const [receiptNo, setReceiptNo] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -49,6 +50,7 @@ export default function BulkPaymentModal({ open, onClose, onPaid, initialSupplie
     setAccountId('');
     setPaymentDate(todayString());
     setNote('');
+    setReceiptNo('');
     client.get('/purchases/bulk-payments/suppliers').then((r) => setSuppliers(r.data.data)).catch(() => setSuppliers([]));
     client.get('/accounts').then((r) => setAccounts(r.data.data.accounts.filter((a) => a.isActive))).catch(() => setAccounts([]));
   }, [open]);
@@ -116,6 +118,7 @@ export default function BulkPaymentModal({ open, onClose, onPaid, initialSupplie
         paymentAccountId: accountId,
         paymentDate,
         note,
+        receiptNo,
       });
       toast.success(`${res.data.data.bulkNumber} saved — ${formatCurrency(res.data.data.amount)} paid to ${res.data.data.supplierName}.`);
       onPaid(res.data.data);
@@ -272,6 +275,9 @@ export default function BulkPaymentModal({ open, onClose, onPaid, initialSupplie
               </FormField>
               <FormField label="Date">
                 <Input type="date" value={paymentDate} max={todayString()} onChange={(e) => setPaymentDate(e.target.value)} />
+              </FormField>
+              <FormField label="Receipt No. (their receipt serial)">
+                <Input value={receiptNo} onChange={(e) => setReceiptNo(e.target.value)} maxLength={60} placeholder="e.g. 0457" />
               </FormField>
               <FormField label="Note (optional)">
                 <Textarea rows={1} value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} />

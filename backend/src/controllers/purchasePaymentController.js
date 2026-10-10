@@ -26,6 +26,7 @@ function bulkToDTO(b, paymentsById = new Map()) {
     paymentAccountName: b.paymentAccountName,
     paymentDate: b.paymentDate,
     note: b.note,
+    receiptNo: b.receiptNo || '',
     allocations: b.allocations.map((a) => {
       const pay = paymentsById.get(String(a.payment));
       return {
@@ -81,20 +82,21 @@ export const listSupplierOutstanding = asyncHandler(async (req, res) => {
 // invoices owe) is applied oldest invoice first; it leaves the account as
 // ONE transaction and produces ONE receipt.
 export const createBulkPayment = asyncHandler(async (req, res) => {
-  const { supplierId, purchaseIds, paymentAccountId, note = '' } = req.body;
+  const { supplierId, purchaseIds, paymentAccountId, note = '', receiptNo = '' } = req.body;
   const amount = Number(req.body.amount);
   if (!supplierId) throw new ApiError(400, 'Select a supplier.');
   if (!Array.isArray(purchaseIds) || purchaseIds.length === 0) throw new ApiError(400, 'Select at least one invoice to pay.');
   if (!Number.isFinite(amount) || amount <= 0 || !Number.isSafeInteger(toCents(amount))) throw new ApiError(400, 'Amount to pay must be greater than zero.');
   if (!paymentAccountId) throw new ApiError(400, 'Please select a payment account.');
   if (String(note).length > 500) throw new ApiError(400, 'Note is too long (500 characters max).');
+  if (String(receiptNo).length > 60) throw new ApiError(400, 'Receipt number is too long (60 characters max).');
   const percentage = req.body.percentage == null || req.body.percentage === '' ? null : Number(req.body.percentage);
   if (percentage !== null && (!Number.isFinite(percentage) || percentage <= 0 || percentage > 100)) throw new ApiError(400, 'Percentage must be between 0 and 100.');
   const paymentDate = parsePaymentDate(req.body.paymentDate);
   const amountCents = toCents(amount);
 
   const result = await runInTransaction(async (session) => {
-    return paySupplier(session, { supplierId, purchaseIds, amountCents, paymentAccountId, paymentDate, note, percentage, user: req.user });
+    return paySupplier(session, { supplierId, purchaseIds, amountCents, paymentAccountId, paymentDate, note, percentage, receiptNo, user: req.user });
   });
 
   await logAudit({
@@ -175,6 +177,7 @@ export const updatePurchasePayment = asyncHandler(async (req, res) => {
     payment.newBalanceCents = payment.previousBalanceCents - newAmountCents;
     payment.paymentDate = paymentDate;
     if (req.body.note != null) payment.note = String(req.body.note).trim();
+    if (req.body.receiptNo != null) payment.receiptNo = String(req.body.receiptNo).trim().slice(0, 60);
     payment.editedAt = new Date();
     await payment.save({ session });
     return { purchase, payment, before };

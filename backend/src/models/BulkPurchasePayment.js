@@ -19,6 +19,8 @@ const schema = new mongoose.Schema(
     accountTransaction: { type: mongoose.Schema.Types.ObjectId, ref: 'AccountTransaction', default: null },
     paymentDate: { type: Date, required: true },
     note: { type: String, default: '', maxlength: 500 },
+    // Serial number on the supplier's own (often handwritten) payment receipt.
+    receiptNo: { type: String, default: '', maxlength: 60, trim: true },
     allocations: [
       {
         purchase: { type: mongoose.Schema.Types.ObjectId, ref: 'Purchase', required: true },

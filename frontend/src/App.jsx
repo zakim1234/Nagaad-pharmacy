@@ -37,6 +37,7 @@ import PurchaseReceiptPage from './pages/receipt/PurchaseReceiptPage.jsx';
 import BulkPaymentReceiptPage from './pages/receipt/BulkPaymentReceiptPage.jsx';
 import VendorBalancesPage from './pages/purchases/VendorBalancesPage.jsx';
 import VendorPlanPage from './pages/purchases/VendorPlanPage.jsx';
+import SupplierStatementPage from './pages/purchases/SupplierStatementPage.jsx';
 import ReturnReceiptPage from './pages/receipt/ReturnReceiptPage.jsx';
 import UsersPage from './pages/users/UsersPage.jsx';
 import NotFound from './pages/NotFound.jsx';
@@ -75,6 +76,7 @@ export default function App() {
               <Route path="/stock-adjustments" element={<RequirePermission module="stock"><StockAdjustmentsPage /></RequirePermission>} />
               <Route path="/purchases" element={<RequirePermission module="purchases"><PurchasesPage /></RequirePermission>} />
               <Route path="/purchases/vendor-balances" element={<RequirePermission module="purchases"><VendorBalancesPage /></RequirePermission>} />
+              <Route path="/purchases/suppliers/:supplierId/statement" element={<RequirePermission module="purchases"><SupplierStatementPage /></RequirePermission>} />
               <Route path="/purchases/vendor-balances/:planId" element={<RequirePermission module="purchases"><VendorPlanPage /></RequirePermission>} />
               <Route path="/purchases/:id" element={<RequirePermission module="purchases"><PurchaseDetailPage /></RequirePermission>} />
               <Route path="/purchases/:id/receipt" element={<RequirePermission module="purchases"><PurchaseReceiptPage /></RequirePermission>} />

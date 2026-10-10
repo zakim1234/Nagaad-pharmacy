@@ -7,7 +7,6 @@ import { printA5 } from '../../utils/printA5.js';
 import { BUSINESS } from '../../constants/business.js';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import Button from '../../components/ui/Button.jsx';
-import Badge from '../../components/ui/Badge.jsx';
 import logo from '../../images/logo.png';
 
 // One receipt for a payment spread across several of a supplier's invoices.
@@ -62,11 +61,17 @@ export default function BulkPaymentReceiptPage() {
             <p className="font-semibold text-slate-800">{bulk.supplierName}</p>
           </div>
           <div className="text-right">
-            <p className="text-slate-400">Receipt No.</p>
+            <p className="text-slate-400">Our ref.</p>
             <p className="font-semibold text-slate-800">{bulk.bulkNumber}</p>
             <p className="text-slate-500">{formatDate(bulk.paymentDate)}</p>
           </div>
         </div>
+        {bulk.receiptNo && (
+          <div className="mt-2 flex justify-between text-xs">
+            <span className="text-slate-400">Supplier receipt No.</span>
+            <span className="font-semibold text-slate-800">{bulk.receiptNo}</span>
+          </div>
+        )}
         <div className="mt-2 flex justify-between text-xs">
           <span className="text-slate-400">Paid from account</span>
           <span className="font-semibold text-slate-800">{bulk.paymentAccountName}</span>
@@ -90,9 +95,6 @@ export default function BulkPaymentReceiptPage() {
                   <Link to={`/purchases/${a.purchase}`} className="font-medium text-brand-600 hover:underline print:text-slate-800 print:no-underline">
                     {a.purchaseNumber}
                   </Link>
-                  <div className="mt-0.5">
-                    <Badge color={a.status === 'Paid' ? 'green' : 'amber'}>{a.status}</Badge>
-                  </div>
                   {a.paymentStatus === 'REVERSED' && <p className="mt-0.5 text-[10px] font-semibold text-rose-600">Deleted later</p>}
                   {a.paymentStatus === 'POSTED' && a.currentAmount !== a.amount && (
                     <p className="mt-0.5 text-[10px] font-semibold text-amber-600">Edited later to {formatCurrency(a.currentAmount)}</p>

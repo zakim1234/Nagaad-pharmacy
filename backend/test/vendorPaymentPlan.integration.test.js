@@ -164,3 +164,43 @@ test('SAVED SHEETS -- every plan is listed and can be opened again', { timeout: 
     await teardown(server);
   }
 });
+
+test('SUPPLIER STATEMENT -- invoices with their serials, payments with receipt numbers, running balance', { timeout: 90000 }, async () => {
+  const { server, request } = await setup('supplier_statement');
+  try {
+    const supplier = await Supplier.create({ name: 'Delta Pharma' });
+    const evc = await Account.create({ name: 'EVC Plus' });
+    const a = await request('/purchases', { supplierId: supplier.id, amount: 300, amountPaid: 0, supplierInvoiceNumber: 'INV-501' });
+    const b = await request('/purchases', { supplierId: supplier.id, amount: 500, amountPaid: 0, supplierInvoiceNumber: 'INV-502' });
+    const voided = await request('/purchases', { supplierId: supplier.id, amount: 999, amountPaid: 0, supplierInvoiceNumber: 'INV-X' });
+    await request(`/purchases/${voided.data.id}/void`, { reason: 'test' });
+
+    // Through the sheet, with the receipt serial they wrote by hand: spans both invoices.
+    const saved = await request('/purchases/payment-plan', { rows: [{ supplierId: supplier.id, allocation: 400, receiptNo: 'R-0077' }] }, 'PUT');
+    assert.equal(saved.data.rows[0].receiptNo, 'R-0077');
+    const paid = await request('/purchases/payment-plan/pay', { paymentAccountId: evc.id });
+    assert.equal(paid.status, 200, JSON.stringify(paid));
+    const bulk = await request(`/purchases/bulk-payments/${paid.data.rows[0].bulkPayment}`);
+    assert.equal(bulk.data.receiptNo, 'R-0077');
+    // A single payment with its own receipt.
+    const single = await request(`/purchases/${b.data.id}/payments`, { amount: 50, paymentAccountId: evc.id, receiptNo: 'R-0078' });
+    assert.equal(single.data.payment.receiptNo, 'R-0078');
+
+    const st = await request(`/purchases/suppliers/${supplier.id}/statement`);
+    assert.equal(st.status, 200, JSON.stringify(st));
+    assert.deepEqual(st.data.totals, { bought: 800, paid: 450, remaining: 350, invoiceCount: 2, paymentCount: 2 });
+    assert.deepEqual(
+      st.data.lines.map((l) => [l.kind, l.serialNo, l.goods, l.paid, l.balance]),
+      [
+        ['INVOICE', 'INV-501', 300, 0, 300],
+        ['INVOICE', 'INV-502', 500, 0, 800],
+        ['PAYMENT', 'R-0077', 0, 400, 400],
+        ['PAYMENT', 'R-0078', 0, 50, 350],
+      ],
+      'the 400 split over two invoices is one line; the voided invoice is left out'
+    );
+    assert.ok(a.data.id);
+  } finally {
+    await teardown(server);
+  }
+});
