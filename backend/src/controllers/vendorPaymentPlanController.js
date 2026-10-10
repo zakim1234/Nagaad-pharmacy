@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Purchase from '../models/Purchase.js';
 import Supplier from '../models/Supplier.js';
 import Account from '../models/Account.js';
@@ -33,6 +34,7 @@ function planToDTO(plan) {
     paymentDate: plan.paymentDate,
     paidAt: plan.paidAt,
     paidByName: plan.paidByName,
+    createdAt: plan.createdAt,
     updatedAt: plan.updatedAt,
   };
 }
@@ -149,5 +151,36 @@ export const payPaymentPlan = asyncHandler(async (req, res) => {
     entityId: plan._id,
     details: { planNumber: plan.planNumber, suppliers: plan.rows.filter((r) => r.paidCents > 0).length, total: fromCents(plan.rows.reduce((s, r) => s + r.paidCents, 0)) },
   });
+  res.json({ success: true, data: planToDTO(plan) });
+});
+
+// GET /api/purchases/payment-plans -- every saved sheet, newest first, for
+// the history list.
+export const listPaymentPlans = asyncHandler(async (req, res) => {
+  const plans = await VendorPaymentPlan.find().sort({ createdAt: -1 }).limit(200);
+  res.json({
+    success: true,
+    data: plans.map((p) => ({
+      id: p._id,
+      planNumber: p.planNumber,
+      status: p.status,
+      supplierCount: p.rows.length,
+      totalOwed: fromCents(p.rows.reduce((s, r) => s + r.owedCents, 0)),
+      totalAllocated: fromCents(p.rows.reduce((s, r) => s + r.allocationCents, 0)),
+      totalPaid: fromCents(p.rows.reduce((s, r) => s + r.paidCents, 0)),
+      paymentAccountName: p.paymentAccountName,
+      paymentDate: p.paymentDate,
+      paidByName: p.paidByName,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+    })),
+  });
+});
+
+// GET /api/purchases/payment-plans/:planId -- one saved sheet.
+export const getPaymentPlanById = asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.planId)) throw new ApiError(404, 'Sheet not found.');
+  const plan = await VendorPaymentPlan.findById(req.params.planId);
+  if (!plan) throw new ApiError(404, 'Sheet not found.');
   res.json({ success: true, data: planToDTO(plan) });
 });

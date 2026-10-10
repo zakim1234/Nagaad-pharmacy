@@ -19,7 +19,7 @@ import {
   getBulkPayment,
   updatePurchasePayment,
 } from '../controllers/purchasePaymentController.js';
-import { getPaymentPlan, savePaymentPlan, payPaymentPlan } from '../controllers/vendorPaymentPlanController.js';
+import { getPaymentPlan, savePaymentPlan, payPaymentPlan, listPaymentPlans, getPaymentPlanById } from '../controllers/vendorPaymentPlanController.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -36,6 +36,8 @@ router.get('/bulk-payments/:bulkId', getBulkPayment);
 router.get('/payment-plan', getPaymentPlan);
 router.put('/payment-plan', savePaymentPlan);
 router.post('/payment-plan/pay', requireRole('admin', 'manager'), payPaymentPlan);
+router.get('/payment-plans', listPaymentPlans);
+router.get('/payment-plans/:planId', getPaymentPlanById);
 router.post('/', createPurchase);
 router.get('/:id', getPurchase);
 router.put('/:id', requireRole('admin', 'manager'), updatePurchase);

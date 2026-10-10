@@ -142,3 +142,25 @@ test('SUPPLIER SUMMARY -- one line per supplier, invoices kept together', { time
     await teardown(server);
   }
 });
+
+test('SAVED SHEETS -- every plan is listed and can be opened again', { timeout: 90000 }, async () => {
+  const { server, request } = await setup('vplan_history');
+  try {
+    const { alpha, beta, evc } = await suppliers(request);
+    await request('/purchases/payment-plan', { rows: [{ supplierId: alpha.id, allocation: 100 }] }, 'PUT');
+    const paid = await request('/purchases/payment-plan/pay', { paymentAccountId: evc.id });
+    await request('/purchases/payment-plan', { rows: [{ supplierId: beta.id, allocation: 50 }] }, 'PUT');
+
+    const list = await request('/purchases/payment-plans');
+    assert.equal(list.status, 200, JSON.stringify(list));
+    assert.deepEqual(list.data.map((p) => [p.status, p.supplierCount, p.totalPaid, p.totalAllocated]), [['OPEN', 1, 0, 50], ['PAID', 1, 100, 100]]);
+
+    const one = await request(`/purchases/payment-plans/${paid.data.id}`);
+    assert.equal(one.data.planNumber, paid.data.planNumber);
+    assert.equal(one.data.rows[0].supplierName, 'Alpha Pharma');
+    assert.match(one.data.rows[0].bulkNumber, /^BPAY-/);
+    assert.equal((await request('/purchases/payment-plans/nope')).status, 404);
+  } finally {
+    await teardown(server);
+  }
+});
