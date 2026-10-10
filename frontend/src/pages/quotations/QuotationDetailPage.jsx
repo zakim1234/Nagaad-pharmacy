@@ -39,7 +39,7 @@ export default function QuotationDetailPage() {
     client.get(`/quotations/${id}`).then(res => { if (active) { fill(res.data.data); setEditing(false); } }).catch(err => { if (active) setError(err.friendlyMessage || 'Quotation not found.'); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [id]);
-  const addLine = product => setItems(rows => rows.some(i => i.itemId === product.id) ? rows.map(i => i.itemId === product.id ? { ...i, quantity: Number(i.quantity) + 1 } : i) : [...rows, { itemId: product.id, name: product.name, quantity: 1, unitPrice: product.sellingPrice, discount: 0 }]);
+  const addLine = product => setItems(rows => rows.some(i => i.itemId === product.id) ? rows.map(i => i.itemId === product.id ? { ...i, quantity: Number(i.quantity) + 1 } : i) : [...rows, { itemId: product.id, name: product.name, itemCode: product.itemCode || '', serialNumber: product.serialNumber || '', quantity: 1, unitPrice: product.sellingPrice, discount: 0 }]);
   const save = async () => {
     if (busy) return;
     if (!customer) return toast.error('Please select a customer.');
@@ -82,10 +82,8 @@ export default function QuotationDetailPage() {
     {editing ? <>
       <Card><CustomerSearchBox activeCustomer={customer} onSelect={setCustomer} onClear={() => setCustomer(null)} /></Card>
       <Card><div className="grid gap-3 sm:grid-cols-2"><FormField label="Date" required><Input type="date" value={date} onChange={e => setDate(e.target.value)} /></FormField><FormField label="Expiry Date" required><Input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)} /></FormField></div></Card>
-      <Card title="Quotation Items"><div className="space-y-3">
-        <QuotationItemsGrid items={items} onAddLine={addLine} onChangeLine={changeLine} onRemoveLine={itemId => setItems(rows => rows.filter(r => r.itemId !== itemId))} />
-        <FormField label="Additional Discount"><Input type="number" min="0" step="0.01" value={discount} onChange={e => setDiscount(e.target.value)} className="max-w-40" /></FormField>
-        <p className="text-right text-sm">Subtotal: {formatCurrency(subtotal)} · Discount: {formatCurrency(totalDiscount)}</p><p className="text-right font-semibold">Grand Total: {formatCurrency(subtotal - totalDiscount)}</p>
+      <Card title="Items"><div className="space-y-3">
+        <QuotationItemsGrid items={items} onAddLine={addLine} onChangeLine={changeLine} onRemoveLine={itemId => setItems(rows => rows.filter(r => r.itemId !== itemId))} subtotal={subtotal} discount={discount} onDiscountChange={setDiscount} totalDiscount={totalDiscount} />
         <FormField label="Notes"><Textarea maxLength={4000} value={notes} onChange={e => setNotes(e.target.value)} /></FormField>
       </div></Card>
     </> : quotation && <div id="print-area" className="mx-auto max-w-4xl rounded-lg border border-slate-200 bg-white p-4 sm:p-8 print:border-0 print:p-0">
