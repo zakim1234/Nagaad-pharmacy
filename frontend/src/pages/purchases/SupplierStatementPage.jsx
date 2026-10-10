@@ -119,7 +119,7 @@ export default function SupplierStatementPage() {
             )}
             {shown.map((l, i) => {
               const invoice = l.kind === 'INVOICE';
-              const to = invoice ? `/purchases/${l.id}` : l.bulk ? `/purchases/bulk-payments/${l.id}` : null;
+              const to = invoice ? `/purchases/${l.id}` : l.bulk ? `/purchases/bulk-payments/${l.id}` : `/purchases/${l.purchaseId}`;
               return (
                 <tr key={`${l.kind}-${l.id}`} className={`border-b border-neutral-200 ${i % 2 ? 'bg-neutral-50' : ''}`}>
                   <td className="whitespace-nowrap px-2 py-2">{formatDate(l.date)}</td>

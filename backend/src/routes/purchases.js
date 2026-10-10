@@ -17,10 +17,11 @@ import {
   listSupplierOutstanding,
   createBulkPayment,
   getBulkPayment,
+  cancelBulk,
   updatePurchasePayment,
 } from '../controllers/purchasePaymentController.js';
 import { getSupplierStatement } from '../controllers/supplierStatementController.js';
-import { getPaymentPlan, savePaymentPlan, payPaymentPlan, listPaymentPlans, getPaymentPlanById } from '../controllers/vendorPaymentPlanController.js';
+import { getPaymentPlan, savePaymentPlan, payPaymentPlan, listPaymentPlans, getPaymentPlanById, cancelPaymentPlan } from '../controllers/vendorPaymentPlanController.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -34,12 +35,14 @@ router.get('/bulk-payments/suppliers', listOwedSuppliers);
 router.get('/bulk-payments/outstanding', listSupplierOutstanding);
 router.post('/bulk-payments', createBulkPayment);
 router.get('/bulk-payments/:bulkId', getBulkPayment);
+router.post('/bulk-payments/:bulkId/cancel', requireRole('admin', 'manager'), cancelBulk);
 // Vendor Balance Summary / payment plan.
 router.get('/payment-plan', getPaymentPlan);
 router.put('/payment-plan', savePaymentPlan);
 router.post('/payment-plan/pay', requireRole('admin', 'manager'), payPaymentPlan);
 router.get('/payment-plans', listPaymentPlans);
 router.get('/payment-plans/:planId', getPaymentPlanById);
+router.post('/payment-plans/:planId/cancel', requireRole('admin', 'manager'), cancelPaymentPlan);
 router.post('/', createPurchase);
 router.get('/:id', getPurchase);
 router.put('/:id', requireRole('admin', 'manager'), updatePurchase);

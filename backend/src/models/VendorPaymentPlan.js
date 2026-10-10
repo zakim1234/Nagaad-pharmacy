@@ -22,7 +22,11 @@ const rowSchema = new mongoose.Schema(
 const schema = new mongoose.Schema(
   {
     planNumber: { type: String, required: true, unique: true }, // VPLAN-YYYY-NNNNNN
-    status: { type: String, enum: ['OPEN', 'PAID'], default: 'OPEN' },
+    // CANCELLED: it was paid, then every payment on it was cancelled and refunded.
+    status: { type: String, enum: ['OPEN', 'PAID', 'CANCELLED'], default: 'OPEN' },
+    cancelledAt: { type: Date, default: null },
+    cancelReason: { type: String, default: '', maxlength: 500 },
+    cancelledByName: { type: String, default: '' },
     rows: { type: [rowSchema], default: [] },
     note: { type: String, default: '', maxlength: 500 },
     paymentAccount: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', default: null },

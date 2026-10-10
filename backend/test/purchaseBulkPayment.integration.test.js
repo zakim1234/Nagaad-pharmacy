@@ -151,7 +151,7 @@ test('PAYMENT EDIT + DELETE -- corrections move money between accounts and recal
   }
 });
 
-test('PURCHASE EDIT + DELETE -- total never below paid, supplier totals follow, delete only without payments/stock', { timeout: 90000 }, async () => {
+test('PURCHASE EDIT + DELETE -- total never below paid, supplier totals follow, delete refunds payments, blocked only by stock', { timeout: 90000 }, async () => {
   const { server, request, asCashier } = await setup('pur_edit');
   try {
     const { supplier, evc, ids } = await abcPharma(request);
@@ -180,12 +180,12 @@ test('PURCHASE EDIT + DELETE -- total never below paid, supplier totals follow, 
     assert.equal(lowered.data.paymentStatus, 'Paid');
     assert.equal((await request(`/purchases/${ids[2]}`, { supplierId: supplier.id, amount: 10 }, 'PUT')).status, 409);
 
-    // Delete is refused while a payment is active; allowed once it is deleted.
-    const blocked = await request(`/purchases/${ids[3]}`, null, 'DELETE');
-    assert.equal(blocked.status, 409);
-    assert.match(blocked.message, /Payment History/);
-    await request(`/purchases/${ids[3]}/payments/${paid.data.payment.id}/reverse`, { reason: 'test' });
-    assert.equal((await request(`/purchases/${ids[3]}`, null, 'DELETE')).status, 200);
+    // Deleting an invoice that has a payment cancels the payment first: the
+    // money goes back to the account.
+    const deleted = await request(`/purchases/${ids[3]}`, null, 'DELETE');
+    assert.equal(deleted.status, 200, JSON.stringify(deleted));
+    assert.equal(deleted.data.refunded, 500);
+    assert.equal((await Account.findById(evc.id)).currentBalanceCents, 0);
     assert.equal(await Purchase.countDocuments({ _id: ids[3] }), 0);
     assert.equal(await PurchasePayment.countDocuments({ purchase: ids[3] }), 0, 'its deleted payment records go with it');
     assert.equal((await Supplier.findById(supplier.id)).totalSpentCents, spentBefore - 100000 - 400000);

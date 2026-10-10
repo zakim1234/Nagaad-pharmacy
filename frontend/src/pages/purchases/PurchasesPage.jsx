@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Ban, Printer, Search, Pencil, Trash2, Sheet, Wallet, FileText } from 'lucide-react';
+import { Ban, Search, Pencil, Trash2, Sheet, Wallet, FileText, ArrowLeft, Plus } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -14,6 +14,7 @@ import Pagination from '../../components/ui/Pagination.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import BulkPaymentModal from './BulkPaymentModal.jsx';
+import PurchaseFormModal from './PurchaseFormModal.jsx';
 import PurchaseEditModal from './PurchaseEditModal.jsx';
 
 const ACTION = 'flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50';
@@ -44,6 +45,7 @@ export default function PurchasesPage() {
   const [q, setQ] = useState('');
   const debouncedQ = useDebounce(q, 300);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [voidItem, setVoidItem] = useState(null);
   const [voiding, setVoiding] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -111,8 +113,8 @@ export default function PurchasesPage() {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await client.delete(`/purchases/${deleteItem.id}`);
-      toast.success(`${deleteItem.purchaseNumber} deleted.`);
+      const res = await client.delete(`/purchases/${deleteItem.id}`);
+      toast.success(res.data.data.refunded > 0 ? `${deleteItem.purchaseNumber} deleted — ${formatCurrency(res.data.data.refunded)} went back to the account.` : `${deleteItem.purchaseNumber} deleted.`);
       setDeleteItem(null);
       reload();
     } catch (err) {
@@ -141,9 +143,6 @@ export default function PurchasesPage() {
       <Td className="whitespace-nowrap">{formatDate(p.createdAt)}</Td>
       <Td>
         <div className="flex flex-wrap justify-end gap-1.5">
-          <Link to={`/purchases/${p.id}/receipt`} className={ACTION} title="Print">
-            <Printer className="h-3.5 w-3.5" /> Print
-          </Link>
           {canVoid && p.status !== 'voided' && (
             <button onClick={() => setEditItem(p)} className={ACTION}>
               <Pencil className="h-3.5 w-3.5" /> Edit
@@ -206,11 +205,22 @@ export default function PurchasesPage() {
             <Button variant="secondary" onClick={() => navigate('/purchases/vendor-balances')}>
               <Sheet className="h-4 w-4" /> Vendor Balances
             </Button>
+            <Button onClick={() => setFormOpen(true)}>
+              <Plus className="h-4 w-4" /> Add invoice
+            </Button>
           </div>
         }
       />
 
       <div>
+          {supplierId && (
+            <button
+              onClick={() => pickSupplier('')}
+              className="mb-3 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to all suppliers
+            </button>
+          )}
           {selected && (
             <div className="mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 text-white shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4">
@@ -288,11 +298,17 @@ export default function PurchasesPage() {
           </div>
       </div>
 
+      <PurchaseFormModal
+        open={formOpen}
+        initialSupplier={selected ? { id: String(selected.id), name: selected.name } : null}
+        onClose={() => setFormOpen(false)}
+        onSaved={reload}
+      />
       <PurchaseEditModal purchase={editItem} onClose={() => setEditItem(null)} onSaved={reload} />
       <ConfirmDialog
         open={!!deleteItem}
         title="Delete Purchase Invoice"
-        message={`Ma hubtaa inaad tirtirto ${deleteItem?.purchaseNumber} (${formatCurrency(deleteItem?.totalCost)})? Falkan dib looma celin karo. (Only possible when it has no active payments; otherwise delete its payments first or use Void.)`}
+        message={`Ma hubtaa inaad tirtirto ${deleteItem?.purchaseNumber} (${formatCurrency(deleteItem?.totalCost)})? Haddii lacag laga bixiyey, lacagtaas waa la cancel gareynayaa oo dib ayey ugu laabanaysaa account-kii laga bixiyey. (Any payments on it are cancelled and the money goes back to the account.)`}
         confirmLabel="Confirm Delete"
         variant="danger"
         loading={deleting}

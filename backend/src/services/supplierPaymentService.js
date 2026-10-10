@@ -130,3 +130,57 @@ export async function paySupplier(session, { supplierId, purchaseIds = null, amo
   await bulk.save({ session });
   return bulk;
 }
+
+// Cancels one supplier payment: the money goes back to the account it came
+// from (as its own REFUND transaction, so the account history stays
+// exact) and the supplier is owed that much again. Already-cancelled
+// payments are left alone. Runs inside the caller's transaction.
+export async function reversePayment(session, payment, { reason = '', user, purchase = null }) {
+  if (payment.status !== 'POSTED') return null;
+  const invoice = purchase || (await Purchase.findById(payment.purchase).session(session));
+  const account = await Account.findById(payment.paymentAccount).session(session);
+  if (!account) throw new ApiError(409, `The account payment ${payment.paymentNumber} was made from no longer exists. Contact an administrator.`);
+  await postImmediateTransaction(
+    {
+      account,
+      direction: 'IN',
+      type: 'REFUND',
+      amountCents: payment.amountCents,
+      referenceType: 'Purchase',
+      referenceId: payment.purchase,
+      description: `Reversal of payment ${payment.paymentNumber}${invoice ? ` on purchase ${invoice.purchaseNumber}` : ''}${reason ? ` (${reason})` : ''}`,
+      createdBy: user,
+    },
+    session
+  );
+  if (invoice) {
+    invoice.paidAmountCents -= payment.amountCents;
+    invoice.balanceCents += payment.amountCents;
+    await invoice.save({ session });
+  }
+  payment.status = 'REVERSED';
+  payment.reversedAt = new Date();
+  payment.reversalReason = reason;
+  await payment.save({ session });
+  return payment;
+}
+
+// Cancels a whole supplier payment receipt (BPAY): every part of it still
+// standing is reversed and its money returned to the account.
+export async function cancelBulkPayment(session, bulkId, { reason = '', user }) {
+  const bulk = await BulkPurchasePayment.findById(bulkId).session(session);
+  if (!bulk) throw new ApiError(404, 'Payment not found.');
+  if (bulk.status === 'CANCELLED') throw new ApiError(409, `${bulk.bulkNumber} is already cancelled.`);
+  const payments = await PurchasePayment.find({ bulkPayment: bulk._id, status: 'POSTED' }).session(session);
+  let refundedCents = 0;
+  for (const p of payments) {
+    await reversePayment(session, p, { reason: reason || `${bulk.bulkNumber} cancelled`, user });
+    refundedCents += p.amountCents;
+  }
+  bulk.status = 'CANCELLED';
+  bulk.cancelledAt = new Date();
+  bulk.cancelReason = String(reason || '').trim();
+  bulk.cancelledByName = user?.name || '';
+  await bulk.save({ session });
+  return { bulk, refundedCents };
+}

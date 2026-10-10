@@ -9,7 +9,8 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { toCents, fromCents } from '../utils/money.js';
 import { runInTransaction } from '../utils/transaction.js';
 import { logAudit } from '../services/auditService.js';
-import { paySupplier, OUTSTANDING } from '../services/supplierPaymentService.js';
+import { paySupplier, cancelBulkPayment, OUTSTANDING } from '../services/supplierPaymentService.js';
+import BulkPurchasePayment from '../models/BulkPurchasePayment.js';
 import { parsePaymentDate } from './purchaseController.js';
 
 function planToDTO(plan) {
@@ -35,9 +36,23 @@ function planToDTO(plan) {
     paymentDate: plan.paymentDate,
     paidAt: plan.paidAt,
     paidByName: plan.paidByName,
+    cancelledAt: plan.cancelledAt || null,
+    cancelReason: plan.cancelReason || '',
+    cancelledByName: plan.cancelledByName || '',
     createdAt: plan.createdAt,
     updatedAt: plan.updatedAt,
   };
+}
+
+// The plan, with each row marked when its receipt was cancelled later.
+async function withReceiptStatus(plan) {
+  const dto = planToDTO(plan);
+  const ids = plan.rows.map((r) => r.bulkPayment).filter(Boolean);
+  if (ids.length) {
+    const cancelled = new Set((await BulkPurchasePayment.find({ _id: { $in: ids }, status: 'CANCELLED' }).select('_id')).map((b) => String(b._id)));
+    dto.rows = dto.rows.map((r) => ({ ...r, cancelled: !!r.bulkPayment && cancelled.has(String(r.bulkPayment)) }));
+  }
+  return dto;
 }
 
 // What each supplier is owed right now (completed invoices with a balance).
@@ -58,7 +73,7 @@ export const getPaymentPlan = asyncHandler(async (req, res) => {
   const balances = [...owed.values()].map((r) => ({ supplierId: r._id, name: r.name, owed: fromCents(r.owedCents), invoiceCount: r.invoiceCount }));
   res.json({
     success: true,
-    data: { balances, totalOwed: fromCents([...owed.values()].reduce((s, r) => s + r.owedCents, 0)), plan: planToDTO(plan), asOf: new Date() },
+    data: { balances, totalOwed: fromCents([...owed.values()].reduce((s, r) => s + r.owedCents, 0)), plan: plan ? await withReceiptStatus(plan) : null, asOf: new Date() },
   });
 });
 
@@ -186,5 +201,40 @@ export const getPaymentPlanById = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.planId)) throw new ApiError(404, 'Sheet not found.');
   const plan = await VendorPaymentPlan.findById(req.params.planId);
   if (!plan) throw new ApiError(404, 'Sheet not found.');
-  res.json({ success: true, data: planToDTO(plan) });
+  res.json({ success: true, data: await withReceiptStatus(plan) });
+});
+
+// POST /api/purchases/payment-plans/:planId/cancel -- admin/manager:
+// cancels every payment made from a paid sheet; each one's money goes back
+// to the account. The sheet stays in the history, marked Cancelled.
+export const cancelPaymentPlan = asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.planId)) throw new ApiError(404, 'Sheet not found.');
+  const reason = String(req.body.reason || '').trim().slice(0, 500);
+  const { plan, refundedCents } = await runInTransaction(async (session) => {
+    const p = await VendorPaymentPlan.findById(req.params.planId).session(session);
+    if (!p) throw new ApiError(404, 'Sheet not found.');
+    if (p.status !== 'PAID') throw new ApiError(409, p.status === 'CANCELLED' ? 'This sheet is already cancelled.' : 'This sheet has not been paid yet.');
+    let refunded = 0;
+    for (const row of p.rows) {
+      if (!row.bulkPayment) continue;
+      const bulk = await BulkPurchasePayment.findById(row.bulkPayment).session(session);
+      if (!bulk || bulk.status === 'CANCELLED') continue;
+      const r = await cancelBulkPayment(session, bulk._id, { reason: reason || `${p.planNumber} cancelled`, user: req.user });
+      refunded += r.refundedCents;
+    }
+    p.status = 'CANCELLED';
+    p.cancelledAt = new Date();
+    p.cancelReason = reason;
+    p.cancelledByName = req.user?.name || '';
+    await p.save({ session });
+    return { plan: p, refundedCents: refunded };
+  });
+  await logAudit({
+    user: req.user,
+    action: 'purchase.payment.plan.cancel',
+    entityType: 'VendorPaymentPlan',
+    entityId: plan._id,
+    details: { planNumber: plan.planNumber, refunded: fromCents(refundedCents), reason },
+  });
+  res.json({ success: true, data: { ...(await withReceiptStatus(plan)), refunded: fromCents(refundedCents) } });
 });

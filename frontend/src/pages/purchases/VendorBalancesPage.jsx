@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Printer, Save, Wallet, Search, FilePlus2, Eye, History } from 'lucide-react';
+import { ArrowLeft, Printer, Save, Wallet, Search, FilePlus2, Eye, History, Undo2 } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -137,9 +137,19 @@ export default function VendorBalancesPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {showPaid ? (
-              <Button variant="secondary" onClick={() => setShowPaid(false)}>
-                <FilePlus2 className="h-4 w-4" /> New allocation
-              </Button>
+              <>
+                {canPay && paidPlan && (
+                  <Link
+                    to={`/purchases/vendor-balances/${paidPlan.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    <Undo2 className="h-4 w-4" /> Cancel payments
+                  </Link>
+                )}
+                <Button variant="secondary" onClick={() => setShowPaid(false)}>
+                  <FilePlus2 className="h-4 w-4" /> New allocation
+                </Button>
+              </>
             ) : (
               <Button variant="secondary" onClick={() => save()} loading={saving} disabled={!dirty || hasErrors}>
                 <Save className="h-4 w-4" /> Save
@@ -295,7 +305,9 @@ export default function VendorBalancesPage() {
                       {h.status === 'PAID' ? formatCurrency(h.totalPaid) : <span className="font-normal text-slate-400">{formatCurrency(h.totalAllocated)} planned</span>}
                     </td>
                     <td className="px-5 py-2.5">
-                      <Badge color={h.status === 'PAID' ? 'green' : 'amber'}>{h.status === 'PAID' ? `Paid · ${h.paymentAccountName}` : 'Not paid yet'}</Badge>
+                      <Badge color={h.status === 'PAID' ? 'green' : h.status === 'CANCELLED' ? 'red' : 'amber'}>
+                        {h.status === 'PAID' ? `Paid · ${h.paymentAccountName}` : h.status === 'CANCELLED' ? 'Cancelled · money returned' : 'Not paid yet'}
+                      </Badge>
                     </td>
                     <td className="px-5 py-2.5 text-right">
                       <Link

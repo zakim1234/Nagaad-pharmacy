@@ -108,11 +108,19 @@ export function PaidPlan({ plan }) {
               <CheckCircle2 className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-base font-bold">Payments done · {formatDate(plan.paymentDate)}</p>
+              <p className="text-base font-bold">
+                {plan.status === 'CANCELLED' ? 'Payments cancelled' : 'Payments done'} · {formatDate(plan.paymentDate)}
+              </p>
               <p className="text-xs text-neutral-400">
                 From {plan.paymentAccountName} · recorded {formatDateTime(plan.paidAt)}
                 {plan.paidByName ? ` by ${plan.paidByName}` : ''}
               </p>
+              {plan.status === 'CANCELLED' && (
+                <p className="text-xs font-semibold text-brand-400">
+                  Cancelled {formatDateTime(plan.cancelledAt)}
+                  {plan.cancelledByName ? ` by ${plan.cancelledByName}` : ''} — all money went back to the account{plan.cancelReason ? ` · ${plan.cancelReason}` : ''}
+                </p>
+              )}
             </div>
           </div>
           <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">
@@ -179,6 +187,7 @@ export function PaidPlan({ plan }) {
                     className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-600"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5 text-brand-600" /> Receipt {r.bulkNumber.replace(/^BPAY-\d{4}-0*/, '#')}
+                    {r.cancelled && <span className="ml-1 rounded bg-rose-100 px-1 text-[10px] font-bold uppercase text-rose-700">Cancelled</span>}
                   </Link>
                 ) : (
                   <span className="text-xs text-slate-400">Nothing owed at payment</span>

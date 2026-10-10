@@ -33,6 +33,11 @@ const schema = new mongoose.Schema(
     ],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     createdByName: { type: String, default: '' },
+    // CANCELLED: every part was reversed and the money returned to the account.
+    status: { type: String, enum: ['POSTED', 'CANCELLED'], default: 'POSTED' },
+    cancelledAt: { type: Date, default: null },
+    cancelReason: { type: String, default: '', maxlength: 500 },
+    cancelledByName: { type: String, default: '' },
   },
   { timestamps: true }
 );

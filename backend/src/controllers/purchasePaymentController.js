@@ -10,7 +10,7 @@ import { runInTransaction } from '../utils/transaction.js';
 import { logAudit } from '../services/auditService.js';
 import { postImmediateTransaction } from '../services/accountService.js';
 import { purchaseToDTO, paymentToDTO, paymentStatusOf, parsePaymentDate } from './purchaseController.js';
-import { paySupplier, OUTSTANDING, OLDEST_FIRST } from '../services/supplierPaymentService.js';
+import { paySupplier, cancelBulkPayment, OUTSTANDING, OLDEST_FIRST } from '../services/supplierPaymentService.js';
 
 
 function bulkToDTO(b, paymentsById = new Map()) {
@@ -44,6 +44,10 @@ function bulkToDTO(b, paymentsById = new Map()) {
     }),
     createdByName: b.createdByName,
     createdAt: b.createdAt,
+    status: b.status || 'POSTED',
+    cancelledAt: b.cancelledAt || null,
+    cancelReason: b.cancelReason || '',
+    cancelledByName: b.cancelledByName || '',
   };
 }
 
@@ -192,4 +196,21 @@ export const updatePurchasePayment = asyncHandler(async (req, res) => {
   });
 
   res.json({ success: true, data: { purchase: purchaseToDTO(result.purchase), payment: paymentToDTO(result.payment), paymentStatus: paymentStatusOf(result.purchase) } });
+});
+
+// POST /api/purchases/bulk-payments/:bulkId/cancel -- admin/manager:
+// cancels a whole payment receipt; its money goes back to the account and
+// the supplier is owed that much again.
+export const cancelBulk = asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.bulkId)) throw new ApiError(404, 'Payment not found.');
+  const reason = String(req.body.reason || '').trim().slice(0, 500);
+  const { bulk, refundedCents } = await runInTransaction((session) => cancelBulkPayment(session, req.params.bulkId, { reason, user: req.user }));
+  await logAudit({
+    user: req.user,
+    action: 'purchase.payment.bulk.cancel',
+    entityType: 'Supplier',
+    entityId: bulk.supplier,
+    details: { bulkNumber: bulk.bulkNumber, refunded: fromCents(refundedCents), reason },
+  });
+  res.json({ success: true, data: { ...bulkToDTO(bulk), refunded: fromCents(refundedCents) } });
 });

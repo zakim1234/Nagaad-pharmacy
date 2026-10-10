@@ -204,3 +204,62 @@ test('SUPPLIER STATEMENT -- invoices with their serials, payments with receipt n
     await teardown(server);
   }
 });
+
+test('REVERSIBLE -- cancel a receipt, cancel a paid sheet, delete an invoice with payments: money goes back', { timeout: 90000 }, async () => {
+  const { server, request, asCashier } = await setup('reversible');
+  try {
+    const { alpha, beta, evc, invoices } = await suppliers(request);
+    const balance = async () => (await Account.findById(evc.id)).currentBalanceCents;
+    const owed = async (name) => (await request('/purchases/payment-plan')).data.balances.find((b) => b.name === name)?.owed ?? 0;
+
+    // 1. A paid sheet for two suppliers, then cancelled as a whole.
+    await request('/purchases/payment-plan', { rows: [{ supplierId: alpha.id, allocation: 400 }, { supplierId: beta.id, allocation: 100 }] }, 'PUT');
+    const plan = await request('/purchases/payment-plan/pay', { paymentAccountId: evc.id });
+    assert.equal(await balance(), -50000);
+    assert.equal((await asCashier(`/purchases/payment-plans/${plan.data.id}/cancel`, {})).status, 403);
+    const cancelled = await request(`/purchases/payment-plans/${plan.data.id}/cancel`, { reason: 'wrong amounts' });
+    assert.equal(cancelled.status, 200, JSON.stringify(cancelled));
+    assert.equal(cancelled.data.status, 'CANCELLED');
+    assert.equal(cancelled.data.refunded, 500);
+    assert.ok(cancelled.data.rows.every((r) => r.cancelled));
+    assert.equal(await balance(), 0, 'all money back in the account');
+    assert.equal(await owed('Alpha Pharma'), 800);
+    assert.equal((await request(`/purchases/payment-plans/${plan.data.id}/cancel`, {})).status, 409, 'only once');
+
+    // 2. One receipt cancelled on its own.
+    const bulk = await request('/purchases/bulk-payments', { supplierId: alpha.id, purchaseIds: invoices['Alpha Pharma'], amount: 350, paymentAccountId: evc.id });
+    assert.equal(await balance(), -35000);
+    const c = await request(`/purchases/bulk-payments/${bulk.data.id}/cancel`, { reason: 'paid twice' });
+    assert.equal(c.data.status, 'CANCELLED');
+    assert.equal(c.data.refunded, 350);
+    assert.equal(await balance(), 0);
+    const st = await request(`/purchases/suppliers/${alpha.id}/statement`);
+    assert.equal(st.data.totals.paid, 0, 'cancelled payments are not on the statement');
+
+    // 3. Delete an invoice that has a payment: refunded, then deleted.
+    await request(`/purchases/${invoices['Beta Medical'][0]}/payments`, { amount: 120, paymentAccountId: evc.id });
+    assert.equal(await balance(), -12000);
+    const del = await request(`/purchases/${invoices['Beta Medical'][0]}`, null, 'DELETE');
+    assert.equal(del.status, 200, JSON.stringify(del));
+    assert.equal(del.data.refunded, 120);
+    assert.equal(await balance(), 0);
+    assert.equal(await owed('Beta Medical'), 0);
+  } finally {
+    await teardown(server);
+  }
+});
+
+test('ADD INVOICE -- serial number, amount and date; all of it owed', { timeout: 90000 }, async () => {
+  const { server, request } = await setup('add_invoice');
+  try {
+    const supplier = await Supplier.create({ name: 'Echo Pharma' });
+    const r = await request('/purchases', { supplierId: supplier.id, supplierInvoiceNumber: 'SN-9001', amount: 250, amountPaid: 0, purchaseDate: '2026-10-02' });
+    assert.equal(r.status, 201, JSON.stringify(r));
+    assert.equal(r.data.supplierInvoiceNumber, 'SN-9001');
+    assert.equal(r.data.purchaseDate.slice(0, 10), '2026-10-02');
+    assert.equal(r.data.balanceDue, 250);
+    assert.equal((await request('/purchases', { supplierId: supplier.id, amount: 5, amountPaid: 0, purchaseDate: '2099-01-01' })).status, 400, 'no future dates');
+  } finally {
+    await teardown(server);
+  }
+});

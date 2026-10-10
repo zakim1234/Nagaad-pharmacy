@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArrowLeft, Printer, Undo2 } from 'lucide-react';
 import client from '../../api/client.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { useToast } from '../../context/ToastContext.jsx';
+import CancelPaymentDialog from './CancelPaymentDialog.jsx';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 import { printReport } from '../../utils/printReport.js';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
@@ -15,6 +18,25 @@ export default function VendorPlanPage() {
   const { planId } = useParams();
   const [plan, setPlan] = useState(null);
   const [error, setError] = useState('');
+  const { user } = useAuth();
+  const toast = useToast();
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const canCancel = user?.role === 'admin' || user?.role === 'manager';
+
+  const cancel = async (reason) => {
+    setCancelling(true);
+    try {
+      const res = await client.post(`/purchases/payment-plans/${planId}/cancel`, { reason });
+      toast.success(`${res.data.data.planNumber} cancelled — ${formatCurrency(res.data.data.refunded)} back in ${res.data.data.paymentAccountName}.`);
+      setCancelOpen(false);
+      setPlan(res.data.data);
+    } catch (err) {
+      toast.error(err.friendlyMessage || 'Could not cancel these payments.');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   useEffect(() => {
     client
@@ -26,7 +48,7 @@ export default function VendorPlanPage() {
   if (error) return <div className="rounded-lg bg-rose-50 p-4 text-sm text-rose-700">{error}</div>;
   if (!plan) return <PageSpinner />;
 
-  const paid = plan.status === 'PAID';
+  const paid = plan.status === 'PAID' || plan.status === 'CANCELLED';
   const owed = round2(plan.rows.reduce((s, r) => s + r.owed, 0));
 
   return (
@@ -39,17 +61,34 @@ export default function VendorPlanPage() {
           <div>
             <h1 className="flex items-center gap-2 text-xl font-bold text-slate-900">
               {plan.planNumber}
-              <Badge color={paid ? 'green' : 'amber'}>{paid ? 'Paid' : 'Not paid yet'}</Badge>
+              {plan.status === 'CANCELLED' ? <Badge color="red">Cancelled</Badge> : <Badge color={paid ? 'green' : 'amber'}>{paid ? 'Paid' : 'Not paid yet'}</Badge>}
             </h1>
             <p className="text-sm text-slate-500">
               Vendor Balance Summary · {formatDate(paid ? plan.paymentDate : plan.updatedAt)}
               {plan.note ? ` · ${plan.note}` : ''}
             </p>
           </div>
-          <Button variant="secondary" onClick={() => printReport('portrait')}>
-            <Printer className="h-4 w-4" /> Print
-          </Button>
+          <div className="flex gap-2">
+            {canCancel && plan.status === 'PAID' && (
+              <Button variant="secondary" onClick={() => setCancelOpen(true)}>
+                <Undo2 className="h-4 w-4" /> Cancel payments
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => printReport('portrait')}>
+              <Printer className="h-4 w-4" /> Print
+            </Button>
+          </div>
         </div>
+
+        <CancelPaymentDialog
+          open={cancelOpen}
+          title={`Cancel all payments of ${plan.planNumber}`}
+          amount={plan.rows.filter((r) => !r.cancelled).reduce((s, r) => s + r.paid, 0)}
+          account={plan.paymentAccountName}
+          loading={cancelling}
+          onConfirm={cancel}
+          onClose={() => setCancelOpen(false)}
+        />
 
         {paid ? (
           <PaidPlan plan={plan} />

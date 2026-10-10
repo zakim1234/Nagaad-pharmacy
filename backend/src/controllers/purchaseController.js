@@ -12,6 +12,7 @@ import { runInTransaction } from '../utils/transaction.js';
 import { resolveDateRange } from '../utils/dateRange.js';
 import { logAudit } from '../services/auditService.js';
 import { postImmediateTransaction } from '../services/accountService.js';
+import { reversePayment } from '../services/supplierPaymentService.js';
 
 // Derived, never persisted: Unpaid/Partial/Paid always reflects the
 // authoritative paidAmountCents/totalCostCents pair, so it can never drift
@@ -120,6 +121,8 @@ export const createPurchase = asyncHandler(async (req, res) => {
   if (!Number.isFinite(Number(amountPaid ?? 0)) || paidAmountCents < 0) throw new ApiError(400, 'Amount paid cannot be negative.');
   if (paidAmountCents > totalCostCents) throw new ApiError(400, 'Amount paid cannot exceed the total amount.');
   if (req.body.items?.length) throw new ApiError(400, 'Enter physical goods through Stock.');
+  // The day the goods/invoice came in (YYYY-MM-DD); today when not given.
+  const purchaseDate = req.body.purchaseDate ? parsePaymentDate(req.body.purchaseDate) : new Date();
   const result = await runInTransaction(async (session) => {
     const supplier = await Supplier.findById(supplierId).session(session);
     if (!supplier) throw new ApiError(404, 'Supplier not found.');
@@ -147,7 +150,7 @@ export const createPurchase = asyncHandler(async (req, res) => {
           paidAmountCents,
           balanceCents,
           paymentAccount: account?._id || null,
-          purchaseDate: new Date(),
+          purchaseDate,
           createdBy: req.user?._id,
         },
       ],
@@ -445,13 +448,14 @@ export const deletePurchase = asyncHandler(async (req, res) => {
   const result = await runInTransaction(async (session) => {
     const purchase = await Purchase.findById(req.params.id).session(session);
     if (!purchase) throw new ApiError(404, 'Purchase not found.');
-    const activePayments = await PurchasePayment.countDocuments({ purchase: purchase._id, status: 'POSTED' }).session(session);
-    if (activePayments > 0) {
-      throw new ApiError(409, `This invoice has ${activePayments} payment(s). Delete them in its Payment History first (the money goes back to the account), or Void the invoice instead.`);
-    }
     if (await InventoryLot.exists({ purchase: purchase._id }).session(session)) {
       throw new ApiError(409, 'Stock was received on this invoice, so it cannot be deleted. Void it instead.');
     }
+    // Its payments are cancelled first: each one's money goes back to the
+    // account it came from.
+    const active = await PurchasePayment.find({ purchase: purchase._id, status: 'POSTED' }).session(session);
+    for (const p of active) await reversePayment(session, p, { reason: `invoice ${purchase.purchaseNumber} deleted`, user: req.user, purchase });
+    purchase.refundedCents = active.reduce((s, p) => s + p.amountCents, 0);
     if (purchase.status !== 'voided') {
       const supplier = await Supplier.findById(purchase.supplier).session(session);
       if (supplier) {
@@ -469,9 +473,9 @@ export const deletePurchase = asyncHandler(async (req, res) => {
     action: 'purchase.delete',
     entityType: 'Purchase',
     entityId: result._id,
-    details: { purchaseNumber: result.purchaseNumber, supplier: result.supplierName, supplierInvoiceNumber: result.supplierInvoiceNumber, total: fromCents(result.totalCostCents), status: result.status },
+    details: { purchaseNumber: result.purchaseNumber, supplier: result.supplierName, supplierInvoiceNumber: result.supplierInvoiceNumber, total: fromCents(result.totalCostCents), status: result.status, refunded: fromCents(result.refundedCents || 0) },
   });
-  res.json({ success: true, data: { id: result._id } });
+  res.json({ success: true, data: { id: result._id, refunded: fromCents(result.refundedCents || 0) } });
 });
 
 // POST /api/purchases/:id/payments -- records an additional payment toward
@@ -573,32 +577,7 @@ export const reversePurchasePayment = asyncHandler(async (req, res) => {
     if (!payment) throw new ApiError(404, 'Payment not found.');
     if (payment.status !== 'POSTED') throw new ApiError(409, 'This payment has already been reversed.');
 
-    const account = await Account.findById(payment.paymentAccount).session(session);
-    if (!account) throw new ApiError(409, 'The account this payment was made from no longer exists. Contact an administrator.');
-
-    await postImmediateTransaction(
-      {
-        account,
-        direction: 'IN',
-        type: 'REFUND',
-        amountCents: payment.amountCents,
-        referenceType: 'Purchase',
-        referenceId: purchase._id,
-        description: `Reversal of payment ${payment.paymentNumber} on purchase ${purchase.purchaseNumber}${reason ? ` (${reason})` : ''}`,
-        createdBy: req.user,
-      },
-      session
-    );
-
-    purchase.paidAmountCents -= payment.amountCents;
-    purchase.balanceCents += payment.amountCents;
-    await purchase.save({ session });
-
-    payment.status = 'REVERSED';
-    payment.reversedAt = new Date();
-    payment.reversalReason = reason;
-    await payment.save({ session });
-
+    await reversePayment(session, payment, { reason, user: req.user, purchase });
     return { purchase, payment };
   });
 

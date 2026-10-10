@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Printer, ArrowLeft } from 'lucide-react';
+import { Printer, ArrowLeft, Undo2 } from 'lucide-react';
 import client from '../../api/client.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { useToast } from '../../context/ToastContext.jsx';
+import CancelPaymentDialog from '../purchases/CancelPaymentDialog.jsx';
 import { formatCurrency, formatDate, formatDateTime } from '../../utils/format.js';
 import { printA5 } from '../../utils/printA5.js';
 import { BUSINESS } from '../../constants/business.js';
@@ -16,6 +19,26 @@ export default function BulkPaymentReceiptPage() {
   const { bulkId } = useParams();
   const [bulk, setBulk] = useState(null);
   const [error, setError] = useState('');
+  const { user } = useAuth();
+  const toast = useToast();
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const canCancel = user?.role === 'admin' || user?.role === 'manager';
+
+  const cancel = async (reason) => {
+    setCancelling(true);
+    try {
+      const res = await client.post(`/purchases/bulk-payments/${bulkId}/cancel`, { reason });
+      toast.success(`${res.data.data.bulkNumber} cancelled — ${formatCurrency(res.data.data.refunded)} back in ${res.data.data.paymentAccountName}.`);
+      setCancelOpen(false);
+      const fresh = await client.get(`/purchases/bulk-payments/${bulkId}`);
+      setBulk(fresh.data.data);
+    } catch (err) {
+      toast.error(err.friendlyMessage || 'Could not cancel this payment.');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   useEffect(() => {
     client
@@ -35,10 +58,38 @@ export default function BulkPaymentReceiptPage() {
         <Link to="/purchases" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
           <ArrowLeft className="h-4 w-4" /> Back to Purchase Invoices
         </Link>
-        <Button onClick={printA5}>
-          <Printer className="h-4 w-4" /> Print
-        </Button>
+        <div className="flex gap-2">
+          {canCancel && bulk.status !== 'CANCELLED' && (
+            <Button variant="secondary" onClick={() => setCancelOpen(true)}>
+              <Undo2 className="h-4 w-4" /> Cancel payment
+            </Button>
+          )}
+          <Button onClick={printA5}>
+            <Printer className="h-4 w-4" /> Print
+          </Button>
+        </div>
       </div>
+
+      {bulk.status === 'CANCELLED' && (
+        <div className="mx-auto mb-4 max-w-[148mm] rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <p className="font-bold">CANCELLED — the money went back to {bulk.paymentAccountName}.</p>
+          <p className="text-xs">
+            {formatDateTime(bulk.cancelledAt)}
+            {bulk.cancelledByName ? ` by ${bulk.cancelledByName}` : ''}
+            {bulk.cancelReason ? ` · ${bulk.cancelReason}` : ''}
+          </p>
+        </div>
+      )}
+
+      <CancelPaymentDialog
+        open={cancelOpen}
+        title={`Cancel ${bulk.bulkNumber}`}
+        amount={bulk.allocations.reduce((s, a) => s + (a.paymentStatus === 'POSTED' ? a.currentAmount ?? a.amount : 0), 0)}
+        account={bulk.paymentAccountName}
+        loading={cancelling}
+        onConfirm={cancel}
+        onClose={() => setCancelOpen(false)}
+      />
 
       <div
         id="print-area"
@@ -52,7 +103,9 @@ export default function BulkPaymentReceiptPage() {
         </div>
 
         <div className="my-3 border-t border-dashed border-slate-300" />
-        <p className="text-center text-sm font-bold uppercase tracking-wide text-slate-800">Bulk Payment Receipt</p>
+        <p className="text-center text-sm font-bold uppercase tracking-wide text-slate-800">
+          Payment Receipt{bulk.status === 'CANCELLED' && <span className="ml-2 text-rose-600">· Cancelled</span>}
+        </p>
         <div className="my-3 border-t border-dashed border-slate-300" />
 
         <div className="flex justify-between text-xs">
