@@ -6,6 +6,7 @@ import { printReport } from '../../utils/printReport.js';
 import { formatMoney } from '../../utils/format.js';
 import Button from '../../components/ui/Button.jsx';
 import { Input } from '../../components/ui/Field.jsx';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import { BUSINESS } from '../../constants/business.js';
 import logo from '../../images/logo.png';
@@ -142,6 +143,7 @@ export default function BalanceSheetReport() {
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-1 w-48" />
         </label>
         <div className="flex gap-2">
+          <SharePdfButton fileName={`Balance-Sheet_${date}`} message={`Balance Sheet — ${date}`} />
           <Button variant="secondary" onClick={() => printReport('portrait')}>
             <Printer className="h-4 w-4" /> Print
           </Button>

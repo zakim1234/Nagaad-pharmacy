@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext.jsx';
 import { printReport } from '../../utils/printReport.js';
 import { formatMoney } from '../../utils/format.js';
 import Button from '../../components/ui/Button.jsx';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
 import { Input, Select } from '../../components/ui/Field.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import PrintReportHeader from '../../components/reports/PrintReportHeader.jsx';
@@ -208,6 +209,7 @@ export default function ProfitLossReport() {
             </Select>
           </label>
           <div className="ml-auto flex gap-2">
+            <SharePdfButton fileName={`Profit-and-Loss_${new Date().toISOString().slice(0, 10)}`} message="Profit & Loss" orientation={columns === 'month' ? 'landscape' : 'portrait'} />
             <Button variant="secondary" onClick={() => printReport(columns === 'month' ? 'landscape' : 'portrait')}>
               <Printer className="h-4 w-4" /> Print
             </Button>
@@ -226,7 +228,7 @@ export default function ProfitLossReport() {
       ) : !report ? (
         <p className="py-10 text-center text-sm text-slate-400">The report could not be loaded. Adjust the filters or press Refresh.</p>
       ) : (
-        <div className={`rounded-xl border border-slate-200 bg-white p-6 shadow-sm print:border-0 print:p-0 print:shadow-none ${loading ? 'opacity-60' : ''}`}>
+        <div id="print-area" className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none ${loading ? 'opacity-60' : ''}`}>
           <PrintReportHeader
             showOnScreen
             title={report.title}

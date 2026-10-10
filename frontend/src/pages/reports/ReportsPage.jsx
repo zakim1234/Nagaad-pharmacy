@@ -47,6 +47,7 @@ import ReportStatRow from '../../components/reports/ReportStatRow.jsx';
 import EmptyReportState from '../../components/reports/EmptyReportState.jsx';
 import DateRangeFilter from '../../components/reports/DateRangeFilter.jsx';
 import PrintReportHeader, { formatRangeLabel } from '../../components/reports/PrintReportHeader.jsx';
+import SharePdfButton from '../../components/SharePdfButton.jsx';
 import PrintReportFooter from '../../components/reports/PrintReportFooter.jsx';
 import { COLORS, axisProps, gridProps, compactMoney, gradient, ChartTooltip, LegendDots, DonutChart } from '../../components/reports/chartKit.jsx';
 import ProfitDrilldownModal from './ProfitDrilldownModal.jsx';
@@ -170,6 +171,14 @@ export default function ReportsPage() {
                 <Printer className="h-4 w-4" /> Print Report
               </button>
             )}
+            {!ownsLayout && (
+              <SharePdfButton
+                fileName={`${activeTab.title.replace(/\s+/g, '-')}_${new Date().toISOString().slice(0, 10)}`}
+                message={`${activeTab.title} — ${rangeLabel}`}
+                orientation={activeTab.orientation}
+                className="bg-white!"
+              />
+            )}
           </div>
         </div>
       </section>
@@ -228,8 +237,15 @@ export default function ReportsPage() {
             />
           )}
 
-          <div id="print-area">
-            {tab !== 'pnl' && tab !== 'balance-sheet' && <PrintReportHeader title={activeTab.title} rangeLabel={rangeLabel} />}
+          <div
+            id={ownsLayout ? undefined : 'print-area'}
+            className={
+              ownsLayout
+                ? ''
+                : 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none'
+            }
+          >
+            {!ownsLayout && <PrintReportHeader showOnScreen title={activeTab.title} rangeLabel={rangeLabel} />}
 
             {tab === 'pnl' ? (
               <ProfitLossReport />

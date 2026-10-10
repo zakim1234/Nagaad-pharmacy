@@ -1,6 +1,5 @@
-import { BUSINESS } from '../../constants/business.js';
 import { formatDate, formatDateTime } from '../../utils/format.js';
-import logo from '../../images/logo.png';
+import DocHeader from '../docs/DocHeader.jsx';
 
 // The one branded page top shared by every report: logo, business name,
 // address, report title, date range and (optionally) a basis line such as
@@ -10,24 +9,17 @@ import logo from '../../images/logo.png';
 // `showOnScreen` to show the same header on screen too.
 export default function PrintReportHeader({ title, rangeLabel, subtitle, showOnScreen = false }) {
   return (
-    <div className={showOnScreen ? '' : 'hidden print:block'}>
-      <div className="flex flex-col items-center text-center">
-        <img src={logo} alt={BUSINESS.name} className="h-14 w-auto object-contain" />
-        <h1 className="mt-1 text-base font-bold tracking-wide text-slate-900">{BUSINESS.name}</h1>
-        <p className="text-xs text-slate-500">{BUSINESS.addressLine}</p>
-        <p className="text-xs text-slate-500">{BUSINESS.phone}</p>
-      </div>
-
-      <div className="my-3 border-t border-slate-300" />
-
-      <div className="text-center">
-        <p className="text-lg font-bold uppercase tracking-wide text-slate-900">{title}</p>
-        {rangeLabel && <p className="mt-0.5 text-sm text-slate-600">{rangeLabel}</p>}
-        {subtitle && <p className="text-xs font-medium text-slate-500">{subtitle}</p>}
-        <p className="mt-0.5 text-xs text-slate-400">Generated: {formatDateTime(new Date())}</p>
-      </div>
-
-      <div className="my-4 border-t border-dashed border-slate-300" />
+    <div className={showOnScreen ? 'mb-5' : 'mb-5 hidden print:block'}>
+      <DocHeader
+        title={title}
+        meta={
+          <span>
+            {rangeLabel && <span className="font-semibold">{rangeLabel}</span>}
+            {subtitle && <span className="ml-2 text-neutral-400">{subtitle}</span>}
+          </span>
+        }
+      />
+      <p className="mt-1 text-right text-[10px] text-neutral-400">Generated: {formatDateTime(new Date())}</p>
     </div>
   );
 }
