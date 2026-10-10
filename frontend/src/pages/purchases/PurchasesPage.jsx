@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Ban, Search, Pencil, Trash2, Sheet, Wallet, FileText, ArrowLeft, Plus } from 'lucide-react';
+import { Ban, Search, Pencil, Trash2, Sheet, Wallet, FileText, ArrowLeft, Plus, ChevronDown, ExternalLink } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -83,9 +83,33 @@ export default function PurchasesPage() {
   useEffect(() => load(), [load]);
   useEffect(() => loadSuppliers(), [loadSuppliers]);
 
+  // "All suppliers" without a search: one line per supplier, its invoices
+  // shown only when opened, so the page stays short.
+  const collapsedView = !supplierId && !debouncedQ;
+  const [expanded, setExpanded] = useState(() => new Set());
+  const [groupItems, setGroupItems] = useState({}); // supplierId -> invoices (undefined while loading)
+
+  const loadGroup = (sid) => {
+    client
+      .get('/purchases', { params: { supplier: sid, limit: 500 } })
+      .then((res) => setGroupItems((g) => ({ ...g, [sid]: res.data.data })))
+      .catch((err) => toast.error(err.friendlyMessage || 'Failed to load invoices.'));
+  };
+
+  const toggleGroup = (sid) => {
+    const next = new Set(expanded);
+    if (next.has(sid)) next.delete(sid);
+    else {
+      next.add(sid);
+      loadGroup(sid);
+    }
+    setExpanded(next);
+  };
+
   const reload = () => {
     load();
     loadSuppliers();
+    expanded.forEach(loadGroup);
   };
 
   const pickSupplier = (id) => setSearchParams(id ? { supplier: id } : {});
@@ -163,33 +187,64 @@ export default function PurchasesPage() {
     </tr>
   );
 
-  // In "All suppliers", a header row opens each supplier's group.
+  const groupHeader = (sid, name, { toggle = false, open = false } = {}) => {
+    const s = bySupplier.get(sid);
+    return (
+      <tr key={`h-${sid}`} className={`border-t-2 border-slate-200 ${open ? 'bg-neutral-100' : 'bg-neutral-50 hover:bg-neutral-100'}`}>
+        <td colSpan={cols} className="px-4 py-2.5">
+          <div className="flex w-full items-center gap-2.5">
+            <button onClick={() => (toggle ? toggleGroup(sid) : pickSupplier(sid))} className="group flex min-w-0 flex-1 items-center gap-2.5 text-left">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-[11px] font-bold text-white">{initials(name)}</span>
+              <span className="truncate font-semibold text-slate-900 group-hover:text-brand-600">{name}</span>
+              {s && (
+                <span className="shrink-0 text-xs text-slate-500">
+                  {s.invoiceCount} invoice{s.invoiceCount === 1 ? '' : 's'}
+                </span>
+              )}
+              {s && (
+                <span className={`ml-auto shrink-0 text-xs font-semibold ${s.owed > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+                  {s.owed > 0 ? `Owed ${formatCurrency(s.owed)}` : 'Paid up'}
+                </span>
+              )}
+            </button>
+            {toggle && (
+              <>
+                <button onClick={() => toggleGroup(sid)} className={ACTION}>
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} /> {open ? 'Hide' : 'View invoices'}
+                </button>
+                <button onClick={() => pickSupplier(sid)} className={ACTION}>
+                  <ExternalLink className="h-3.5 w-3.5" /> Open
+                </button>
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  // Collapsed "All suppliers": a line per supplier; invoices only when opened.
+  const collapsedRows = suppliers.flatMap((sup) => {
+    const sid = String(sup.id);
+    const open = expanded.has(sid);
+    const list = groupItems[sid];
+    const out = [groupHeader(sid, sup.name, { toggle: true, open })];
+    if (open) {
+      if (!list) out.push(<TableLoading key={`l-${sid}`} colSpan={cols} />);
+      else if (list.length === 0) out.push(<TableEmpty key={`e-${sid}`} colSpan={cols} message="No invoices." />);
+      else out.push(...list.map(invoiceRow));
+    }
+    return out;
+  });
+
+  // Searching, or one supplier open: the invoices themselves, grouped.
   const rows = items.map((p, i) => {
     const sid = String(p.supplier);
     const newGroup = !supplierId && (i === 0 || String(items[i - 1].supplier) !== sid);
     const s = bySupplier.get(sid);
     return (
       <Fragment key={p.id}>
-        {newGroup && (
-          <tr className="border-t-2 border-slate-200 bg-neutral-50">
-            <td colSpan={cols} className="px-4 py-2">
-              <button onClick={() => pickSupplier(sid)} className="group flex w-full items-center gap-2.5 text-left">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-[11px] font-bold text-white">{initials(p.supplierName)}</span>
-                <span className="font-semibold text-slate-900 group-hover:text-brand-600 group-hover:underline">{p.supplierName}</span>
-                {s && (
-                  <span className="text-xs text-slate-500">
-                    {s.invoiceCount} invoice{s.invoiceCount === 1 ? '' : 's'}
-                  </span>
-                )}
-                {s && (
-                  <span className={`ml-auto text-xs font-semibold ${s.owed > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
-                    {s.owed > 0 ? `Owed ${formatCurrency(s.owed)}` : 'Paid up'}
-                  </span>
-                )}
-              </button>
-            </td>
-          </tr>
-        )}
+        {newGroup && groupHeader(sid, s?.name || p.supplierName)}
         {invoiceRow(p)}
       </Fragment>
     );
@@ -284,7 +339,13 @@ export default function PurchasesPage() {
               </tr>
             </THead>
             <TBody>
-              {loading ? (
+              {collapsedView ? (
+                suppliers.length === 0 ? (
+                  <TableEmpty colSpan={cols} message="No purchase invoices recorded yet." />
+                ) : (
+                  collapsedRows
+                )
+              ) : loading ? (
                 <TableLoading colSpan={cols} />
               ) : items.length === 0 ? (
                 <TableEmpty colSpan={cols} message={selected ? `No invoices from ${selected.name} match.` : 'No purchase invoices recorded yet.'} />
@@ -293,9 +354,11 @@ export default function PurchasesPage() {
               )}
             </TBody>
           </Table>
-          <div className="rounded-b-xl border border-t-0 border-slate-200 bg-white">
-            <Pagination {...pagination} onChange={setPage} />
-          </div>
+          {!collapsedView && (
+            <div className="rounded-b-xl border border-t-0 border-slate-200 bg-white">
+              <Pagination {...pagination} onChange={setPage} />
+            </div>
+          )}
       </div>
 
       <PurchaseFormModal
