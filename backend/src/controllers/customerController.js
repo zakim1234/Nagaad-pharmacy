@@ -250,6 +250,10 @@ export const getCustomerHistory = asyncHandler(async (req, res) => {
         type: p.type,
         allocations: p.allocations.map((a) => ({ receiptNumber: a.receiptNumber, amount: fromCents(a.amountCents) })),
         notes: p.notes,
+        paymentAccountName: p.paymentAccountName,
+        status: p.status || 'POSTED',
+        cancelledAt: p.cancelledAt,
+        refundedTo: p.refundedTo,
         createdAt: p.createdAt,
       })),
       timeline: ledger.map((l) => ({
@@ -656,7 +660,7 @@ export const getCustomerStatement = asyncHandler(async (req, res) => {
 
   const [sales, payments, todaysDrafts] = await Promise.all([
     Sale.find({ customer: customer._id, status: 'CONFIRMED', createdAt: { $gte: from, $lte: to } }).sort({ createdAt: 1 }),
-    Payment.find({ customer: customer._id, createdAt: { $gte: from, $lte: to } }).sort({ createdAt: 1 }),
+    Payment.find({ customer: customer._id, status: { $ne: 'CANCELLED' }, createdAt: { $gte: from, $lte: to } }).sort({ createdAt: 1 }),
     Sale.find({ customer: customer._id, status: 'DRAFT' }).sort({ createdAt: -1 }),
   ]);
 
@@ -767,4 +771,108 @@ export const setWalletAutoPay = asyncHandler(async (req, res) => {
   await customer.save();
   await logAudit({ user: req.user, action: 'customer.wallet.autoPay', entityType: 'Customer', entityId: customer._id, details: { enabled: customer.walletAutoPay } });
   res.json({ success: true, data: toDTO(customer) });
+});
+
+// POST /api/customers/:id/payments/:paymentId/cancel { reason, refundTo } --
+// admin/manager: undoes a debt payment. The amount is owed again on the
+// invoices it paid, and the money either stays with us as wallet credit
+// (refundTo: 'WALLET') or is handed back out of the account it came into
+// (refundTo: 'ACCOUNT'). A payment made from the wallet always goes back to
+// the wallet.
+export const cancelCustomerPayment = asyncHandler(async (req, res) => {
+  const reason = String(req.body.reason || '').trim().slice(0, 500);
+  const result = await runInTransaction(async (session) => {
+    const customer = await Customer.findById(req.params.id).session(session);
+    if (!customer) throw new ApiError(404, 'Customer not found.');
+    const payment = await Payment.findOne({ _id: req.params.paymentId, customer: customer._id }).session(session);
+    if (!payment) throw new ApiError(404, 'Payment not found.');
+    if (payment.type !== 'debt_payment') throw new ApiError(409, 'Only debt payments can be cancelled here. A payment taken at the sale is undone by cancelling that invoice.');
+    if (payment.status === 'CANCELLED') throw new ApiError(409, 'This payment is already cancelled.');
+
+    const fromWallet = !payment.paymentAccount;
+    const refundTo = fromWallet ? 'WALLET' : req.body.refundTo === 'ACCOUNT' ? 'ACCOUNT' : 'WALLET';
+
+    // The debt comes back on the same invoices.
+    for (const a of payment.allocations) {
+      const sale = await Sale.findById(a.sale).session(session);
+      if (!sale || sale.status !== 'CONFIRMED') {
+        throw new ApiError(409, `Invoice ${a.receiptNumber} was cancelled after this payment, so the payment cannot be undone.`);
+      }
+      sale.outstandingCents += a.amountCents;
+      await sale.save({ session });
+    }
+    const amountCents = payment.amountCents;
+    const balanceBeforeCents = customer.balanceCents;
+    customer.balanceCents += amountCents;
+    customer.totalPaidCents = Math.max(0, customer.totalPaidCents - amountCents);
+
+    if (refundTo === 'WALLET') {
+      const walletBefore = customer.walletBalanceCents;
+      customer.walletBalanceCents += amountCents;
+      await CustomerWalletTransaction.create(
+        [
+          {
+            customer: customer._id,
+            type: 'REFUND',
+            amountCents,
+            note: `Payment ${payment.receiptNumber} cancelled -- money kept in the wallet${reason ? `: ${reason}` : ''}`,
+            balanceBeforeCents: walletBefore,
+            balanceAfterCents: customer.walletBalanceCents,
+            createdBy: req.user?._id,
+          },
+        ],
+        { session }
+      );
+    } else {
+      const account = await Account.findById(payment.paymentAccount).session(session);
+      if (!account) throw new ApiError(409, 'The account this payment came into no longer exists. Keep the money in the wallet instead.');
+      await postImmediateTransaction(
+        {
+          account,
+          direction: 'OUT',
+          type: 'REFUND',
+          amountCents,
+          referenceType: 'Payment',
+          referenceId: payment._id,
+          description: `Payment ${payment.receiptNumber} cancelled -- money returned to ${customer.name}${reason ? ` (${reason})` : ''}`,
+          createdBy: req.user,
+        },
+        session
+      );
+    }
+    await customer.save({ session });
+
+    await CustomerLedger.create(
+      [
+        {
+          customer: customer._id,
+          type: 'PAYMENT_CANCELLED',
+          amountCents,
+          payment: payment._id,
+          description: `Payment ${payment.receiptNumber} cancelled -- ${refundTo === 'WALLET' ? 'money kept in the wallet' : 'money given back from ' + (payment.paymentAccountName || 'the account')}${reason ? `: ${reason}` : ''}`,
+          balanceBeforeCents,
+          balanceAfterCents: customer.balanceCents,
+          createdBy: req.user?._id,
+        },
+      ],
+      { session }
+    );
+
+    payment.status = 'CANCELLED';
+    payment.cancelledAt = new Date();
+    payment.cancelReason = reason;
+    payment.cancelledByName = req.user?.name || '';
+    payment.refundedTo = refundTo;
+    await payment.save({ session });
+    return { customer, payment, refundTo };
+  });
+
+  await logAudit({
+    user: req.user,
+    action: 'customer.payment.cancel',
+    entityType: 'Customer',
+    entityId: result.customer._id,
+    details: { receiptNumber: result.payment.receiptNumber, amount: fromCents(result.payment.amountCents), refundTo: result.refundTo, reason },
+  });
+  res.json({ success: true, data: { customer: toDTO(result.customer), receiptNumber: result.payment.receiptNumber, amount: fromCents(result.payment.amountCents), refundTo: result.refundTo } });
 });

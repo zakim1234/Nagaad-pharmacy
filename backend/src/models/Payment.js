@@ -25,6 +25,13 @@ const paymentSchema = new mongoose.Schema(
     previousBalanceCents: { type: Number, default: 0 },
     newBalanceCents: { type: Number, default: 0 },
     notes: { type: String, default: '' },
+    // CANCELLED: the debt was put back on its invoices and the money went to
+    // the customer's wallet or back out of the account (refundedTo).
+    status: { type: String, enum: ['POSTED', 'CANCELLED'], default: 'POSTED' },
+    cancelledAt: { type: Date, default: null },
+    cancelReason: { type: String, default: '' },
+    cancelledByName: { type: String, default: '' },
+    refundedTo: { type: String, enum: ['', 'WALLET', 'ACCOUNT'], default: '' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }

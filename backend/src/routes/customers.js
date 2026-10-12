@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth, requirePermission } from '../middleware/auth.js';
+import { requireAuth, requirePermission, requireRole } from '../middleware/auth.js';
 import {
   listCustomers,
   searchCustomers,
@@ -10,6 +10,7 @@ import {
   getCustomerHistory,
   getCustomerDebt,
   payCustomerDebt,
+  cancelCustomerPayment,
   getCustomerStatement,
   depositToWallet,
   payDebtFromWallet,
@@ -35,6 +36,7 @@ router.get('/:id/history', requirePermission('customers'), getCustomerHistory);
 router.get('/:id/statement', requirePermission('customers'), getCustomerStatement);
 router.get('/:id/debt', requirePermission('customers'), getCustomerDebt);
 router.post('/:id/payments', requirePermission('customers'), payCustomerDebt);
+router.post('/:id/payments/:paymentId/cancel', requirePermission('customers'), requireRole('admin', 'manager'), cancelCustomerPayment);
 router.post('/:id/wallet/deposit', requirePermission('customers'), depositToWallet);
 router.post('/:id/wallet/pay-debt', requirePermission('customers'), payDebtFromWallet);
 router.put('/:id/wallet/auto-pay', requirePermission('customers'), setWalletAutoPay);

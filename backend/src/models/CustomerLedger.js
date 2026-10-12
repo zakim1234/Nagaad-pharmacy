@@ -9,7 +9,7 @@ const customerLedgerSchema = new mongoose.Schema(
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
     type: {
       type: String,
-      enum: ['SALE_CREDIT', 'PAYMENT', 'ADJUSTMENT', 'SALE_VOID', 'SALE_RETURN', 'REFUND'],
+      enum: ['SALE_CREDIT', 'PAYMENT', 'ADJUSTMENT', 'SALE_VOID', 'SALE_RETURN', 'REFUND', 'PAYMENT_CANCELLED'],
       required: true,
     },
     amountCents: { type: Number, required: true }, // signed: +increases debt, -decreases debt

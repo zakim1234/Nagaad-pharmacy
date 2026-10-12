@@ -302,3 +302,49 @@ test('WALLET CHOICE -- by default a deposit stays in the wallet; the debt is pai
     await teardown(server);
   }
 });
+
+test('CANCEL CUSTOMER PAYMENT -- debt comes back; money kept in the wallet or given back from the account', { timeout: 90000 }, async () => {
+  const ctx = await setup('cancel_cust_payment');
+  const { server, request } = ctx;
+  try {
+    const account = await Account.create({ name: 'EVC Plus' });
+    const item = await InventoryItem.create({ name: 'Cancel Item', itemCode: 'CANCEL-1', quantity: 1000, costPriceCents: 100, sellingPriceCents: 1000 });
+    const customer = await Customer.create({ name: 'Dr Jilbo', phone: '999' });
+    await giveDebt(ctx, customer, account, item, 10); // $100 debt
+    const balance = async () => (await Account.findById(account.id)).currentBalanceCents;
+    const startBalance = await balance();
+
+    // 1. A deposit that paid $60 of the debt -> cancel, keep the money in the wallet.
+    await request(`/customers/${customer.id}/wallet/deposit`, { amount: 60, paymentAccountId: account.id, applyToDebt: true });
+    let c = await Customer.findById(customer.id);
+    assert.equal(c.balanceCents, 4000);
+    const pay1 = await Payment.findOne({ customer: customer.id, type: 'debt_payment' });
+    const kept = await request(`/customers/${customer.id}/payments/${pay1.id}/cancel`, { refundTo: 'WALLET', reason: 'wrong' });
+    assert.equal(kept.status, 200, JSON.stringify(kept));
+    c = await Customer.findById(customer.id);
+    assert.deepEqual([c.balanceCents, c.walletBalanceCents], [10000, 6000], 'owes 100 again, 60 in the wallet');
+    assert.equal(await balance(), startBalance + 6000, 'the deposit itself stays in the account');
+    assert.equal((await Sale.findOne({ customer: customer.id })).outstandingCents, 10000);
+    assert.equal((await request(`/customers/${customer.id}/payments/${pay1.id}/cancel`, {})).status, 409, 'only once');
+
+    // 2. A normal debt payment of $30 -> cancel, money given back out of the account.
+    const pay2 = await request(`/customers/${customer.id}/payments`, { amount: 30, paymentAccountId: account.id });
+    assert.equal(pay2.status, 201, JSON.stringify(pay2));
+    const pay2Doc = await Payment.findOne({ customer: customer.id, status: 'POSTED', type: 'debt_payment' });
+    const back = await request(`/customers/${customer.id}/payments/${pay2Doc.id}/cancel`, { refundTo: 'ACCOUNT' });
+    assert.equal(back.status, 200, JSON.stringify(back));
+    assert.equal(await balance(), startBalance + 6000, '30 came in and went back out');
+    c = await Customer.findById(customer.id);
+    assert.equal(c.balanceCents, 10000);
+
+    // The statement leaves cancelled payments out.
+    const st = await request(`/customers/${customer.id}/statement`, undefined, 'GET');
+    assert.equal(st.status, 200, JSON.stringify(st));
+    assert.equal(st.data.summary.totalPayments, 0);
+    const hist = await request(`/customers/${customer.id}/history`, undefined, 'GET');
+    assert.ok(hist.data.payments.every((p) => p.status === 'CANCELLED'));
+    assert.ok(hist.data.timeline.some((t) => t.type === 'PAYMENT_CANCELLED'));
+  } finally {
+    await teardown(server);
+  }
+});

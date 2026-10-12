@@ -55,6 +55,10 @@ export const getPaymentReceipt = asyncHandler(async (req, res) => {
       newBalance: fromCents(payment.newBalanceCents),
       allocations: payment.allocations.map((a) => ({ receiptNumber: a.receiptNumber, amount: fromCents(a.amountCents) })),
       notes: payment.notes,
+      status: payment.status || 'POSTED',
+      cancelledAt: payment.cancelledAt,
+      cancelReason: payment.cancelReason,
+      refundedTo: payment.refundedTo,
       createdAt: payment.createdAt,
     },
   });

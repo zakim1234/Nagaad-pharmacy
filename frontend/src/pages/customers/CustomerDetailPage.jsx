@@ -36,6 +36,7 @@ import PayDebtModal from './PayDebtModal.jsx';
 import ReturnItemsModal from './ReturnItemsModal.jsx';
 import CustomerQuotationsSection from './CustomerQuotationsSection.jsx';
 import CustomerWalletSection from './CustomerWalletSection.jsx';
+import CancelCustomerPaymentDialog from './CancelCustomerPaymentDialog.jsx';
 import SharePdfButton from '../../components/SharePdfButton.jsx';
 import DocHeader, { DocInfo } from '../../components/docs/DocHeader.jsx';
 
@@ -46,6 +47,7 @@ const LEDGER_LABELS = {
   SALE_VOID: { label: 'Sale Cancelled', color: 'slate' },
   SALE_RETURN: { label: 'Items Returned', color: 'blue' },
   REFUND: { label: 'Refund', color: 'amber' },
+  PAYMENT_CANCELLED: { label: 'Payment Cancelled', color: 'red' },
 };
 
 const INVOICE_STATUS_LABEL = { DRAFT: 'Pending', CONFIRMED: 'Completed', CANCELLED: 'Cancelled' };
@@ -73,6 +75,7 @@ export default function CustomerDetailPage() {
   const toast = useToast();
   const { user } = useAuth();
   const canManage = user?.role === 'admin' || user?.role === 'manager';
+  const [cancelPayment, setCancelPayment] = useState(null);
   const [data, setData] = useState(null);
   const [debt, setDebt] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -130,6 +133,7 @@ export default function CustomerDetailPage() {
   if (!data) return null;
 
   const { customer, sales, timeline, walletPaid = 0 } = data;
+  const paymentsById = new Map((data.payments || []).map((p) => [String(p.id), p]));
   const activeSales = sales.filter((s) => s.status !== 'CANCELLED');
   const invoices = status ? activeSales.filter((s) => s.status === status) : activeSales;
   const cancelledSales = sales.filter((s) => s.status === 'CANCELLED');
@@ -541,6 +545,20 @@ export default function CustomerDetailPage() {
                           {formatCurrency(t.amount)}
                         </p>
                         <p className="text-xs text-slate-400">Balance: {formatCurrency(t.balanceAfter)}</p>
+                        {t.type === 'PAYMENT' && t.payment && (() => {
+                          const p = paymentsById.get(String(t.payment));
+                          if (!p) return null;
+                          if (p.status === 'CANCELLED') return <span className="mt-1 inline-block"><Badge color="red">Cancelled</Badge></span>;
+                          return canManage && p.type === 'debt_payment' ? (
+                            <button
+                              type="button"
+                              onClick={() => setCancelPayment(p)}
+                              className="mt-1.5 inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                            >
+                              <Undo2 className="h-3.5 w-3.5" /> Cancel payment
+                            </button>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
                   </li>
@@ -552,6 +570,7 @@ export default function CustomerDetailPage() {
       )}
 
       <PayDebtModal open={payOpen} onClose={() => setPayOpen(false)} customerId={id} onPaid={load} />
+      <CancelCustomerPaymentDialog customerId={id} payment={cancelPayment} onClose={() => setCancelPayment(null)} onCancelled={load} />
       <ReturnItemsModal open={!!returnSale} onClose={() => setReturnSale(null)} sale={returnSale} onReturned={load} />
       <ConfirmDialog
         open={!!cancelTarget}
