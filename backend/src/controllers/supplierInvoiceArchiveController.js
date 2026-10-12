@@ -26,8 +26,8 @@ function toDTO(doc) {
     })),
     grandTotal: fromCents(doc.grandTotalCents),
     notes: doc.notes,
-    purchase: doc.purchase || null,
-    purchaseNumber: doc.purchaseNumber || null,
+    purchase: doc.purchase?._id || doc.purchase || null,
+    purchaseNumber: doc.purchaseNumber || doc.purchase?.purchaseNumber || null,
     createdBy: doc.createdBy,
     createdAt: doc.createdAt,
   };
@@ -188,7 +188,7 @@ export const searchArchives = asyncHandler(async (req, res) => {
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
   const [rows, total] = await Promise.all([
-    SupplierInvoiceArchive.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
+    SupplierInvoiceArchive.find(filter).populate('purchase', 'purchaseNumber').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
     SupplierInvoiceArchive.countDocuments(filter),
   ]);
   res.json({ success: true, data: rows.map(toDTO), pagination: { page, limit, total, pages: Math.ceil(total / limit) } });
@@ -198,4 +198,23 @@ export const getArchive = asyncHandler(async (req, res) => {
   const archive = await SupplierInvoiceArchive.findById(req.params.id);
   if (!archive) throw new ApiError(404, 'Supplier invoice archive not found.');
   res.json({ success: true, data: toDTO(archive) });
+});
+
+// POST /api/supplier-invoice-archives/:id/to-purchase -- for an archive saved
+// before archives were added to Purchase Invoices automatically: records
+// its purchase invoice (serial number, grand total owed) now, once.
+export const sendArchiveToPurchases = asyncHandler(async (req, res) => {
+  const result = await runInTransaction(async (session) => {
+    const doc = await SupplierInvoiceArchive.findById(req.params.id).session(session);
+    if (!doc) throw new ApiError(404, 'Supplier invoice archive not found.');
+    if (!doc.supplier) throw new ApiError(400, 'Choose the supplier on this invoice first (Edit), then add it to Purchase Invoices.');
+    if (doc.purchase && (await Purchase.exists({ _id: doc.purchase }).session(session))) throw new ApiError(409, 'This invoice is already in Purchase Invoices.');
+    doc.purchase = null;
+    const purchase = await syncArchivePurchase(session, doc, { user: req.user });
+    await doc.save({ session });
+    doc.purchaseNumber = purchase?.purchaseNumber || null;
+    return doc;
+  });
+  await logAudit({ user: req.user, action: 'supplierInvoiceArchive.toPurchase', entityType: 'SupplierInvoiceArchive', entityId: result._id, details: { archiveNumber: result.archiveNumber, purchaseNumber: result.purchaseNumber } });
+  res.json({ success: true, data: toDTO(result) });
 });

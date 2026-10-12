@@ -8,6 +8,7 @@ import Supplier from '../src/models/Supplier.js';
 import Account from '../src/models/Account.js';
 import AccountTransaction from '../src/models/AccountTransaction.js';
 import Purchase from '../src/models/Purchase.js';
+import SupplierInvoiceArchive from '../src/models/SupplierInvoiceArchive.js';
 
 async function setup(dbName) {
   await mongoose.connect(`mongodb://127.0.0.1:27028/${dbName}_${Date.now()}?replicaSet=stocktest`);
@@ -305,6 +306,41 @@ test('MANUAL ENTRY ARCHIVE -- also records the purchase invoice, kept in step', 
     assert.equal(await Purchase.countDocuments({ _id: after._id }), 0);
     assert.equal((await Account.findById(evc.id)).currentBalanceCents, 0);
     assert.equal((await Supplier.findById(other.id)).totalSpentCents, 0);
+  } finally {
+    await teardown(server);
+  }
+});
+
+test('OLDER ARCHIVE -- Add to Purchase Invoices once, then it shows its PUR number', { timeout: 90000 }, async () => {
+  const { server, request } = await setup('archive_old');
+  try {
+    const supplier = await Supplier.create({ name: 'Al Xarameyn Pharma' });
+    // Saved before archives were linked: no purchase invoice behind it.
+    const old = await SupplierInvoiceArchive.create({
+      archiveNumber: 'SINV-2026-000004',
+      serialNumber: '737478',
+      supplier: supplier._id,
+      supplierName: supplier.name,
+      rows: [{ itemName: 'zinc', quantity: 100, costCents: 200, totalCents: 20000 }],
+      grandTotalCents: 20000,
+    });
+    const noSupplier = await SupplierInvoiceArchive.create({
+      archiveNumber: 'SINV-2026-000005',
+      serialNumber: 'NS-1',
+      rows: [{ itemName: 'x', quantity: 1, costCents: 100, totalCents: 100 }],
+      grandTotalCents: 100,
+    });
+
+    const sent = await request(`/supplier-invoice-archives/${old.id}/to-purchase`, {});
+    assert.equal(sent.status, 200, JSON.stringify(sent));
+    assert.match(sent.data.purchaseNumber, /^PUR-/);
+    const p = await Purchase.findById(sent.data.purchase);
+    assert.deepEqual([p.supplierInvoiceNumber, p.totalCostCents, p.balanceCents], ['737478', 20000, 20000]);
+    assert.equal((await request(`/supplier-invoice-archives/${old.id}/to-purchase`, {})).status, 409, 'only once');
+    assert.equal((await request(`/supplier-invoice-archives/${noSupplier.id}/to-purchase`, {})).status, 400, 'needs a supplier');
+
+    const list = await request('/supplier-invoice-archives');
+    assert.equal(list.data.find((a) => a.id === old.id).purchaseNumber, sent.data.purchaseNumber);
   } finally {
     await teardown(server);
   }

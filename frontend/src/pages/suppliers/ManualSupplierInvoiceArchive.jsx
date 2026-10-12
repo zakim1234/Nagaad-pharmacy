@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Trash2, Plus, Search, Save, FileText, Building2, Pencil } from 'lucide-react';
+import { Trash2, Plus, Search, Save, FileText, Building2, Pencil, ArrowRightLeft, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -52,6 +53,20 @@ export default function ManualSupplierInvoiceArchive() {
   const startDelete = (archive) => {
     setViewing(null);
     setDeleteTarget(archive);
+  };
+
+  const [sending, setSending] = useState(null);
+  const sendToPurchases = async (archive) => {
+    setSending(archive.id);
+    try {
+      const res = await client.post(`/supplier-invoice-archives/${archive.id}/to-purchase`, {});
+      toast.success(`Added to Purchase Invoices as ${res.data.data.purchaseNumber} — ${formatCurrency(archive.grandTotal)} owed to ${archive.supplierName}.`);
+      load();
+    } catch (err) {
+      toast.error(err.friendlyMessage || 'Could not add it to Purchase Invoices.');
+    } finally {
+      setSending(null);
+    }
   };
 
   const handleDelete = async () => {
@@ -120,6 +135,27 @@ export default function ManualSupplierInvoiceArchive() {
                 <p className="text-xs text-slate-400">{formatDate(a.createdAt)}</p>
                 <p className="mt-1 text-base font-bold tabular-nums text-slate-900">{formatCurrency(a.grandTotal)}</p>
               </button>
+              <div className="px-4 pb-2.5">
+                {a.purchaseNumber ? (
+                  <Link
+                    to={`/purchases/${a.purchase}`}
+                    className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2 py-1 text-[11px] font-semibold text-neutral-700 hover:bg-neutral-200"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5 text-brand-600" /> In Purchase Invoices · {a.purchaseNumber}
+                  </Link>
+                ) : a.supplier ? (
+                  <button
+                    type="button"
+                    disabled={sending === a.id}
+                    onClick={() => sendToPurchases(a)}
+                    className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+                  >
+                    <ArrowRightLeft className="h-3.5 w-3.5" /> {sending === a.id ? 'Adding…' : 'Add to Purchase Invoices'}
+                  </button>
+                ) : (
+                  <span className="text-[11px] text-slate-400">No supplier — Edit to choose one, then add to Purchase Invoices</span>
+                )}
+              </div>
               {canManage && (
                 <div className="flex gap-1.5 border-t border-slate-100 px-4 py-2.5">
                   <CardAction icon={Pencil} label="Edit" onClick={() => startEdit(a)} />
