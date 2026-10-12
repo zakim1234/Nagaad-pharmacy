@@ -77,3 +77,33 @@ test('SALARIES -- sheet of users, pay all at once as Salaries expenses, cancel r
     await teardown(server);
   }
 });
+
+test('SALARY STATEMENT -- everyone or one person; cancelled sheets left out', { timeout: 90000 }, async () => {
+  const { server, admin, cashier, request } = await setup('salary_statement');
+  try {
+    const evc = await Account.create({ name: 'EVC Plus' });
+    const payMonth = async (period, a, c, date) => {
+      await request('/salaries/sheet', { period, rows: [{ userId: admin.id, amount: a }, { userId: cashier.id, amount: c }] }, 'PUT');
+      return request('/salaries/sheet/pay', { paymentAccountId: evc.id, paymentDate: date });
+    };
+    await payMonth('2026-08', 500, 300, '2026-08-30');
+    await payMonth('2026-09', 500, 350, '2026-09-30');
+    const wrong = await payMonth('2026-10', 999, 999, '2026-10-05');
+    await request(`/salaries/sheets/${wrong.data.id}/cancel`, {});
+
+    const all = await request('/salaries/statement');
+    assert.equal(all.status, 200, JSON.stringify(all));
+    assert.equal(all.data.lines.length, 4, 'cancelled month left out');
+    assert.equal(all.data.total, 1650);
+    assert.deepEqual(all.data.people.map((p) => [p.name, p.payments, p.total]), [['Admin', 2, 1000], ['Cashier Ali', 2, 650]]);
+
+    const one = await request(`/salaries/statement?userId=${cashier.id}`);
+    assert.deepEqual(one.data.lines.map((l) => [l.period, l.amount]), [['2026-08', 300], ['2026-09', 350]]);
+    assert.equal(one.data.total, 650);
+
+    const sept = await request('/salaries/statement?from=2026-09-01&to=2026-09-30');
+    assert.equal(sept.data.total, 850);
+  } finally {
+    await teardown(server);
+  }
+});

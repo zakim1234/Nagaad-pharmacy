@@ -182,3 +182,56 @@ export const cancelSalarySheet = asyncHandler(async (req, res) => {
   await logAudit({ user: req.user, action: 'salary.cancel', entityType: 'SalarySheet', entityId: sheet._id, details: { sheetNumber: sheet.sheetNumber, refunded: fromCents(refundedCents), reason } });
   res.json({ success: true, data: { ...sheetToDTO(sheet), refunded: fromCents(refundedCents) } });
 });
+
+// GET /api/salaries/statement?userId=&from=YYYY-MM-DD&to=YYYY-MM-DD -- every
+// salary actually paid (paid sheets only; cancelled ones are left out), for
+// everyone or one person, oldest first, with totals per person.
+export const getSalaryStatement = asyncHandler(async (req, res) => {
+  const { userId } = req.query;
+  if (userId && !mongoose.isValidObjectId(userId)) throw new ApiError(400, 'Unknown person.');
+  const filter = { status: 'PAID' };
+  if (req.query.from || req.query.to) {
+    filter.paymentDate = {};
+    if (req.query.from) filter.paymentDate.$gte = parseExpenseDate(req.query.from);
+    if (req.query.to) filter.paymentDate.$lte = new Date(parseExpenseDate(req.query.to).getTime() + 12 * 3600 * 1000);
+  }
+  if (userId) filter['rows.user'] = userId;
+  const sheets = await SalarySheet.find(filter).sort({ paymentDate: 1, createdAt: 1 });
+
+  const lines = [];
+  for (const s of sheets) {
+    for (const r of s.rows) {
+      if (userId && String(r.user) !== String(userId)) continue;
+      lines.push({
+        user: r.user,
+        name: r.name,
+        role: r.role,
+        period: s.period,
+        paymentDate: s.paymentDate,
+        sheetId: s._id,
+        sheetNumber: s.sheetNumber,
+        expenseNumber: r.expenseNumber,
+        account: s.paymentAccountName,
+        amount: fromCents(r.amountCents),
+      });
+    }
+  }
+  const byPerson = new Map();
+  for (const l of lines) {
+    const k = String(l.user);
+    const p = byPerson.get(k) || { user: l.user, name: l.name, role: l.role, payments: 0, totalCents: 0 };
+    p.payments += 1;
+    p.totalCents += Math.round(l.amount * 100);
+    byPerson.set(k, p);
+  }
+  const people = [...byPerson.values()].sort((a, b) => a.name.localeCompare(b.name)).map(({ totalCents, ...p }) => ({ ...p, total: fromCents(totalCents) }));
+  res.json({
+    success: true,
+    data: {
+      lines,
+      people,
+      total: fromCents(lines.reduce((t, l) => t + Math.round(l.amount * 100), 0)),
+      range: { from: req.query.from || null, to: req.query.to || null },
+    },
+  });
+});

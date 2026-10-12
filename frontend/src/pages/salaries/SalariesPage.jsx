@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Banknote, CheckCircle2, Eye, History, Printer, Save, Undo2, Wallet, Copy } from 'lucide-react';
+import { ArrowLeft, Banknote, CheckCircle2, Eye, History, Printer, Save, Undo2, Wallet, Copy, ScrollText } from 'lucide-react';
 import client from '../../api/client.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate, formatDateTime } from '../../utils/format.js';
@@ -288,6 +288,9 @@ function SalarySheetEditor() {
             )}
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link to="/salaries/statement" className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+              <ScrollText className="h-4 w-4" /> Payment statement
+            </Link>
             <Button variant="secondary" onClick={() => save()} loading={saving} disabled={!dirty || hasErrors}>
               <Save className="h-4 w-4" /> Save
             </Button>
@@ -325,7 +328,12 @@ function SalarySheetEditor() {
                     <td className="px-4 py-2 text-slate-400">{i + 1}</td>
                     <td className="px-4 py-2">
                       <p className="font-medium text-slate-800">{r.name}</p>
-                      <p className="text-xs text-slate-400">@{r.username}</p>
+                      <p className="text-xs text-slate-400">
+                        @{r.username} ·{' '}
+                        <Link to={`/salaries/statement?user=${r.userId}`} className="font-semibold text-brand-600 hover:underline">
+                          Statement
+                        </Link>
+                      </p>
                     </td>
                     <td className="px-4 py-2 text-slate-600">{ROLE_LABEL[r.role] || r.role}</td>
                     <td className="whitespace-nowrap px-4 py-2 text-right text-slate-400">{r.last ? formatCurrency(r.last) : '—'}</td>

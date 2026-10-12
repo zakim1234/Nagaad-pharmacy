@@ -7,6 +7,7 @@ import {
   listSalarySheets,
   getSalarySheetById,
   cancelSalarySheet,
+  getSalaryStatement,
 } from '../controllers/salaryController.js';
 
 // Salaries are admin/manager only.
@@ -18,6 +19,7 @@ router.get('/sheet', getSalarySheet);
 router.put('/sheet', saveSalarySheet);
 router.post('/sheet/pay', paySalarySheet);
 router.get('/sheets', listSalarySheets);
+router.get('/statement', getSalaryStatement);
 router.get('/sheets/:id', getSalarySheetById);
 router.post('/sheets/:id/cancel', cancelSalarySheet);
 
