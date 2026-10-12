@@ -21,6 +21,7 @@ import {
   UserCog,
   CalendarCheck,
   SlidersHorizontal,
+  Banknote,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { hasPermission } from '../constants/permissions.js';
@@ -48,6 +49,7 @@ const navItems = [
   { to: '/suppliers', label: 'Suppliers', icon: Building2, module: 'suppliers' },
   { to: '/supplier-invoices', label: 'Supplier Invoices', icon: Receipt, module: 'supplierInvoices' },
   { to: '/expenses', label: 'Expenses', icon: HandCoins, module: 'expenses' },
+  { to: '/salaries', label: 'Salaries', icon: Banknote, module: null, roles: ['admin', 'manager'] },
   { to: '/reports', label: 'Reports', icon: BarChart3, module: 'reports' },
 ];
 
@@ -72,7 +74,7 @@ function SidebarContent({ onNavigate }) {
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-2.5 pt-1">
         {navItems
-          .filter(({ module }) => module === null || hasPermission(user, module))
+          .filter(({ module, roles }) => (roles ? roles.includes(user?.role) : module === null || hasPermission(user, module)))
           .concat(user?.role === 'admin' ? [{ to: '/users', label: 'Users', icon: UserCog, module: null }] : [])
           .map(({ to, label, icon: Icon }) => (
           <NavLink

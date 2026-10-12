@@ -1,8 +1,7 @@
 import Expense from '../models/Expense.js';
 import { listExpenseCategories, resolveExpenseCategory, addExpenseCategory } from '../services/expenseCategoryService.js';
 import Account from '../models/Account.js';
-import { nextSequence } from '../models/Counter.js';
-import { postImmediateTransaction } from '../services/accountService.js';
+import { postExpense, voidExpenseDoc } from '../services/expenseService.js';
 import { logAudit } from '../services/auditService.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -28,15 +27,10 @@ function toDTO(e) {
   };
 }
 
-async function generateExpenseNumber(session) {
-  const seq = await nextSequence('expense', session);
-  return `EXP-${new Date().getFullYear()}-${String(seq).padStart(6, '0')}`;
-}
-
 // Expense dates are calendar days, not instants. Anchoring them at local noon
 // keeps them inside the right day for every from/to range the reports build,
 // whatever timezone the server runs in.
-function parseExpenseDate(value) {
+export function parseExpenseDate(value) {
   if (!value) return new Date();
   const day = String(value).slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new ApiError(400, 'Enter a valid expense date.');
@@ -74,41 +68,7 @@ export const createExpense = asyncHandler(async (req, res) => {
     const account = await Account.findById(paymentAccountId).session(session);
     if (!account || !account.isActive) throw new ApiError(400, 'Selected payment account is not available.');
 
-    const expenseNumber = await generateExpenseNumber(session);
-    const txn = await postImmediateTransaction(
-      {
-        account,
-        direction: 'OUT',
-        type: 'EXPENSE',
-        amountCents,
-        referenceType: 'Expense',
-        referenceId: null, // filled below once the expense _id exists
-        description: `Expense ${expenseNumber} - ${category}${note ? `: ${note}` : ''}`,
-        createdBy: req.user,
-      },
-      session
-    );
-
-    const [created] = await Expense.create(
-      [
-        {
-          expenseNumber,
-          category,
-          amountCents,
-          date: expenseDate,
-          paymentAccount: account._id,
-          paymentAccountName: account.name,
-          accountTransaction: txn._id,
-          note: String(note).trim(),
-          createdBy: req.user?._id || null,
-          createdByName: req.user?.name || '',
-        },
-      ],
-      { session }
-    );
-    txn.referenceId = created._id;
-    await txn.save({ session });
-    return created;
+    return postExpense(session, { category, amountCents, date: expenseDate, account, note, user: req.user });
   });
 
   await logAudit({
@@ -168,31 +128,7 @@ export const voidExpense = asyncHandler(async (req, res) => {
   const expense = await runInTransaction(async (session) => {
     const doc = await Expense.findById(req.params.id).session(session);
     if (!doc) throw new ApiError(404, 'Expense not found.');
-    if (doc.status === 'VOIDED') throw new ApiError(409, 'This expense has already been voided.');
-
-    const account = await Account.findById(doc.paymentAccount).session(session);
-    if (!account) throw new ApiError(409, 'The account this expense was paid from no longer exists. Contact an administrator.');
-
-    await postImmediateTransaction(
-      {
-        account,
-        direction: 'IN',
-        type: 'REFUND',
-        amountCents: doc.amountCents,
-        referenceType: 'Expense',
-        referenceId: doc._id,
-        description: `Void of expense ${doc.expenseNumber}${reason ? ` (${reason})` : ''}`,
-        createdBy: req.user,
-      },
-      session
-    );
-
-    doc.status = 'VOIDED';
-    doc.voidedAt = new Date();
-    doc.voidReason = reason;
-    doc.voidedBy = req.user?._id || null;
-    await doc.save({ session });
-    return doc;
+    return voidExpenseDoc(session, doc, { reason, user: req.user });
   });
 
   await logAudit({
