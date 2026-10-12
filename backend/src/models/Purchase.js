@@ -25,6 +25,8 @@ const purchaseSchema = new mongoose.Schema(
     accountTransaction: { type: mongoose.Schema.Types.ObjectId, ref: 'AccountTransaction', default: null },
     purchaseDate: { type: Date, default: Date.now },
     notes: { type: String, default: '' },
+    // Set when this invoice was created from a Manual Entry supplier invoice archive.
+    sourceArchive: { type: mongoose.Schema.Types.ObjectId, ref: 'SupplierInvoiceArchive', default: null },
     status: { type: String, enum: ['completed', 'voided'], default: 'completed' },
     voidedAt: { type: Date, default: null },
     voidedReason: { type: String, default: '' },
