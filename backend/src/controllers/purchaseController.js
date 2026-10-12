@@ -13,6 +13,7 @@ import { resolveDateRange } from '../utils/dateRange.js';
 import { logAudit } from '../services/auditService.js';
 import { postImmediateTransaction } from '../services/accountService.js';
 import { reversePayment } from '../services/supplierPaymentService.js';
+import { removePurchase } from '../services/archivePurchaseService.js';
 
 // Derived, never persisted: Unpaid/Partial/Paid always reflects the
 // authoritative paidAmountCents/totalCostCents pair, so it can never drift
@@ -28,6 +29,7 @@ function toDTO(p) {
     id: p._id,
     purchaseNumber: p.purchaseNumber,
     supplierInvoiceNumber: p.supplierInvoiceNumber,
+    sourceArchive: p.sourceArchive || null,
     supplier: p.supplier,
     supplierName: p.supplierName,
     items: p.items.map((i) => ({
@@ -75,7 +77,7 @@ export function paymentToDTO(pay) {
   };
 }
 
-async function generatePurchaseNumber(session) {
+export async function generatePurchaseNumber(session) {
   const seq = await nextSequence('purchase', session);
   const year = new Date().getFullYear();
   return `PUR-${year}-${String(seq).padStart(6, '0')}`;
@@ -448,23 +450,9 @@ export const deletePurchase = asyncHandler(async (req, res) => {
   const result = await runInTransaction(async (session) => {
     const purchase = await Purchase.findById(req.params.id).session(session);
     if (!purchase) throw new ApiError(404, 'Purchase not found.');
-    if (await InventoryLot.exists({ purchase: purchase._id }).session(session)) {
-      throw new ApiError(409, 'Stock was received on this invoice, so it cannot be deleted. Void it instead.');
-    }
     // Its payments are cancelled first: each one's money goes back to the
     // account it came from.
-    const active = await PurchasePayment.find({ purchase: purchase._id, status: 'POSTED' }).session(session);
-    for (const p of active) await reversePayment(session, p, { reason: `invoice ${purchase.purchaseNumber} deleted`, user: req.user, purchase });
-    purchase.refundedCents = active.reduce((s, p) => s + p.amountCents, 0);
-    if (purchase.status !== 'voided') {
-      const supplier = await Supplier.findById(purchase.supplier).session(session);
-      if (supplier) {
-        supplier.totalSpentCents -= purchase.totalCostCents;
-        await supplier.save({ session });
-      }
-    }
-    await PurchasePayment.deleteMany({ purchase: purchase._id }, { session });
-    await purchase.deleteOne({ session });
+    purchase.refundedCents = await removePurchase(session, purchase, { user: req.user });
     return purchase;
   });
 
