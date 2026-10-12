@@ -75,14 +75,18 @@ async function generatePaymentReceiptNumber(session) {
 // Mutates and saves `customer`. Call it after any step that creates debt
 // (Close Day confirming a credit sale) or credits the wallet (restoring a
 // cancelled/reversed sale's wallet amount). Returns the cents applied.
-export async function applyWalletToDebt(customer, session, createdBy) {
+// Automatic calls only act for a customer with walletAutoPay on; pass
+// { force: true } (optionally with maxCents) when someone chose to pay the
+// debt from the wallet now.
+export async function applyWalletToDebt(customer, session, createdBy, { force = false, maxCents = null } = {}) {
+  if (!force && !customer.walletAutoPay) return 0;
   if (customer.walletBalanceCents <= 0 || customer.balanceCents <= 0) return 0;
 
   const outstandingInvoices = await Sale.find({ customer: customer._id, status: 'CONFIRMED', outstandingCents: { $gt: 0 } })
     .sort({ createdAt: 1 })
     .session(session);
   const totalOutstandingCents = outstandingInvoices.reduce((sum, s) => sum + s.outstandingCents, 0);
-  let toAllocate = Math.min(customer.walletBalanceCents, customer.balanceCents, totalOutstandingCents);
+  let toAllocate = Math.min(customer.walletBalanceCents, customer.balanceCents, totalOutstandingCents, maxCents ?? Infinity);
   if (toAllocate <= 0) return 0;
 
   const allocations = [];
@@ -117,7 +121,7 @@ export async function applyWalletToDebt(customer, session, createdBy) {
         allocations,
         previousBalanceCents,
         newBalanceCents: customer.balanceCents,
-        notes: 'Paid automatically from wallet balance',
+        notes: force ? 'Paid from wallet balance (customer agreed)' : 'Paid automatically from wallet balance',
         createdBy: createdById,
       },
     ],
@@ -131,7 +135,7 @@ export async function applyWalletToDebt(customer, session, createdBy) {
         type: 'PAYMENT',
         amountCents: -appliedCents,
         payment: payment._id,
-        description: `Debt payment ${receiptNumber} (${invoiceList}) -- paid automatically from wallet`,
+        description: `Debt payment ${receiptNumber} (${invoiceList}) -- paid ${force ? '' : 'automatically '}from wallet`,
         balanceBeforeCents: previousBalanceCents,
         balanceAfterCents: customer.balanceCents,
         createdBy: createdById,
@@ -147,7 +151,7 @@ export async function applyWalletToDebt(customer, session, createdBy) {
         type: 'SALE_PAYMENT',
         amountCents: -appliedCents,
         sale: allocations[0].sale,
-        note: `Paid debt automatically: ${invoiceList}`,
+        note: `Paid debt${force ? '' : ' automatically'}: ${invoiceList}`,
         balanceBeforeCents: previousWalletBalanceCents,
         balanceAfterCents: customer.walletBalanceCents,
         createdBy: createdById,

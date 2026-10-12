@@ -60,7 +60,7 @@ test('WALLET DEPOSIT -- clears outstanding debt first (oldest invoice), leftover
     assert.equal((await Customer.findById(customer.id)).balanceCents, 5000);
 
     // Deposit $80: $50 clears the debt, $30 left over goes to the wallet.
-    const deposit = await request(`/customers/${customer.id}/wallet/deposit`, { amount: 80, paymentAccountId: account.id, note: 'cash' });
+    const deposit = await request(`/customers/${customer.id}/wallet/deposit`, { amount: 80, paymentAccountId: account.id, note: 'cash', applyToDebt: true });
     assert.equal(deposit.status, 201, JSON.stringify(deposit));
     assert.equal(deposit.data.debtCleared, 50);
     assert.equal(deposit.data.walletCredited, 30);
@@ -109,7 +109,7 @@ test('WALLET DEPOSIT -- deposit smaller than the debt: all of it clears debt, no
     const item = await InventoryItem.create({ name: 'Widget', itemCode: 'WIDG-2', quantity: 1000, costPriceCents: 100, sellingPriceCents: 1000 });
 
     await giveDebt({ admin, request }, customer, account, item, 5); // $50 debt
-    const deposit = await request(`/customers/${customer.id}/wallet/deposit`, { amount: 30, paymentAccountId: account.id });
+    const deposit = await request(`/customers/${customer.id}/wallet/deposit`, { amount: 30, paymentAccountId: account.id, applyToDebt: true });
     assert.equal(deposit.status, 201, JSON.stringify(deposit));
     assert.equal(deposit.data.debtCleared, 30);
     assert.equal(deposit.data.walletCredited, 0);
@@ -146,7 +146,7 @@ test('WALLET DEPOSIT -- no debt: behaves exactly as before, entire deposit becom
 test('WALLET AUTO-PAY -- Close Day covers a credit sale from wallet money deposited after the Draft', { timeout: 90000 }, async () => {
   const { admin, server, request } = await setup('autopay_close');
   try {
-    const customer = await Customer.create({ name: 'Cumar', phone: '444' });
+    const customer = await Customer.create({ name: 'Cumar', phone: '444', walletAutoPay: true });
     const account = await Account.create({ name: 'EVC Plus' });
     const item = await InventoryItem.create({ name: 'Biotin', itemCode: 'BIO-1', quantity: 1000, costPriceCents: 100, sellingPriceCents: 1000 });
 
@@ -180,7 +180,7 @@ test('WALLET AUTO-PAY -- Close Day covers a credit sale from wallet money deposi
 test('WALLET AUTO-PAY -- wallet smaller than the debt: all of it is used, the rest stays owed', { timeout: 90000 }, async () => {
   const { admin, server, request } = await setup('autopay_partial');
   try {
-    const customer = await Customer.create({ name: 'Asha', phone: '555' });
+    const customer = await Customer.create({ name: 'Asha', phone: '555', walletAutoPay: true });
     const account = await Account.create({ name: 'Cash Drawer' });
     const item = await InventoryItem.create({ name: 'Widget', itemCode: 'WIDG-3', quantity: 1000, costPriceCents: 100, sellingPriceCents: 1000 });
 
@@ -200,7 +200,7 @@ test('WALLET AUTO-PAY -- wallet smaller than the debt: all of it is used, the re
 test('WALLET AUTO-PAY -- wallet money returned by a reversal pays the customer\'s other debt', { timeout: 90000 }, async () => {
   const { admin, server, request } = await setup('autopay_reverse');
   try {
-    const customer = await Customer.create({ name: 'Hodan', phone: '666' });
+    const customer = await Customer.create({ name: 'Hodan', phone: '666', walletAutoPay: true });
     const account = await Account.create({ name: 'Cash Drawer' });
     const item = await InventoryItem.create({ name: 'Widget', itemCode: 'WIDG-4', quantity: 1000, costPriceCents: 100, sellingPriceCents: 1000 });
 
@@ -258,6 +258,46 @@ test('WALLET RETURN -- returning items from a wallet-paid invoice gives the mone
     const reversed = await request(`/sales/${sale.data.id}/reverse`, { reason: 'test' });
     assert.equal(reversed.status, 200, JSON.stringify(reversed));
     assert.equal((await Customer.findById(customer.id)).walletBalanceCents, 10000);
+  } finally {
+    await teardown(server);
+  }
+});
+
+test('WALLET CHOICE -- by default a deposit stays in the wallet; the debt is paid from it only when chosen', { timeout: 90000 }, async () => {
+  const ctx = await setup('wallet_choice');
+  const { server, request } = ctx;
+  try {
+    const account = await Account.create({ name: 'EVC Plus' });
+    const item = await InventoryItem.create({ name: 'Choice Item', itemCode: 'CHOICE-1', quantity: 1000, costPriceCents: 100, sellingPriceCents: 1000 }); // $10/unit
+    const customer = await Customer.create({ name: 'Jilbo', phone: '888' });
+    await giveDebt(ctx, customer, account, item, 10); // $100 debt
+    assert.equal((await Customer.findById(customer.id)).balanceCents, 10000);
+
+    // Deposit with no choice: all of it stays in the wallet, the debt stays.
+    const kept = await request(`/customers/${customer.id}/wallet/deposit`, { amount: 60, paymentAccountId: account.id });
+    assert.equal(kept.status, 201, JSON.stringify(kept));
+    let c = await Customer.findById(customer.id);
+    assert.deepEqual([c.walletBalanceCents, c.balanceCents], [6000, 10000]);
+
+    // The customer agrees: pay 40 of the debt from the wallet.
+    assert.equal((await request(`/customers/${customer.id}/wallet/pay-debt`, { amount: 70 })).status, 400, 'more than the wallet holds');
+    const part = await request(`/customers/${customer.id}/wallet/pay-debt`, { amount: 40 });
+    assert.equal(part.status, 200, JSON.stringify(part));
+    assert.equal(part.data.applied, 40);
+    c = await Customer.findById(customer.id);
+    assert.deepEqual([c.walletBalanceCents, c.balanceCents], [2000, 6000]);
+
+    // Turn auto-pay on: the next deposit goes to the debt by itself.
+    const on = await request(`/customers/${customer.id}/wallet/auto-pay`, { enabled: true }, 'PUT');
+    assert.equal(on.data.walletAutoPay, true);
+    await request(`/customers/${customer.id}/wallet/deposit`, { amount: 10, paymentAccountId: account.id });
+    c = await Customer.findById(customer.id);
+    assert.deepEqual([c.walletBalanceCents, c.balanceCents], [2000, 5000]);
+
+    // Explicit "keep in wallet" wins over auto-pay.
+    await request(`/customers/${customer.id}/wallet/deposit`, { amount: 5, paymentAccountId: account.id, applyToDebt: false });
+    c = await Customer.findById(customer.id);
+    assert.deepEqual([c.walletBalanceCents, c.balanceCents], [2500, 5000]);
   } finally {
     await teardown(server);
   }

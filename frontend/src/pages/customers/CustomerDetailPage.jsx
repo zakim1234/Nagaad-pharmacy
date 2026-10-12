@@ -269,7 +269,7 @@ export default function CustomerDetailPage() {
 
       {tab === 'quotations' && <CustomerQuotationsSection customerId={id} customer={customer} />}
       {tab === 'wallet' && (
-        <CustomerWalletSection customerId={id} customerName={customer.name} walletBalance={customer.walletBalance} customerDebt={customer.balance} onChanged={load} />
+        <CustomerWalletSection customerId={id} customerName={customer.name} walletBalance={customer.walletBalance} customerDebt={customer.balance} walletAutoPay={customer.walletAutoPay} onChanged={load} />
       )}
 
       {tab === 'invoices' && (

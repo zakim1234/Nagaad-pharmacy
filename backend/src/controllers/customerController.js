@@ -11,6 +11,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { toCents, fromCents } from '../utils/money.js';
 import { runInTransaction } from '../utils/transaction.js';
+import { applyWalletToDebt } from '../services/walletService.js';
 import { logAudit } from '../services/auditService.js';
 
 function toDTO(c) {
@@ -23,6 +24,7 @@ function toDTO(c) {
     notes: c.notes,
     balance: fromCents(c.balanceCents),
     walletBalance: fromCents(c.walletBalanceCents),
+    walletAutoPay: !!c.walletAutoPay,
     totalPurchased: fromCents(c.totalPurchasedCents),
     totalPaid: fromCents(c.totalPaidCents),
     createdAt: c.createdAt,
@@ -494,7 +496,11 @@ export const depositToWallet = asyncHandler(async (req, res) => {
     let debtClearedCents = 0;
     let payment = null;
 
-    if (customer.balanceCents > 0) {
+    // Use the deposit on the debt only when chosen (applyToDebt), or, when
+    // nothing was chosen, if this customer pays debt from the wallet
+    // automatically. Otherwise all of it stays in the wallet.
+    const applyToDebt = req.body.applyToDebt == null ? !!customer.walletAutoPay : req.body.applyToDebt === true || req.body.applyToDebt === 'true';
+    if (applyToDebt && customer.balanceCents > 0) {
       const outstandingInvoices = await Sale.find({ customer: customer._id, status: 'CONFIRMED', outstandingCents: { $gt: 0 } })
         .sort({ createdAt: 1 })
         .session(session);
@@ -731,3 +737,34 @@ export const getCustomerStatement = asyncHandler(async (req, res) => {
 });
 
 export { toDTO as customerToDTO };
+
+// POST /api/customers/:id/wallet/pay-debt { amount? } -- the customer agreed:
+// pay their debt (oldest invoice first) out of their wallet, all of it or
+// up to `amount`.
+export const payDebtFromWallet = asyncHandler(async (req, res) => {
+  const amount = req.body.amount == null || req.body.amount === '' ? null : Number(req.body.amount);
+  if (amount !== null && (!Number.isFinite(amount) || amount <= 0 || !Number.isSafeInteger(toCents(amount)))) throw new ApiError(400, 'Enter a valid amount.');
+  const result = await runInTransaction(async (session) => {
+    const customer = await Customer.findById(req.params.id).session(session);
+    if (!customer) throw new ApiError(404, 'Customer not found.');
+    if (customer.walletBalanceCents <= 0) throw new ApiError(400, 'There is no money in this customer\'s wallet.');
+    if (customer.balanceCents <= 0) throw new ApiError(400, 'This customer has no debt to pay.');
+    const maxCents = amount === null ? null : toCents(amount);
+    if (maxCents !== null && maxCents > Math.min(customer.walletBalanceCents, customer.balanceCents)) throw new ApiError(400, 'That is more than the wallet holds or the debt owed.');
+    const appliedCents = await applyWalletToDebt(customer, session, req.user, { force: true, maxCents });
+    return { customer, appliedCents };
+  });
+  await logAudit({ user: req.user, action: 'customer.wallet.payDebt', entityType: 'Customer', entityId: result.customer._id, details: { amount: fromCents(result.appliedCents) } });
+  res.json({ success: true, data: { customer: toDTO(result.customer), applied: fromCents(result.appliedCents) } });
+});
+
+// PUT /api/customers/:id/wallet/auto-pay { enabled } -- whether wallet money
+// pays this customer's debt automatically.
+export const setWalletAutoPay = asyncHandler(async (req, res) => {
+  const customer = await Customer.findById(req.params.id);
+  if (!customer) throw new ApiError(404, 'Customer not found.');
+  customer.walletAutoPay = req.body.enabled === true;
+  await customer.save();
+  await logAudit({ user: req.user, action: 'customer.wallet.autoPay', entityType: 'Customer', entityId: customer._id, details: { enabled: customer.walletAutoPay } });
+  res.json({ success: true, data: toDTO(customer) });
+});
