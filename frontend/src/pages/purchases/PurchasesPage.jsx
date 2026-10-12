@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Ban, Search, Pencil, Trash2, Sheet, Wallet, FileText, ArrowLeft, Plus, ChevronDown, ExternalLink } from 'lucide-react';
+import { Ban, Search, Pencil, Trash2, Sheet, Wallet, FileText, ArrowLeft, ChevronDown, ExternalLink } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -14,7 +14,6 @@ import Pagination from '../../components/ui/Pagination.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import BulkPaymentModal from './BulkPaymentModal.jsx';
-import PurchaseFormModal from './PurchaseFormModal.jsx';
 import PurchaseEditModal from './PurchaseEditModal.jsx';
 
 const ACTION = 'flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50';
@@ -45,7 +44,6 @@ export default function PurchasesPage() {
   const [q, setQ] = useState('');
   const debouncedQ = useDebounce(q, 300);
   const [bulkOpen, setBulkOpen] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
   const [voidItem, setVoidItem] = useState(null);
   const [voiding, setVoiding] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -254,14 +252,11 @@ export default function PurchasesPage() {
     <div>
       <PageHeader
         title="Purchase Invoices"
-        subtitle="Invoices for goods purchased, kept together by supplier"
+        subtitle="Goods invoices by supplier — added automatically from Supplier Invoices (Manual Entry)"
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => navigate('/purchases/vendor-balances')}>
               <Sheet className="h-4 w-4" /> Vendor Balances
-            </Button>
-            <Button onClick={() => setFormOpen(true)}>
-              <Plus className="h-4 w-4" /> Add invoice
             </Button>
           </div>
         }
@@ -361,12 +356,6 @@ export default function PurchasesPage() {
           )}
       </div>
 
-      <PurchaseFormModal
-        open={formOpen}
-        initialSupplier={selected ? { id: String(selected.id), name: selected.name } : null}
-        onClose={() => setFormOpen(false)}
-        onSaved={reload}
-      />
       <PurchaseEditModal purchase={editItem} onClose={() => setEditItem(null)} onSaved={reload} />
       <ConfirmDialog
         open={!!deleteItem}
