@@ -30,8 +30,6 @@ const schema = new mongoose.Schema(
     rows: { type: [rowSchema], required: true, validate: (v) => Array.isArray(v) && v.length > 0 },
     grandTotalCents: { type: Number, required: true, min: 0 },
     notes: { type: String, default: '', maxlength: 2000 },
-    // The purchase invoice (debt) created from this archive, kept in step with it.
-    purchase: { type: mongoose.Schema.Types.ObjectId, ref: 'Purchase', default: null },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   },
   // autoIndex is disabled here on purpose, same reasoning as

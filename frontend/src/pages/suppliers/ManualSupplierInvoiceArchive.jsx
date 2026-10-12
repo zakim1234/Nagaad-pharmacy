@@ -57,12 +57,8 @@ export default function ManualSupplierInvoiceArchive() {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      const res = await client.delete(`/supplier-invoice-archives/${deleteTarget.id}`);
-      toast.success(
-        res.data.data.refunded > 0
-          ? `Serial ${deleteTarget.serialNumber} deleted — ${formatCurrency(res.data.data.refunded)} paid on it went back to the account.`
-          : `Serial ${deleteTarget.serialNumber} deleted.`
-      );
+      await client.delete(`/supplier-invoice-archives/${deleteTarget.id}`);
+      toast.success(`Serial ${deleteTarget.serialNumber} deleted.`);
       setDeleteTarget(null);
       load();
     } catch (err) {
@@ -148,7 +144,7 @@ export default function ManualSupplierInvoiceArchive() {
       <ConfirmDialog
         open={!!deleteTarget}
         title="Delete Supplier Invoice"
-        message={`Ma hubtaa inaad tirtirto invoice-ka Serial ${deleteTarget?.serialNumber} (${formatCurrency(deleteTarget?.grandTotal)})? Falkan dib looma celin karo. ${deleteTarget?.purchase ? ' Its purchase invoice is deleted too; anything paid on it goes back to the account.' : ''} (Stock is not affected.)`}
+        message={`Ma hubtaa inaad tirtirto invoice-ka Serial ${deleteTarget?.serialNumber} (${formatCurrency(deleteTarget?.grandTotal)})? Falkan dib looma celin karo. (This archived copy will be removed permanently. Stock and accounts are not affected.)`}
         confirmLabel="Confirm Delete"
         variant="danger"
         loading={deleting}
@@ -305,15 +301,11 @@ function ManualEntryModal({ open, archive, onClose, onSaved }) {
     setSaving(true);
     try {
       if (editing) {
-        const res = await client.put(`/supplier-invoice-archives/${archive.id}`, body);
-        toast.success(res.data.data.purchaseNumber ? `Serial ${body.serialNumber} updated — ${res.data.data.purchaseNumber} updated too.` : `Serial ${body.serialNumber} updated.`);
+        await client.put(`/supplier-invoice-archives/${archive.id}`, body);
+        toast.success(`Serial ${body.serialNumber} updated.`);
       } else {
         const res = await client.post('/supplier-invoice-archives', body);
-        toast.success(
-          res.data.data.purchaseNumber
-            ? `${res.data.data.archiveNumber} saved — added to Purchase Invoices as ${res.data.data.purchaseNumber} (${formatCurrency(res.data.data.grandTotal)} owed).`
-            : `Supplier invoice archive ${res.data.data.archiveNumber} saved.`
-        );
+        toast.success(`Supplier invoice archive ${res.data.data.archiveNumber} saved.`);
       }
       onSaved();
     } catch (err) {
@@ -341,7 +333,7 @@ function ManualEntryModal({ open, archive, onClose, onSaved }) {
       }
     >
       <div className="space-y-4">
-        <p className="text-sm text-slate-500">Enter exactly what the supplier's paper invoice shows. With a supplier chosen, it is also added to Purchase Invoices (serial number and grand total, owed) — no need to enter it twice. Stock is never changed.</p>
+        <p className="text-sm text-slate-500">Enter exactly what the supplier's paper invoice shows -- this never changes Stock or Inventory.</p>
         <div className="grid gap-3 sm:grid-cols-2">
           <FormField label="Supplier (optional)">
             <SupplierPicker active={supplier} onSelect={setSupplier} onClear={() => setSupplier(null)} />

@@ -5,9 +5,6 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { toCents, fromCents } from '../utils/money.js';
 import { logAudit } from '../services/auditService.js';
-import { runInTransaction } from '../utils/transaction.js';
-import Purchase from '../models/Purchase.js';
-import { syncArchivePurchase, removePurchase } from '../services/archivePurchaseService.js';
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -26,8 +23,6 @@ function toDTO(doc) {
     })),
     grandTotal: fromCents(doc.grandTotalCents),
     notes: doc.notes,
-    purchase: doc.purchase || null,
-    purchaseNumber: doc.purchaseNumber || null,
     createdBy: doc.createdBy,
     createdAt: doc.createdAt,
   };
@@ -95,15 +90,7 @@ export const createArchive = asyncHandler(async (req, res) => {
   const archiveNumber = await generateArchiveNumber();
   let archive;
   try {
-    // With a supplier, the same save also records the purchase invoice
-    // (their serial number, the grand total owed) -- no second entry.
-    archive = await runInTransaction(async (session) => {
-      const [doc] = await SupplierInvoiceArchive.create([{ archiveNumber, ...fields, createdBy: req.user?._id }], { session });
-      const purchase = await syncArchivePurchase(session, doc, { user: req.user });
-      await doc.save({ session });
-      doc.purchaseNumber = purchase?.purchaseNumber || null;
-      return doc;
-    });
+    archive = await SupplierInvoiceArchive.create({ archiveNumber, ...fields, createdBy: req.user?._id });
   } catch (err) {
     // Race-condition backstop: two concurrent saves for the same serial can
     // both pass the pre-check above -- the schema's unique index (once
@@ -122,14 +109,9 @@ export const updateArchive = asyncHandler(async (req, res) => {
   const archive = await SupplierInvoiceArchive.findById(req.params.id);
   if (!archive) throw new ApiError(404, 'Supplier invoice archive not found.');
   const fields = await buildArchiveFields(req.body, archive._id);
+  Object.assign(archive, fields);
   try {
-    await runInTransaction(async (session) => {
-      const doc = await SupplierInvoiceArchive.findById(archive._id).session(session);
-      Object.assign(doc, fields);
-      const purchase = await syncArchivePurchase(session, doc, { user: req.user });
-      await doc.save({ session });
-      Object.assign(archive, fields, { purchase: doc.purchase, purchaseNumber: purchase?.purchaseNumber || null });
-    });
+    await archive.save();
   } catch (err) {
     if (err?.code === 11000) throw new ApiError(409, `An archive with serial number "${fields.serialNumber}" already exists.`);
     throw err;
@@ -150,14 +132,7 @@ export const updateArchive = asyncHandler(async (req, res) => {
 export const deleteArchive = asyncHandler(async (req, res) => {
   const archive = await SupplierInvoiceArchive.findById(req.params.id);
   if (!archive) throw new ApiError(404, 'Supplier invoice archive not found.');
-  // Its purchase invoice goes too (any payment on it is cancelled and the
-  // money returned to the account).
-  let refundedCents = 0;
-  await runInTransaction(async (session) => {
-    const purchase = archive.purchase ? await Purchase.findById(archive.purchase).session(session) : null;
-    if (purchase) refundedCents = await removePurchase(session, purchase, { user: req.user, reason: `supplier invoice ${archive.archiveNumber} deleted` });
-    await SupplierInvoiceArchive.deleteOne({ _id: archive._id }, { session });
-  });
+  await archive.deleteOne();
   await logAudit({
     user: req.user,
     action: 'supplierInvoiceArchive.delete',
@@ -165,7 +140,7 @@ export const deleteArchive = asyncHandler(async (req, res) => {
     entityId: archive._id,
     details: { archiveNumber: archive.archiveNumber, serialNumber: archive.serialNumber, supplierName: archive.supplierName, grandTotal: fromCents(archive.grandTotalCents) },
   });
-  res.json({ success: true, data: { id: archive._id, refunded: fromCents(refundedCents) } });
+  res.json({ success: true, data: { id: archive._id } });
 });
 
 // GET /api/supplier-invoice-archives?q=...&serial=...&supplier=... -- with
