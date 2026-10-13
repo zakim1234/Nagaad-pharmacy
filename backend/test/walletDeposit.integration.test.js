@@ -348,3 +348,51 @@ test('CANCEL CUSTOMER PAYMENT -- debt comes back; money kept in the wallet or gi
     await teardown(server);
   }
 });
+
+
+test('CANCEL PAID INVOICE -- paid later by a debt payment: allowed, the money goes to the wallet', { timeout: 90000 }, async () => {
+  const ctx = await setup('cancel_paid_later');
+  try {
+    const account = await Account.create({ name: 'EVC Plus' });
+    const item = await InventoryItem.create({ name: 'Bio', itemCode: 'BIO-1', quantity: 100, costPriceCents: 100, sellingPriceCents: 2500 });
+    const customer = await Customer.create({ name: 'Cash Payer', phone: '101' });
+    const saleId = await giveDebt(ctx, customer, account, item, 1); // $25 owed
+    const paid = await ctx.request(`/customers/${customer.id}/payments`, { amount: 25, paymentAccountId: account.id });
+    assert.equal(paid.status, 201, JSON.stringify(paid));
+    const accountBefore = (await Account.findById(account.id)).currentBalanceCents;
+
+    const reversed = await ctx.request(`/sales/${saleId}/reverse`, { reason: 'customer changed mind' });
+    assert.equal(reversed.status, 200, JSON.stringify(reversed));
+    const c = await Customer.findById(customer.id);
+    assert.deepEqual([c.balanceCents, c.walletBalanceCents], [0, 2500], 'nothing owed, the $25 is in the wallet');
+    assert.equal((await Account.findById(account.id)).currentBalanceCents, accountBefore, 'no cash left the account');
+    assert.equal((await InventoryItem.findById(item.id)).quantity, 100, 'stock back');
+  } finally {
+    await teardown(ctx.server);
+  }
+});
+
+test('CANCEL PAID INVOICE -- cash paid at the sale goes to the wallet, or is handed back when chosen', { timeout: 90000 }, async () => {
+  const ctx = await setup('cancel_paid_cash');
+  try {
+    const account = await Account.create({ name: 'EVC Plus' });
+    const item = await InventoryItem.create({ name: 'Bio', itemCode: 'BIO-2', quantity: 100, costPriceCents: 100, sellingPriceCents: 2000 });
+    const a = await Customer.create({ name: 'Wallet Back', phone: '102' });
+    const b = await Customer.create({ name: 'Cash Back', phone: '103' });
+    const saleA = await ctx.request('/sales', { customerId: a.id, items: [{ itemId: item.id, quantity: 2 }], paidAmount: 40, paymentAccountId: account.id });
+    const saleB = await ctx.request('/sales', { customerId: b.id, items: [{ itemId: item.id, quantity: 1 }], paidAmount: 20, paymentAccountId: account.id });
+    await closeDay({ user: ctx.admin });
+    const balance = async () => (await Account.findById(account.id)).currentBalanceCents;
+    const start = await balance();
+
+    assert.equal((await ctx.request(`/sales/${saleA.data.id}/reverse`, {})).status, 200);
+    assert.equal((await Customer.findById(a.id)).walletBalanceCents, 4000, 'default: into the wallet');
+    assert.equal(await balance(), start);
+
+    assert.equal((await ctx.request(`/sales/${saleB.data.id}/reverse`, { refundTo: 'ACCOUNT' })).status, 200);
+    assert.equal((await Customer.findById(b.id)).walletBalanceCents, 0);
+    assert.equal(await balance(), start - 2000, 'handed back out of the account');
+  } finally {
+    await teardown(ctx.server);
+  }
+});

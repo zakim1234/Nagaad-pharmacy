@@ -6,6 +6,7 @@ import InventoryLot from '../models/InventoryLot.js';
 import Account from '../models/Account.js';
 import Payment from '../models/Payment.js';
 import CustomerLedger from '../models/CustomerLedger.js';
+import CustomerWalletTransaction from '../models/CustomerWalletTransaction.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { toCents, fromCents } from '../utils/money.js';
@@ -347,12 +348,13 @@ export const reverseSale = asyncHandler(async (req, res) => {
     if (!sale) throw new ApiError(404, 'Sale not found.');
     if (sale.status === 'DRAFT') throw new ApiError(409, 'This is still a Draft invoice -- cancel it instead of reversing it.');
     if (sale.status === 'CANCELLED') throw new ApiError(409, 'This sale has already been cancelled/reversed.');
-    if (sale.balanceAddedCents > 0 && sale.outstandingCents !== sale.balanceAddedCents) {
-      throw new ApiError(
-        409,
-        'Cannot reverse this sale: a debt payment has already been applied to it. Reverse or reallocate that payment first.'
-      );
-    }
+    // Money already received for this invoice: at the sale (paidAmount) and
+    // by debt payments made on it later (the part of its credit no longer
+    // outstanding). For a customer it goes to their wallet unless
+    // refundTo: 'ACCOUNT' asks for the cash paid at the sale to be handed
+    // back; a walk-in sale (no customer) can only be refunded.
+    const paidLaterCents = Math.max(0, sale.balanceAddedCents - sale.outstandingCents);
+    const refundTo = !sale.customer ? 'ACCOUNT' : req.body.refundTo === 'ACCOUNT' ? 'ACCOUNT' : 'WALLET';
 
     // Only the portion not already restored by a prior partial return (see
     // returnSale) is restored here -- lotConsumption entries are decremented
@@ -388,23 +390,25 @@ export const reverseSale = asyncHandler(async (req, res) => {
 
     const customer = await Customer.findById(sale.customer).session(session);
     if (customer) {
+      // Only what is still owed on this invoice comes off the balance; what
+      // was paid on it is handled as money (wallet or refund) below.
       const previousBalanceCents = customer.balanceCents;
-      customer.balanceCents -= sale.balanceAddedCents;
+      customer.balanceCents -= sale.outstandingCents;
       customer.totalPurchasedCents -= sale.totalCents;
-      customer.totalPaidCents -= sale.paidAmountCents;
+      customer.totalPaidCents = Math.max(0, customer.totalPaidCents - sale.paidAmountCents - paidLaterCents);
       await customer.save({ session });
 
-      if (sale.balanceAddedCents > 0) {
+      if (sale.outstandingCents > 0) {
         await CustomerLedger.create(
           [
             {
               customer: customer._id,
               type: 'SALE_VOID',
-              amountCents: -sale.balanceAddedCents,
+              amountCents: -sale.outstandingCents,
               sale: sale._id,
               description: `Reversed sale ${sale.receiptNumber}${reason ? ` (${reason})` : ''}`,
               balanceBeforeCents: previousBalanceCents,
-              balanceAfterCents: previousBalanceCents - sale.balanceAddedCents,
+              balanceAfterCents: customer.balanceCents,
               createdBy: req.user?._id,
             },
           ],
@@ -413,9 +417,33 @@ export const reverseSale = asyncHandler(async (req, res) => {
       }
     }
 
+    // Money paid on it later always goes to the customer's wallet; cash paid
+    // at the sale goes there too unless it is handed back.
+    const toWalletCents = customer ? paidLaterCents + (refundTo === 'WALLET' ? sale.paidAmountCents : 0) : 0;
+    if (toWalletCents > 0) {
+      const walletBefore = customer.walletBalanceCents;
+      customer.walletBalanceCents += toWalletCents;
+      await customer.save({ session });
+      await CustomerWalletTransaction.create(
+        [
+          {
+            customer: customer._id,
+            type: 'REFUND',
+            amountCents: toWalletCents,
+            sale: sale._id,
+            note: `Invoice ${sale.receiptNumber} cancelled -- money paid on it moved to the wallet${reason ? `: ${reason}` : ''}`,
+            balanceBeforeCents: walletBefore,
+            balanceAfterCents: customer.walletBalanceCents,
+            createdBy: req.user?._id,
+          },
+        ],
+        { session }
+      );
+    }
+
     // The original payment was already POSTED at Close Day -- refund it out
     // of the same account rather than silently deleting that history.
-    if (sale.paymentAccount && sale.paidAmountCents > 0) {
+    if (refundTo === 'ACCOUNT' && sale.paymentAccount && sale.paidAmountCents > 0) {
       const account = await Account.findById(sale.paymentAccount).session(session);
       if (account) {
         await postImmediateTransaction(
@@ -447,8 +475,9 @@ export const reverseSale = asyncHandler(async (req, res) => {
     await sale.save({ session });
 
     // Wallet credit given back above pays any other debt the customer owes
-    // (run after this sale is CANCELLED so it is never paid itself).
-    if (sale.walletAmountCents > 0 && customer) await applyWalletToDebt(customer, session, req.user);
+    // when they pay debt from the wallet automatically (run after this sale
+    // is CANCELLED so it is never paid itself).
+    if ((sale.walletAmountCents > 0 || toWalletCents > 0) && customer) await applyWalletToDebt(customer, session, req.user);
 
     return sale;
   });
@@ -458,7 +487,7 @@ export const reverseSale = asyncHandler(async (req, res) => {
     action: 'sale.reverse',
     entityType: 'Sale',
     entityId: result._id,
-    details: { reason },
+    details: { reason, refundTo: req.body.refundTo || 'WALLET' },
   });
 
   res.json({ success: true, data: toDTO(result) });
