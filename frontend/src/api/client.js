@@ -13,12 +13,18 @@ client.interceptors.request.use((config) => {
   const token = localStorage.getItem('pos_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   const branch = getSelectedBranch();
-  if (branch) config.headers['X-Branch-Id'] = branch;
+  // No branch chosen: the Super Admin's all-branches view (reports only).
+  config.headers['X-Branch-Id'] = branch || 'all';
   return config;
 });
 
 // The branch the Super Admin chose to work in (ignored by the server for
 // anyone else, who always works in their own branch).
+// The Super Admin with no branch open: reports add every branch together.
+export function isAllBranchesView(user) {
+  return !!user?.isSuperAdmin && !getSelectedBranch();
+}
+
 export function getSelectedBranch() {
   try {
     return localStorage.getItem('pos_branch') || '';

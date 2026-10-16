@@ -34,7 +34,7 @@ import { getSelectedBranch } from '../api/client.js';
 
 // The Super Admin outside any branch sees only the company-wide pages; a
 // branch's own pages appear once they open a branch.
-const OVERVIEW_PATHS = ['/super-dashboard', '/all-branches', '/users', '/branches'];
+const OVERVIEW_PATHS = ['/super-dashboard', '/all-branches', '/reports', '/users', '/branches'];
 const inOverview = (user) => !!user?.isSuperAdmin && !getSelectedBranch();
 
 // `module: null` means always visible to any authenticated user (no

@@ -1,5 +1,7 @@
 import { formatDate, formatDateTime } from '../../utils/format.js';
 import DocHeader from '../docs/DocHeader.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { isAllBranchesView } from '../../api/client.js';
 
 // The one branded page top shared by every report: logo, business name,
 // address, report title, date range and (optionally) a basis line such as
@@ -8,12 +10,15 @@ import DocHeader from '../docs/DocHeader.jsx';
 // header; a report that is itself a document (Profit & Loss) passes
 // `showOnScreen` to show the same header on screen too.
 export default function PrintReportHeader({ title, rangeLabel, subtitle, showOnScreen = false }) {
+  const { user } = useAuth();
+  const allBranches = isAllBranchesView(user);
   return (
     <div className={showOnScreen ? 'mb-5' : 'mb-5 hidden print:block'}>
       <DocHeader
         title={title}
         meta={
           <span>
+            {allBranches && <span className="mr-2 rounded bg-brand-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">All branches</span>}
             {rangeLabel && <span className="font-semibold">{rangeLabel}</span>}
             {subtitle && <span className="ml-2 text-neutral-400">{subtitle}</span>}
           </span>

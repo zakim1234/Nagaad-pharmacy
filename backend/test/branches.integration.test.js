@@ -125,6 +125,45 @@ test('BRANCHES -- day close is per branch; the Super Admin dashboard adds every 
   }
 });
 
+test('BRANCHES -- Super Admin reports in the all-branches view add every branch together', { timeout: 120000 }, async () => {
+  const { server, hodan, bakaal, owner, hodanAdmin, bakaalAdmin, as } = await setup('branches_reports');
+  try {
+    for (const [branch, admin, qty] of [[hodan, hodanAdmin, 4], [bakaal, bakaalAdmin, 2]]) {
+      const account = await runWithBranch(branch._id, () => Account.create({ name: 'Cash' }));
+      const item = await runWithBranch(branch._id, () => InventoryItem.create({ name: 'Bio', itemCode: 'B-1', quantity: 100, costPriceCents: 500, sellingPriceCents: 1000 }));
+      const customer = await runWithBranch(branch._id, () => Customer.create({ name: 'Buyer', phone: '1' }));
+      const sale = await as(admin)('/sales', { customerId: customer.id, items: [{ itemId: item.id, quantity: qty }], paidAmount: 0, paymentAccountId: account.id });
+      assert.equal(sale.status, 201, JSON.stringify(sale));
+      await runWithBranch(branch._id, () => closeDay({ user: admin }));
+    }
+
+    const all = as(owner, 'all');
+    const sheet = await all('/reports/balance-sheet');
+    assert.equal(sheet.status, 200, JSON.stringify(sheet));
+    const hodanSheet = await as(owner, hodan._id)('/reports/balance-sheet');
+    const bakaalSheet = await as(owner, bakaal._id)('/reports/balance-sheet');
+    assert.equal(sheet.data.assets.totalAssets, hodanSheet.data.assets.totalAssets + bakaalSheet.data.assets.totalAssets, JSON.stringify(sheet.data.assets));
+
+    const sales = await all('/reports/sales?range=month');
+    assert.equal(sales.status, 200, JSON.stringify(sales));
+    assert.equal(sales.data.totalSales, 60, JSON.stringify(sales.data));
+    assert.equal((await all('/reports/inventory')).status, 200);
+    assert.equal((await all('/reports/profit-loss?range=month')).status, 200);
+    assert.equal((await all('/reports/expenses?range=month')).status, 200);
+
+    // A branch admin asking for 'all' still sees only their own branch.
+    const hodanSales = await as(hodanAdmin, 'all')('/reports/sales?range=month');
+    assert.equal(hodanSales.data.totalSales, 40);
+
+    // 'all' never reaches a write: it lands in one branch, not the whole company.
+    const cust = await all('/customers', { name: 'Overview Customer', phone: '2' });
+    assert.equal(cust.status, 201, JSON.stringify(cust));
+    assert.ok((await Customer.findById(cust.data.id)).branch, 'a write always gets a branch');
+  } finally {
+    await teardown(server);
+  }
+});
+
 test('BRANCHES -- Super Admin home: today, pending, day status and staff per branch', { timeout: 120000 }, async () => {
   const { server, hodan, bakaal, owner, hodanAdmin, bakaalAdmin, as } = await setup('branches_overview');
   try {

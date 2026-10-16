@@ -35,7 +35,8 @@ import {
   ShieldCheck,
   CalendarRange,
 } from 'lucide-react';
-import client from '../../api/client.js';
+import client, { isAllBranchesView } from '../../api/client.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 import { printReport } from '../../utils/printReport.js';
@@ -91,6 +92,7 @@ const NO_DATE_TABS = ['inventory', 'expired', 'low-stock'];
 const ENDPOINTS = { performance: 'user-performance', expired: 'expired-products' };
 
 export default function ReportsPage() {
+  const allBranches = isAllBranchesView(useAuth().user);
   const toast = useToast();
   const [tab, setTab] = useState('sales');
   const [range, setRange] = useState('today');
@@ -152,7 +154,7 @@ export default function ReportsPage() {
               <ActiveIcon className="h-7 w-7" />
             </div>
             <div>
-              <p className="text-sm text-white/70">Reports</p>
+              <p className="text-sm text-white/70">Reports{allBranches && <span className="ml-2 rounded bg-white px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-700">All branches · consolidated</span>}</p>
               <h1 className="text-2xl font-bold leading-tight">{activeTab.title}</h1>
               <p className="mt-0.5 text-sm text-white/70">{activeTab.hint}</p>
             </div>

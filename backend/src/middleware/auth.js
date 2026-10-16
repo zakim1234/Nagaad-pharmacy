@@ -31,6 +31,11 @@ export async function requireAuth(req, res, next) {
     if (branches.length) {
       if (user.isSuperAdmin) {
         const wanted = String(req.headers['x-branch-id'] || '');
+        if (wanted === 'all' && isAllBranchesRead(req)) {
+          // Reports for the whole company: nothing filtered, read-only.
+          req.branchId = 'all';
+          return runWithBranch(null, () => next());
+        }
         branch = branches.includes(wanted) ? wanted : branches[0];
       } else {
         if (!user.branch || !branches.includes(String(user.branch))) {
@@ -44,6 +49,14 @@ export async function requireAuth(req, res, next) {
   } catch (err) {
     next(err);
   }
+}
+
+// The Super Admin's "all branches" view covers reading reports only (and the
+// lookups report screens use); anything else always runs in one branch, so
+// nothing can ever be written without a branch.
+const ALL_BRANCHES_READS = ['/api/reports', '/api/quotations', '/api/sales', '/api/customers/search'];
+function isAllBranchesRead(req) {
+  return req.method === 'GET' && ALL_BRANCHES_READS.some((p) => req.originalUrl.startsWith(p));
 }
 
 // Open branch ids, oldest first; cached briefly (branches rarely change).

@@ -27,6 +27,9 @@ const COLLATION = { locale: 'en', strength: 2 }; // case-insensitive
 // listed order, always ahead of custom categories (which keep their own
 // order after them, as before).
 async function ensureSeeded() {
+  // The all-branches report view never creates anything (each branch
+  // seeds its own categories when it is used).
+  if (!currentBranch() && (await ExpenseCategory.exists({ branch: { $ne: null } }))) return;
   const existing = await ExpenseCategory.find({ name: { $in: DEFAULT_EXPENSE_CATEGORIES } }).collation(COLLATION).select('name');
   if (existing.length === DEFAULT_EXPENSE_CATEGORIES.length) return;
   await ExpenseCategory.bulkWrite(
@@ -40,7 +43,7 @@ async function ensureSeeded() {
 export async function listExpenseCategories() {
   await ensureSeeded();
   const docs = await ExpenseCategory.find({ isActive: true }).sort({ sortOrder: 1, name: 1 });
-  return docs.map((d) => d.name);
+  return [...new Set(docs.map((d) => d.name))]; // once each, even across branches
 }
 
 // Returns the canonical spelling of a category, or throws 400 if it doesn't exist.
