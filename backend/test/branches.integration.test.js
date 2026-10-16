@@ -129,12 +129,18 @@ test('BRANCHES -- Super Admin reports in the all-branches view add every branch 
   const { server, hodan, bakaal, owner, hodanAdmin, bakaalAdmin, as } = await setup('branches_reports');
   try {
     for (const [branch, admin, qty] of [[hodan, hodanAdmin, 4], [bakaal, bakaalAdmin, 2]]) {
-      const account = await runWithBranch(branch._id, () => Account.create({ name: 'Cash' }));
+      const account = await runWithBranch(branch._id, () => Account.create({ name: 'Cash', currentBalanceCents: 100000 }));
       const item = await runWithBranch(branch._id, () => InventoryItem.create({ name: 'Bio', itemCode: 'B-1', quantity: 100, costPriceCents: 500, sellingPriceCents: 1000 }));
       const customer = await runWithBranch(branch._id, () => Customer.create({ name: 'Buyer', phone: '1' }));
-      const sale = await as(admin)('/sales', { customerId: customer.id, items: [{ itemId: item.id, quantity: qty }], paidAmount: 0, paymentAccountId: account.id });
+      const sale = await as(admin)('/sales', { customerId: customer.id, items: [{ itemId: item.id, quantity: qty }], paidAmount: qty * 3, paymentAccountId: account.id });
       assert.equal(sale.status, 201, JSON.stringify(sale));
       await runWithBranch(branch._id, () => closeDay({ user: admin }));
+      // Each branch's own expense and supplier debt.
+      const exp = await as(admin)('/expenses', { category: 'Rent', amount: qty * 4, paymentAccountId: account.id });
+      assert.equal(exp.status, 201, JSON.stringify(exp));
+      const supplier = await as(admin)('/suppliers', { name: 'Life Care', phone: '3' });
+      const pur = await as(admin)('/purchases', { supplierId: supplier.data.id, amount: qty * 7, amountPaid: 0, purchaseAccountId: account.id });
+      assert.equal(pur.status, 201, JSON.stringify(pur));
     }
 
     const all = as(owner, 'all');
@@ -142,7 +148,16 @@ test('BRANCHES -- Super Admin reports in the all-branches view add every branch 
     assert.equal(sheet.status, 200, JSON.stringify(sheet));
     const hodanSheet = await as(owner, hodan._id)('/reports/balance-sheet');
     const bakaalSheet = await as(owner, bakaal._id)('/reports/balance-sheet');
-    assert.equal(sheet.data.assets.totalAssets, hodanSheet.data.assets.totalAssets + bakaalSheet.data.assets.totalAssets, JSON.stringify(sheet.data.assets));
+    // Year-end check: every line of the company sheet equals the branches'
+    // sheets added together -- Total liabilities & equity included.
+    const add = (a, b) => Math.round((a + b) * 100) / 100;
+    for (const part of ['assets', 'liabilities', 'equity']) {
+      for (const [key, value] of Object.entries(sheet.data[part])) {
+        assert.equal(value, add(hodanSheet.data[part][key], bakaalSheet.data[part][key]), `${part}.${key}`);
+      }
+    }
+    assert.equal(sheet.data.totalLiabilitiesAndEquity, add(hodanSheet.data.totalLiabilitiesAndEquity, bakaalSheet.data.totalLiabilitiesAndEquity));
+    assert.ok(sheet.data.liabilities.payable > 0 && sheet.data.equity.netIncome !== 0, JSON.stringify(sheet.data));
 
     const sales = await all('/reports/sales?range=month');
     assert.equal(sales.status, 200, JSON.stringify(sales));
