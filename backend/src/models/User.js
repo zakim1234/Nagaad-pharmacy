@@ -17,6 +17,9 @@ export const PERMISSION_MODULES = [
   'reports',
   'expenses',
   'createItems',
+  // Cancel invoices (pending or confirmed). Admins always can; anyone else
+  // only when an admin switches it on for them.
+  'cancelInvoices',
   'partners',
   'fixedAssets',
   'zakat',

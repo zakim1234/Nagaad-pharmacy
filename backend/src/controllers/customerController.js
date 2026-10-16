@@ -876,3 +876,40 @@ export const cancelCustomerPayment = asyncHandler(async (req, res) => {
   });
   res.json({ success: true, data: { customer: toDTO(result.customer), receiptNumber: result.payment.receiptNumber, amount: fromCents(result.payment.amountCents), refundTo: result.refundTo } });
 });
+
+// GET /api/customers/debtors -- only the customers who owe money, most owed
+// first, with what is needed to follow up: contacts, how many invoices are
+// unpaid and since when, the last payment, and wallet credit.
+export const listDebtors = asyncHandler(async (req, res) => {
+  const customers = await Customer.find({ balanceCents: { $gt: 0 } }).sort({ balanceCents: -1 });
+  const ids = customers.map((c) => c._id);
+  const [openInvoices, lastPayments] = await Promise.all([
+    Sale.aggregate([
+      { $match: { customer: { $in: ids }, status: 'CONFIRMED', outstandingCents: { $gt: 0 } } },
+      { $group: { _id: '$customer', count: { $sum: 1 }, oldest: { $min: '$createdAt' } } },
+    ]),
+    Payment.aggregate([
+      { $match: { customer: { $in: ids }, status: { $ne: 'CANCELLED' } } },
+      { $group: { _id: '$customer', last: { $max: '$createdAt' } } },
+    ]),
+  ]);
+  const inv = new Map(openInvoices.map((r) => [String(r._id), r]));
+  const pay = new Map(lastPayments.map((r) => [String(r._id), r.last]));
+  const rows = customers.map((c) => ({
+    id: c._id,
+    name: c.name,
+    phone: c.phone,
+    address: c.address,
+    balance: fromCents(c.balanceCents),
+    walletBalance: fromCents(c.walletBalanceCents),
+    totalPurchased: fromCents(c.totalPurchasedCents),
+    totalPaid: fromCents(c.totalPaidCents),
+    unpaidInvoices: inv.get(String(c._id))?.count || 0,
+    oldestUnpaid: inv.get(String(c._id))?.oldest || null,
+    lastPayment: pay.get(String(c._id)) || null,
+  }));
+  res.json({
+    success: true,
+    data: { customers: rows, totalOwed: fromCents(customers.reduce((s, c) => s + c.balanceCents, 0)), count: rows.length, asOf: new Date() },
+  });
+});

@@ -1,26 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Store } from 'lucide-react';
+import { Store, Globe2, LogOut } from 'lucide-react';
 import client, { getSelectedBranch, setSelectedBranch } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
-// Sidebar strip showing which branch this screen is working in. The Super
-// Admin picks the branch here (every page then shows that branch); everyone
+// Sidebar strip showing where this screen is working. The Super Admin is
+// either in the all-branches overview (only All Branches / Users / Branches
+// in the menu) or inside one branch (that branch's full menu); everyone
 // else just sees their own branch's name.
 export default function BranchSwitcher() {
   const { user } = useAuth();
   const [branches, setBranches] = useState([]);
-  const [current, setCurrent] = useState('');
+  const selected = getSelectedBranch();
 
   useEffect(() => {
     if (!user) return;
     client
       .get('/branches')
-      .then((res) => {
-        setBranches(res.data.data);
-        const chosen = getSelectedBranch();
-        const valid = res.data.data.some((b) => String(b.id) === chosen && b.active);
-        setCurrent(valid ? chosen : String(res.data.current || ''));
-      })
+      .then((res) => setBranches(res.data.data))
       .catch(() => setBranches([]));
   }, [user]);
 
@@ -34,23 +30,40 @@ export default function BranchSwitcher() {
     );
   }
 
-  const change = (id) => {
+  const inside = branches.find((b) => String(b.id) === selected && b.active);
+
+  const go = (id) => {
     setSelectedBranch(id);
-    setCurrent(id);
-    // Every page reloads its data for the newly chosen branch.
-    window.location.reload();
+    // Every page reloads for the newly chosen place.
+    window.location.href = id ? '/dashboard' : '/all-branches';
   };
 
+  if (!inside) {
+    return (
+      <label className="mx-3 mb-2 block rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+        <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+          <Globe2 className="h-3.5 w-3.5" /> All branches · overview
+        </span>
+        <select value="" onChange={(e) => e.target.value && go(e.target.value)} className="mt-1 w-full cursor-pointer bg-transparent text-sm font-bold text-neutral-900 outline-none">
+          <option value="">Open a branch…</option>
+          {branches
+            .filter((b) => b.active)
+            .map((b) => (
+              <option key={b.id} value={String(b.id)}>
+                {b.name}
+              </option>
+            ))}
+        </select>
+      </label>
+    );
+  }
+
   return (
-    <label className="mx-3 mb-2 block rounded-lg border border-brand-200 bg-brand-50/60 px-3 py-2">
+    <div className="mx-3 mb-2 rounded-lg border border-brand-200 bg-brand-50/60 px-3 py-2">
       <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-brand-700">
         <Store className="h-3.5 w-3.5" /> Working in branch
       </span>
-      <select
-        value={current}
-        onChange={(e) => change(e.target.value)}
-        className="mt-1 w-full cursor-pointer bg-transparent text-sm font-bold text-neutral-900 outline-none"
-      >
+      <select value={String(inside.id)} onChange={(e) => go(e.target.value)} className="mt-1 w-full cursor-pointer bg-transparent text-sm font-bold text-neutral-900 outline-none">
         {branches
           .filter((b) => b.active)
           .map((b) => (
@@ -59,6 +72,13 @@ export default function BranchSwitcher() {
             </option>
           ))}
       </select>
-    </label>
+      <button
+        type="button"
+        onClick={() => go('')}
+        className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-brand-200 bg-white px-2 py-1 text-[11px] font-semibold text-brand-700 hover:bg-brand-50"
+      >
+        <LogOut className="h-3 w-3" /> Back to all branches
+      </button>
+    </div>
   );
 }

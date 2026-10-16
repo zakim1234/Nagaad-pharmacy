@@ -149,6 +149,17 @@ export default function UsersPage() {
 
   useEffect(() => load(), [load]);
 
+  const toggleCancel = async (u) => {
+    const on = u.permissions.includes('cancelInvoices');
+    try {
+      await client.put(`/users/${u.id}`, { permissions: on ? u.permissions.filter((p) => p !== 'cancelInvoices') : [...u.permissions, 'cancelInvoices'] });
+      toast.success(on ? `${u.name} can no longer cancel invoices.` : `${u.name} can now cancel invoices.`);
+      load();
+    } catch (err) {
+      toast.error(err.friendlyMessage || 'Could not change this permission.');
+    }
+  };
+
   const handleToggleActive = async () => {
     setToggling(true);
     try {
@@ -183,6 +194,7 @@ export default function UsersPage() {
             <Th>Role</Th>
             {showBranch && <Th>Branch</Th>}
             <Th>Permissions</Th>
+            <Th>Cancel invoices</Th>
             <Th>Status</Th>
             <Th>Created</Th>
             <Th className="text-right">Actions</Th>
@@ -190,9 +202,9 @@ export default function UsersPage() {
         </THead>
         <TBody>
           {loading ? (
-            <TableLoading colSpan={showBranch ? 8 : 7} />
+            <TableLoading colSpan={showBranch ? 9 : 8} />
           ) : users.length === 0 ? (
-            <TableEmpty colSpan={showBranch ? 8 : 7} message="No users found." />
+            <TableEmpty colSpan={showBranch ? 9 : 8} message="No users found." />
           ) : (
             users.map((u) => (
               <tr key={u.id} className="hover:bg-slate-50">
@@ -207,6 +219,19 @@ export default function UsersPage() {
                     <span className="text-xs text-slate-300">None</span>
                   ) : (
                     <span className="text-xs text-slate-500">{u.permissions.length} module{u.permissions.length > 1 ? 's' : ''}</span>
+                  )}
+                </Td>
+                <Td>
+                  {u.role === 'admin' ? (
+                    <span className="text-xs text-slate-400">Always</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => toggleCancel(u)}
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${u.permissions.includes('cancelInvoices') ? 'bg-brand-600 text-white hover:bg-brand-700' : 'border border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                    >
+                      {u.permissions.includes('cancelInvoices') ? 'On — click to turn off' : 'Off — click to allow'}
+                    </button>
                   )}
                 </Td>
                 <Td><Badge color={u.active ? 'green' : 'red'}>{u.active ? 'Active' : 'Deactivated'}</Badge></Td>

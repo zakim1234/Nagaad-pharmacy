@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, ScrollText } from 'lucide-react';
 import client from '../../api/client.js';
 import { useDebounce } from '../../hooks/useDebounce.js';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -61,14 +61,19 @@ export default function CustomersPage() {
         title="Customers"
         subtitle="Manage customer records and outstanding balances"
         actions={
-          <Button
-            onClick={() => {
-              setEditItem(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" /> Add Customer
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Link to="/customers/debtors" className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+              <ScrollText className="h-4 w-4 text-brand-600" /> Debtors statement
+            </Link>
+            <Button
+              onClick={() => {
+                setEditItem(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" /> Add Customer
+            </Button>
+          </div>
         }
       />
 

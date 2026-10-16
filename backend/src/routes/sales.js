@@ -22,8 +22,8 @@ router.post('/', createSale);
 router.get('/:id', getSale);
 router.get('/:id/receipt', getReceipt);
 router.put('/:id', updateSale);
-router.post('/:id/cancel', cancelSale);
-router.post('/:id/reverse', requireRole('admin', 'manager'), reverseSale);
+router.post('/:id/cancel', requirePermission('cancelInvoices'), cancelSale);
+router.post('/:id/reverse', requirePermission('cancelInvoices'), reverseSale);
 router.post('/:id/return', requireRole('admin', 'manager'), returnSale);
 
 export default router;

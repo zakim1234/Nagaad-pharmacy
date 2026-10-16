@@ -16,6 +16,7 @@ import {
   payDebtFromWallet,
   setWalletAutoPay,
   getWalletHistory,
+  listDebtors,
 } from '../controllers/customerController.js';
 
 const router = Router();
@@ -26,6 +27,7 @@ router.use(requireAuth);
 // the standalone Customers module -- gating these would break that workflow.
 router.get('/search', searchCustomers);
 router.post('/', createCustomer);
+router.get('/debtors', requirePermission('customers'), listDebtors);
 router.get('/:id', getCustomer);
 
 // The actual Customers module: browsing, editing, debt/wallet management.

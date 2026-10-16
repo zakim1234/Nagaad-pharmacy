@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Printer, ArrowLeft, Pencil, XCircle, Undo2 } from 'lucide-react';
 import client from '../../api/client.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { hasPermission } from '../../constants/permissions.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate, formatTime } from '../../utils/format.js';
 import { printA5 } from '../../utils/printA5.js';
@@ -20,6 +22,8 @@ export default function ReceiptPage() {
   const [error, setError] = useState('');
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const { user } = useAuth();
+  const canCancelInvoices = hasPermission(user, 'cancelInvoices');
 
   const load = useCallback(() => {
     client
@@ -61,9 +65,11 @@ export default function ReceiptPage() {
               <Button variant="secondary" onClick={() => navigate(`/pos?edit=${sale.id}`)}>
                 <Pencil className="h-4 w-4" /> Edit
               </Button>
-              <Button variant="danger" onClick={() => setCancelOpen(true)}>
-                <XCircle className="h-4 w-4" /> Cancel
-              </Button>
+              {canCancelInvoices && (
+                <Button variant="danger" onClick={() => setCancelOpen(true)}>
+                  <XCircle className="h-4 w-4" /> Cancel
+                </Button>
+              )}
             </>
           )}
           <SharePdfButton fileName={`Invoice-${sale.receiptNumber}`} phone={sale.customerPhone} message={`${BUSINESS.name} — Invoice ${sale.receiptNumber}: ${formatCurrency(sale.total)}`} />

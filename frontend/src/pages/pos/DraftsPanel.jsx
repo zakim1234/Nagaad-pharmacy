@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Pencil, Printer, XCircle, Clock } from 'lucide-react';
 import client from '../../api/client.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { hasPermission } from '../../constants/permissions.js';
 import { formatCurrency, formatTime } from '../../utils/format.js';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 
@@ -12,6 +14,8 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 export default function DraftsPanel({ drafts, loading, onChanged }) {
   const toast = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canCancelInvoices = hasPermission(user, 'cancelInvoices');
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelling, setCancelling] = useState(false);
 
@@ -65,13 +69,15 @@ export default function DraftsPanel({ drafts, loading, onChanged }) {
               >
                 <Printer className="h-4 w-4" />
               </button>
-              <button
-                onClick={() => setCancelTarget(d)}
-                className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-                title="Cancel"
-              >
-                <XCircle className="h-4 w-4" />
-              </button>
+              {canCancelInvoices && (
+                <button
+                  onClick={() => setCancelTarget(d)}
+                  className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                  title="Cancel"
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>

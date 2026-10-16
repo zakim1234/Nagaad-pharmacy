@@ -439,3 +439,25 @@ test('DELETE ITEM -- on a pending invoice: Close Day still confirms it', { timeo
     await teardown(ctx.server);
   }
 });
+
+test('DEBTORS STATEMENT -- only customers who owe, most owed first', { timeout: 90000 }, async () => {
+  const ctx = await setup('debtors');
+  try {
+    const account = await Account.create({ name: 'Cash' });
+    const item = await InventoryItem.create({ name: 'D', itemCode: 'D-1', quantity: 100, costPriceCents: 100, sellingPriceCents: 1000 });
+    const small = await Customer.create({ name: 'Small Debt', phone: '301' });
+    const big = await Customer.create({ name: 'Big Debt', phone: '302' });
+    await Customer.create({ name: 'No Debt', phone: '303' });
+    const s1 = await ctx.request('/sales', { customerId: small.id, items: [{ itemId: item.id, quantity: 1 }], paidAmount: 0, paymentAccountId: account.id });
+    const s2 = await ctx.request('/sales', { customerId: big.id, items: [{ itemId: item.id, quantity: 5 }], paidAmount: 0, paymentAccountId: account.id });
+    assert.equal(s1.status + s2.status, 402);
+    await closeDay({ user: ctx.admin });
+
+    const res = await ctx.request('/customers/debtors', undefined, 'GET');
+    assert.equal(res.status, 200, JSON.stringify(res));
+    assert.deepEqual(res.data.customers.map((c) => [c.name, c.balance, c.unpaidInvoices]), [['Big Debt', 50, 1], ['Small Debt', 10, 1]]);
+    assert.equal(res.data.totalOwed, 60);
+  } finally {
+    await teardown(ctx.server);
+  }
+});

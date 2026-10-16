@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Boxes,
@@ -30,6 +30,12 @@ import { hasPermission } from '../constants/permissions.js';
 import { BUSINESS } from '../constants/business.js';
 import logo from '../images/logo.png';
 import BranchSwitcher from '../components/BranchSwitcher.jsx';
+import { getSelectedBranch } from '../api/client.js';
+
+// The Super Admin outside any branch sees only the company-wide pages; a
+// branch's own pages appear once they open a branch.
+const OVERVIEW_PATHS = ['/all-branches', '/users', '/branches'];
+const inOverview = (user) => !!user?.isSuperAdmin && !getSelectedBranch();
 
 // `module: null` means always visible to any authenticated user (no
 // standalone permission gate) -- Dashboard only, per the deliberate choice
@@ -82,6 +88,7 @@ function SidebarContent({ onNavigate }) {
           .filter(({ module, roles, superAdmin }) => (superAdmin ? !!user?.isSuperAdmin : roles ? roles.includes(user?.role) : module === null || hasPermission(user, module)))
           .concat(user?.role === 'admin' ? [{ to: '/users', label: 'Users', icon: UserCog, module: null }] : [])
           .concat(user?.isSuperAdmin ? [{ to: '/branches', label: 'Branches', icon: Store, module: null }] : [])
+          .filter(({ to }) => (inOverview(user) ? OVERVIEW_PATHS.includes(to) : to !== '/all-branches'))
           .map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
@@ -128,6 +135,13 @@ function SidebarContent({ onNavigate }) {
 
 export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (inOverview(user) && !OVERVIEW_PATHS.includes(location.pathname)) navigate('/all-branches', { replace: true });
+  }, [user, location.pathname, navigate]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">

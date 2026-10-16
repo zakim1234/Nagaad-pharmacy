@@ -18,7 +18,7 @@ test('user performance report: per-user totals, account breakdown, and cancelled
 
     const admin = await User.create({ username: 'admin1', name: 'Admin One', passwordHash: 'unused', role: 'admin' });
     const cashierA = await User.create({ username: 'cashiera', name: 'Cashier A', passwordHash: 'unused', role: 'cashier', permissions: ['pos', 'reports'] });
-    const cashierB = await User.create({ username: 'cashierb', name: 'Cashier B', passwordHash: 'unused', role: 'cashier', permissions: ['pos', 'reports'] });
+    const cashierB = await User.create({ username: 'cashierb', name: 'Cashier B', passwordHash: 'unused', role: 'cashier', permissions: ['pos', 'reports', 'cancelInvoices'] });
     const customer = await Customer.create({ name: 'Walk-in', phone: '999' });
     const account = await Account.create({ name: 'Cash Drawer' });
     const item = await InventoryItem.create({ name: 'Widget', itemCode: 'WIDG-1', quantity: 100, costPriceCents: 100, sellingPriceCents: 500 });

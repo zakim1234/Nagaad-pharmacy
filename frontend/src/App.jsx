@@ -41,6 +41,7 @@ import SupplierStatementPage from './pages/purchases/SupplierStatementPage.jsx';
 import SalariesPage from './pages/salaries/SalariesPage.jsx';
 import SalaryStatementPage from './pages/salaries/SalaryStatementPage.jsx';
 import AllBranchesPage from './pages/branches/AllBranchesPage.jsx';
+import DebtorsStatementPage from './pages/customers/DebtorsStatementPage.jsx';
 import BranchesPage from './pages/branches/BranchesPage.jsx';
 import ReturnReceiptPage from './pages/receipt/ReturnReceiptPage.jsx';
 import UsersPage from './pages/users/UsersPage.jsx';
@@ -91,6 +92,7 @@ export default function App() {
               <Route path="/purchases/:id/receipt" element={<RequirePermission module="purchases"><PurchaseReceiptPage /></RequirePermission>} />
               <Route path="/purchases/bulk-payments/:bulkId" element={<RequirePermission module="purchases"><BulkPaymentReceiptPage /></RequirePermission>} />
               <Route path="/customers" element={<RequirePermission module="customers"><CustomersPage /></RequirePermission>} />
+              <Route path="/customers/debtors" element={<RequirePermission module="customers"><DebtorsStatementPage /></RequirePermission>} />
               <Route path="/customers/:id" element={<RequirePermission module="customers"><CustomerDetailPage /></RequirePermission>} />
               <Route path="/customers/:id/statement" element={<RequirePermission module="customers"><CustomerStatementPage /></RequirePermission>} />
               <Route path="/suppliers" element={<RequirePermission module="suppliers"><SuppliersPage /></RequirePermission>} />

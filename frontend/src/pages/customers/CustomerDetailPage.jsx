@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { hasPermission } from '../../constants/permissions.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate, formatDateTime } from '../../utils/format.js';
 import { printReport } from '../../utils/printReport.js';
@@ -75,6 +76,7 @@ export default function CustomerDetailPage() {
   const toast = useToast();
   const { user } = useAuth();
   const canManage = user?.role === 'admin' || user?.role === 'manager';
+  const canCancelInvoices = hasPermission(user, 'cancelInvoices');
   const [cancelPayment, setCancelPayment] = useState(null);
   const [data, setData] = useState(null);
   const [debt, setDebt] = useState(null);
@@ -383,14 +385,12 @@ export default function CustomerDetailPage() {
                                   {s.status === 'DRAFT' && (
                                     <>
                                       <IconAction label="Edit" title="Edit" onClick={() => navigate(`/pos?edit=${s.id}`)} icon={Pencil} />
-                                      <IconAction label="Cancel" title="Cancel draft" danger onClick={() => setCancelTarget({ sale: s, mode: 'cancel' })} icon={XCircle} />
+                                      {canCancelInvoices && <IconAction label="Cancel" title="Cancel draft" danger onClick={() => setCancelTarget({ sale: s, mode: 'cancel' })} icon={XCircle} />}
                                     </>
                                   )}
-                                  {s.status === 'CONFIRMED' && canManage && (
-                                    <>
-                                      <IconAction label="Return" title="Return items" onClick={() => setReturnSale(s)} icon={Undo2} />
-                                      <IconAction label="Cancel" title="Cancel invoice" danger onClick={() => setCancelTarget({ sale: s, mode: 'reverse' })} icon={XCircle} />
-                                    </>
+                                  {s.status === 'CONFIRMED' && canManage && <IconAction label="Return" title="Return items" onClick={() => setReturnSale(s)} icon={Undo2} />}
+                                  {s.status === 'CONFIRMED' && canCancelInvoices && (
+                                    <IconAction label="Cancel" title="Cancel invoice" danger onClick={() => setCancelTarget({ sale: s, mode: 'reverse' })} icon={XCircle} />
                                   )}
                                 </div>
                               </td>
