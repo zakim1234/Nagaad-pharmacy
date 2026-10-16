@@ -396,3 +396,46 @@ test('CANCEL PAID INVOICE -- cash paid at the sale goes to the wallet, or is han
     await teardown(ctx.server);
   }
 });
+
+test('DELETE ITEM -- always allowed; its old invoices still return, cancel and close', { timeout: 90000 }, async () => {
+  const ctx = await setup('delete_item');
+  try {
+    const account = await Account.create({ name: 'Cash' });
+    const sold = await InventoryItem.create({ name: 'Gvagzol Supp', itemCode: 'GV-1', quantity: 100, costPriceCents: 100, sellingPriceCents: 500 });
+    const pending = await InventoryItem.create({ name: 'Pending Item', itemCode: 'PD-1', quantity: 50, costPriceCents: 100, sellingPriceCents: 300 });
+    const customer = await Customer.create({ name: 'History Customer', phone: '201' });
+
+    // A confirmed sale of `sold`, then the item is deleted.
+    const saleId = await giveDebt(ctx, customer, account, sold, 4); // $20 owed
+    const del = await ctx.request(`/inventory/${sold.id}`, undefined, 'DELETE');
+    assert.equal(del.status, 200, JSON.stringify(del));
+    assert.equal(await InventoryItem.countDocuments({ _id: sold.id }), 0);
+
+    // Its invoice still returns and cancels.
+    const ret = await ctx.request(`/sales/${saleId}/return`, { items: [{ itemId: sold.id, quantity: 1 }], reason: 'test' });
+    assert.equal(ret.status, 200, JSON.stringify(ret));
+    assert.equal((await Customer.findById(customer.id)).balanceCents, 1500);
+    const rev = await ctx.request(`/sales/${saleId}/reverse`, { reason: 'test' });
+    assert.equal(rev.status, 200, JSON.stringify(rev));
+    assert.equal((await Customer.findById(customer.id)).balanceCents, 0);
+  } finally {
+    await teardown(ctx.server);
+  }
+});
+
+test('DELETE ITEM -- on a pending invoice: Close Day still confirms it', { timeout: 90000 }, async () => {
+  const ctx = await setup('delete_item_pending');
+  try {
+    const account = await Account.create({ name: 'Cash' });
+    const item = await InventoryItem.create({ name: 'Pending Item', itemCode: 'PD-2', quantity: 50, costPriceCents: 100, sellingPriceCents: 300 });
+    const customer = await Customer.create({ name: 'Pending Customer', phone: '202' });
+    const draft = await ctx.request('/sales', { customerId: customer.id, items: [{ itemId: item.id, quantity: 2 }], paidAmount: 0, paymentAccountId: account.id });
+    assert.equal(draft.status, 201, JSON.stringify(draft));
+    assert.equal((await ctx.request(`/inventory/${item.id}`, undefined, 'DELETE')).status, 200);
+    await closeDay({ user: ctx.admin });
+    assert.equal((await Sale.findById(draft.data.id)).status, 'CONFIRMED');
+    assert.equal((await Customer.findById(customer.id)).balanceCents, 600);
+  } finally {
+    await teardown(ctx.server);
+  }
+});

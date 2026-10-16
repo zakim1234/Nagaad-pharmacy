@@ -23,6 +23,7 @@ export async function reserveStock(itemId, quantity, session) {
 // Releases a previously reserved quantity (Draft edited down, or cancelled).
 export async function releaseReservation(itemId, quantity, session, allocations = []) {
   if (quantity <= 0) return;
+  if (!(await InventoryItem.exists({ _id: itemId }).session(session))) return; // item was deleted
   await releaseBatches(allocations, session);
   await InventoryItem.findByIdAndUpdate(
     itemId,

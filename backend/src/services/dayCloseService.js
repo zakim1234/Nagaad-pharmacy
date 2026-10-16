@@ -220,6 +220,13 @@ export async function closeDay({ user } = {}) {
       let costOfGoodsCents = 0;
       for (const line of sale.items) {
         const itemDoc = await InventoryItem.findById(line.item).session(session);
+        if (!itemDoc) {
+          // Item deleted after this invoice was made: no stock left to deduct.
+          line.costPriceCents = line.costPriceCents || 0;
+          line.lotConsumption = [];
+          costOfGoodsCents += line.quantity * line.costPriceCents;
+          continue;
+        }
         if (!line.batchReservations?.length) line.batchReservations = await reserveBatches(itemDoc, line.quantity, session);
         const { breakdown } = await consumeReservedBatches(line.batchReservations, session);
         await confirmReservation(line.item, line.quantity, session, sale.receiptNumber);

@@ -217,7 +217,7 @@ export default function InventoryPage() {
       <ConfirmDialog
         open={!!deleteItem}
         title="Delete Item"
-        message={`Are you sure you want to delete "${deleteItem?.name}"? This cannot be undone.`}
+        message={`Ma hubtaa inaad tirtirto "${deleteItem?.name}"? Alaabta iyo stock-geeda (${deleteItem?.quantity ?? 0}) waa la tirtirayaa, dib looma celin karo. Boonooyinkii hore way sii jiraan. (The item and its stock are removed for good; past invoices keep it.)`}
         confirmLabel="Delete"
         loading={deleting}
         onConfirm={handleDelete}

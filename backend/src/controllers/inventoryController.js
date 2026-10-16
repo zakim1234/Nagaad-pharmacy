@@ -322,14 +322,11 @@ export const deleteInventoryItem = asyncHandler(async (req, res) => {
   const item = await InventoryItem.findById(req.params.id);
   if (!item) throw new ApiError(404, 'Item not found.');
 
-  const saleCount = await Sale.countDocuments({ 'items.item': item._id, status: 'CONFIRMED' });
-  if (saleCount > 0 || await InventoryLot.exists({ item: item._id }) || await Sale.exists({ 'items.item': item._id })) {
-    throw new ApiError(
-      409,
-      'This item has sales history and cannot be deleted. Consider marking it inactive instead.'
-    );
-  }
-
+  // Deleting is always allowed. Its batches (lots) are removed with it; past
+  // invoices, purchases and returns keep their own copy of the item's name
+  // and price, so they still show correctly. Later actions on them (cancel,
+  // return, Close Day of a pending invoice) skip the stock of a deleted item.
+  await InventoryLot.deleteMany({ item: item._id });
   await item.deleteOne();
 
   await logAudit({
@@ -337,7 +334,7 @@ export const deleteInventoryItem = asyncHandler(async (req, res) => {
     action: 'inventory.delete',
     entityType: 'InventoryItem',
     entityId: item._id,
-    details: { name: item.name },
+    details: { name: item.name, itemCode: item.itemCode, quantity: item.quantity, costPrice: item.costPriceCents / 100 },
   });
 
   res.json({ success: true, data: { id: req.params.id } });

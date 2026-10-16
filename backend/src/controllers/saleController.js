@@ -366,6 +366,7 @@ export const reverseSale = asyncHandler(async (req, res) => {
       const stillConsumed = line.quantity - (line.returnedQuantity || 0);
       if (stillConsumed <= 0) continue;
       const itemDoc = await InventoryItem.findById(line.item).session(session);
+      if (!itemDoc) continue; // item deleted: nothing to put back
       const oldQuantity = itemDoc.quantity;
       const oldAverageCostCents = itemDoc.costPriceCents;
       const newAverageCostCents = calculateWeightedAverageCost({
@@ -580,6 +581,11 @@ export const returnSale = asyncHandler(async (req, res) => {
         remaining -= take;
       }
       const itemDoc = await InventoryItem.findById(line.item).session(session);
+      if (!itemDoc) {
+        // Item deleted: the money side of the return still happens.
+        sale.items[index].returnedQuantity = (line.returnedQuantity || 0) + qty;
+        continue;
+      }
       const oldQuantity = itemDoc.quantity;
       const oldAverageCostCents = itemDoc.costPriceCents;
       const newAverageCostCents = calculateWeightedAverageCost({
