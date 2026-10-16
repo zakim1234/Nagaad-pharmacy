@@ -5,6 +5,9 @@ import { connectDB } from './config/db.js';
 import { migrateInventorySchema } from './utils/migrateInventoryV2.js';
 import { migrateSalesSchema } from './utils/migrateSalesV2.js';
 import { seedDefaultAccounts } from './utils/seedAccounts.js';
+import { migrateBranches } from './utils/migrateBranches.js';
+import Branch from './models/Branch.js';
+import { runWithBranch } from './services/branchContext.js';
 import InventoryItem from './models/InventoryItem.js';
 
 const PORT = process.env.PORT || 5010;
@@ -27,7 +30,9 @@ async function start() {
     await connectDB();
     await migrateInventorySchema();
     await migrateSalesSchema();
-    await seedDefaultAccounts();
+    await migrateBranches();
+    // Each branch gets the default payment accounts.
+    for (const b of await Branch.find()) await runWithBranch(b._id, () => seedDefaultAccounts());
     await InventoryItem.syncIndexes();
     // Build every model's indexes now, before serving. Otherwise the first
     // use of a model builds them mid-request, and a payment transaction

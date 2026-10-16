@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 const paymentBreakdownSchema = new mongoose.Schema(
   { account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' }, accountName: String, amountCents: Number },
@@ -82,5 +83,7 @@ const dayCloseSchema = new mongoose.Schema(
 );
 
 dayCloseSchema.index({ businessDate: -1 });
+
+dayCloseSchema.plugin(branchScoped);
 
 export default mongoose.model('DayClose', dayCloseSchema);

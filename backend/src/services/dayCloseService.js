@@ -7,6 +7,14 @@ import Account from '../models/Account.js';
 import DayClose from '../models/DayClose.js';
 import Expense from '../models/Expense.js';
 import BusinessDay from '../models/BusinessDay.js';
+import { currentBranch } from './branchContext.js';
+
+// The live OPEN/CLOSED record of the current branch ('current' when there
+// are no branches).
+const businessDayId = () => {
+  const branch = currentBranch();
+  return branch ? `current:${branch}` : 'current';
+};
 import User from '../models/User.js';
 import { nextSequence } from '../models/Counter.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -33,9 +41,9 @@ async function generatePaymentReceiptNumber(session) {
 // an existing deployment upgrading to this feature never finds POS
 // unexpectedly locked just because the record doesn't exist yet.
 export async function getBusinessDayStatus() {
-  let bd = await BusinessDay.findById('current');
+  let bd = await BusinessDay.findById(businessDayId());
   if (!bd) {
-    bd = await BusinessDay.create({ _id: 'current', status: 'OPEN', businessDate: startOfDay(), openedAt: new Date() });
+    bd = await BusinessDay.create({ _id: businessDayId(), status: 'OPEN', businessDate: startOfDay(), openedAt: new Date() });
   }
   return bd;
 }
@@ -195,7 +203,7 @@ export async function closeDay({ user } = {}) {
     const invoiceReferences = [];
     const confirmedSales = [];
 
-    const bd = await BusinessDay.findById('current').session(session);
+    const bd = await BusinessDay.findById(businessDayId()).session(session);
     if (bd && bd.status === 'CLOSED') throw new ApiError(409, 'The day was already closed.');
 
     const currentDrafts = await Sale.find({ status: 'DRAFT' }).sort({ createdAt: 1 }).session(session);
@@ -364,7 +372,7 @@ export async function closeDay({ user } = {}) {
 
     // 7. Flip the business day to CLOSED.
     await BusinessDay.findByIdAndUpdate(
-      'current',
+      businessDayId(),
       {
         status: 'CLOSED',
         closedAt: new Date(),
@@ -413,7 +421,7 @@ export async function getDayCloseHistory({ page = 1, limit = 20 } = {}) {
 // guard is what prevents that dangerous state from ever being reachable.
 export async function reopenDayClose({ dayCloseId, user, reason = '' }) {
   const result = await runInTransaction(async (session) => {
-    const businessDay = await BusinessDay.findById('current').session(session);
+    const businessDay = await BusinessDay.findById(businessDayId()).session(session);
     if (!businessDay || businessDay.status !== 'CLOSED') {
       throw new ApiError(409, 'The business day is not closed. There is nothing to reopen.');
     }

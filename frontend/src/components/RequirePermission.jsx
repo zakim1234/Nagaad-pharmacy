@@ -6,10 +6,10 @@ import { hasPermission } from '../constants/permissions.js';
 // regardless of what this renders. This exists so a direct URL visit
 // (typed, bookmarked, or reached after a permission was revoked) shows a
 // clear message instead of a broken/empty page or a raw 403 from the API.
-export default function RequirePermission({ module, adminOnly, roles, children }) {
+export default function RequirePermission({ module, adminOnly, roles, superAdmin, children }) {
   const { user } = useAuth();
 
-  const allowed = roles ? roles.includes(user?.role) : adminOnly ? user?.role === 'admin' : hasPermission(user, module);
+  const allowed = superAdmin ? !!user?.isSuperAdmin : roles ? roles.includes(user?.role) : adminOnly ? user?.role === 'admin' : hasPermission(user, module);
   if (!allowed) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center text-center">

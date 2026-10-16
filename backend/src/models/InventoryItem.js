@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 const DEFAULT_LOW_STOCK_THRESHOLD = 5;
 
@@ -57,10 +58,10 @@ const inventoryItemSchema = new mongoose.Schema(
 
 inventoryItemSchema.index({ name: 'text', itemCode: 'text', serialNumber: 'text', sku: 'text', barcode: 'text' });
 inventoryItemSchema.index({ barcode: 1 });
-inventoryItemSchema.index({ itemCode: 1 }, { unique: true });
+inventoryItemSchema.index({ branch: 1, itemCode: 1 }, { unique: true });
 // $ne isn't supported in a partial index filter; $gt: '' is an equivalent
 // "non-empty string" test since all non-empty strings sort after ''.
-inventoryItemSchema.index({ serialNumber: 1 }, { unique: true, partialFilterExpression: { serialNumber: { $type: 'string', $gt: '' } } });
+inventoryItemSchema.index({ branch: 1, serialNumber: 1 }, { unique: true, partialFilterExpression: { serialNumber: { $type: 'string', $gt: '' } } });
 inventoryItemSchema.index({ category: 1 });
 inventoryItemSchema.index({ expiryDate: 1 });
 
@@ -88,4 +89,6 @@ inventoryItemSchema.set('toJSON', { virtuals: true });
 inventoryItemSchema.set('toObject', { virtuals: true });
 
 export { DEFAULT_LOW_STOCK_THRESHOLD };
+inventoryItemSchema.plugin(branchScoped);
+
 export default mongoose.model('InventoryItem', inventoryItemSchema);

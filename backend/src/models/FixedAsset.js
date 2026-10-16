@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // A durable, non-trade asset (computer, shelving, furniture, ...) recorded
 // for the Balance Sheet's Fixed Assets section. Not inventory -- these are
@@ -18,5 +19,7 @@ const schema = new mongoose.Schema(
 );
 
 schema.index({ isActive: 1, dateAdded: -1 });
+
+schema.plugin(branchScoped);
 
 export default mongoose.model('FixedAsset', schema);

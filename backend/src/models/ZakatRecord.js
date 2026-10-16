@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 const breakdownRowSchema = new mongoose.Schema(
   {
@@ -43,5 +44,7 @@ const schema = new mongoose.Schema(
 );
 
 schema.index({ calculationDate: -1 });
+
+schema.plugin(branchScoped);
 
 export default mongoose.model('ZakatRecord', schema);

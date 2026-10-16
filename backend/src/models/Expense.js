@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // A business expense paid out of one of the shop's Accounts. Creating one
 // immediately posts an OUT AccountTransaction (same model as a Purchase
@@ -28,5 +29,7 @@ const expenseSchema = new mongoose.Schema(
 expenseSchema.index({ date: -1 });
 expenseSchema.index({ status: 1, date: -1 });
 expenseSchema.index({ category: 1, date: -1 });
+
+expenseSchema.plugin(branchScoped);
 
 export default mongoose.model('Expense', expenseSchema);

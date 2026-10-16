@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // The append-only ledger behind every Account.currentBalanceCents. A sale
 // paid into an account starts PENDING (the invoice is still a same-day
@@ -42,5 +43,7 @@ const accountTransactionSchema = new mongoose.Schema(
 accountTransactionSchema.index({ account: 1, createdAt: -1 });
 accountTransactionSchema.index({ referenceType: 1, referenceId: 1 });
 accountTransactionSchema.index({ status: 1, createdAt: -1 });
+
+accountTransactionSchema.plugin(branchScoped);
 
 export default mongoose.model('AccountTransaction', accountTransactionSchema);

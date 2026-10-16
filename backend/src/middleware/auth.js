@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Branch from '../models/Branch.js';
+import { runWithBranch } from '../services/branchContext.js';
 import { ApiError } from '../utils/ApiError.js';
 
 export async function requireAuth(req, res, next) {
@@ -21,10 +23,45 @@ export async function requireAuth(req, res, next) {
     }
 
     req.user = user;
-    next();
+    // Every request runs in one branch: the user's own, or for the Super
+    // Admin the branch they switched to (X-Branch-Id), else the first one.
+    // With no branches at all, nothing is filtered (single-shop mode).
+    const branches = await activeBranchIds();
+    let branch = null;
+    if (branches.length) {
+      if (user.isSuperAdmin) {
+        const wanted = String(req.headers['x-branch-id'] || '');
+        branch = branches.includes(wanted) ? wanted : branches[0];
+      } else {
+        if (!user.branch || !branches.includes(String(user.branch))) {
+          throw new ApiError(403, 'Your user is not assigned to an open branch. Please contact the Super Admin.');
+        }
+        branch = String(user.branch);
+      }
+    }
+    req.branchId = branch;
+    runWithBranch(branch, () => next());
   } catch (err) {
     next(err);
   }
+}
+
+// Open branch ids, oldest first; cached briefly (branches rarely change).
+let branchCache = { at: 0, ids: [] };
+export async function activeBranchIds({ fresh = false } = {}) {
+  if (!fresh && Date.now() - branchCache.at < 5000) return branchCache.ids;
+  const ids = (await Branch.find({ active: true }).sort({ createdAt: 1 }).select('_id')).map((b) => String(b._id));
+  branchCache = { at: Date.now(), ids };
+  return ids;
+}
+export function clearBranchCache() {
+  branchCache = { at: 0, ids: [] };
+}
+
+// Only the Super Admin (all branches).
+export function requireSuperAdmin(req, res, next) {
+  if (!req.user?.isSuperAdmin) return next(new ApiError(403, 'Only the Super Admin can do this.'));
+  next();
 }
 
 export function requireRole(...roles) {

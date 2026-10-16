@@ -1,5 +1,6 @@
 import ExpenseCategory from '../models/ExpenseCategory.js';
 import { ApiError } from '../utils/ApiError.js';
+import { currentBranch } from './branchContext.js';
 
 // Seeded the first time categories are read. Includes the four the Expenses
 // module originally shipped with, so existing expenses keep resolving.
@@ -30,7 +31,7 @@ async function ensureSeeded() {
   if (existing.length === DEFAULT_EXPENSE_CATEGORIES.length) return;
   await ExpenseCategory.bulkWrite(
     DEFAULT_EXPENSE_CATEGORIES.map((name, i) => ({
-      updateOne: { filter: { name }, update: { $setOnInsert: { name }, $set: { sortOrder: i - 1000 } }, upsert: true, collation: COLLATION },
+      updateOne: { filter: { name, branch: currentBranch() }, update: { $setOnInsert: { name }, $set: { sortOrder: i - 1000 } }, upsert: true, collation: COLLATION },
     }))
   );
 }

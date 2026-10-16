@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 export const DECREASE_REASONS = ['DAMAGED', 'EXPIRED', 'LOST', 'THEFT', 'COUNT_CORRECTION', 'OTHER'];
 export const INCREASE_REASONS = ['COUNT_CORRECTION', 'FOUND', 'OTHER'];
@@ -45,5 +46,7 @@ const stockAdjustmentSchema = new mongoose.Schema(
 stockAdjustmentSchema.index({ createdAt: -1 });
 stockAdjustmentSchema.index({ item: 1, createdAt: -1 });
 stockAdjustmentSchema.index({ countNumber: 1 });
+
+stockAdjustmentSchema.plugin(branchScoped);
 
 export default mongoose.model('StockAdjustment', stockAdjustmentSchema);

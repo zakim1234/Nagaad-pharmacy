@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 const auditLogSchema = new mongoose.Schema(
   {
@@ -14,5 +15,7 @@ const auditLogSchema = new mongoose.Schema(
 
 auditLogSchema.index({ entityType: 1, entityId: 1 });
 auditLogSchema.index({ createdAt: -1 });
+
+auditLogSchema.plugin(branchScoped);
 
 export default mongoose.model('AuditLog', auditLogSchema);

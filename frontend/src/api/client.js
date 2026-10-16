@@ -12,8 +12,28 @@ const client = axios.create({
 client.interceptors.request.use((config) => {
   const token = localStorage.getItem('pos_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  const branch = getSelectedBranch();
+  if (branch) config.headers['X-Branch-Id'] = branch;
   return config;
 });
+
+// The branch the Super Admin chose to work in (ignored by the server for
+// anyone else, who always works in their own branch).
+export function getSelectedBranch() {
+  try {
+    return localStorage.getItem('pos_branch') || '';
+  } catch {
+    return '';
+  }
+}
+export function setSelectedBranch(id) {
+  try {
+    if (id) localStorage.setItem('pos_branch', id);
+    else localStorage.removeItem('pos_branch');
+  } catch {
+    // storage unavailable: the server falls back to the first branch
+  }
+}
 
 let onUnauthorized = null;
 export function setUnauthorizedHandler(fn) {

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 const itemSchema = new mongoose.Schema({
   item: { type: mongoose.Schema.Types.ObjectId, ref: 'InventoryItem', required: true },
@@ -30,4 +31,6 @@ const schema = new mongoose.Schema({
 }, { timestamps: true });
 schema.index({ customer: 1, date: -1 });
 schema.index({ status: 1, expiryDate: 1 });
+schema.plugin(branchScoped);
+
 export default mongoose.model('Quotation', schema);

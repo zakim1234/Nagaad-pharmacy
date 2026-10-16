@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 function normalize(name) {
   return (name || '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -38,5 +39,7 @@ customerSchema.index({ phone: 1 });
 customerSchema.index({ name: 'text', phone: 'text' });
 
 customerSchema.statics.normalize = normalize;
+
+customerSchema.plugin(branchScoped);
 
 export default mongoose.model('Customer', customerSchema);

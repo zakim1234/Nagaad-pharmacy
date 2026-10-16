@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // Which lots (and therefore which purchases/suppliers) a sold quantity was
 // drawn from, in FIFO order. Lets supplier/item profitability reports trace
@@ -121,5 +122,7 @@ saleSchema.index({ quotation: 1 }, { unique: true, partialFilterExpression: { qu
 
 saleSchema.index({ customer: 1, outstandingCents: 1 });
 saleSchema.index({ status: 1, createdAt: -1 });
+
+saleSchema.plugin(branchScoped);
 
 export default mongoose.model('Sale', saleSchema);

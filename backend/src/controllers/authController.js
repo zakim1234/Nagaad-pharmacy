@@ -20,6 +20,8 @@ function sanitize(user) {
     // the frontend never needs its own "is admin" special-casing to
     // decide what to show.
     permissions: user.role === 'admin' ? PERMISSION_MODULES : user.permissions || [],
+    isSuperAdmin: !!user.isSuperAdmin,
+    branch: user.branch || null,
   };
 }
 

@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 const accountSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true, unique: true },
+    name: { type: String, required: true, trim: true },
     type: { type: String, enum: ['MOBILE_MONEY', 'BANK', 'MERCHANT', 'OTHER'], default: 'OTHER' },
     accountNumber: { type: String, trim: true, default: '' },
     openingBalanceCents: { type: Number, default: 0 },
@@ -13,5 +14,8 @@ const accountSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+accountSchema.index({ branch: 1, name: 1 }, { unique: true });
+accountSchema.plugin(branchScoped);
 
 export default mongoose.model('Account', accountSchema);

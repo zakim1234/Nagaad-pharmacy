@@ -40,6 +40,8 @@ import VendorPlanPage from './pages/purchases/VendorPlanPage.jsx';
 import SupplierStatementPage from './pages/purchases/SupplierStatementPage.jsx';
 import SalariesPage from './pages/salaries/SalariesPage.jsx';
 import SalaryStatementPage from './pages/salaries/SalaryStatementPage.jsx';
+import AllBranchesPage from './pages/branches/AllBranchesPage.jsx';
+import BranchesPage from './pages/branches/BranchesPage.jsx';
 import ReturnReceiptPage from './pages/receipt/ReturnReceiptPage.jsx';
 import UsersPage from './pages/users/UsersPage.jsx';
 import NotFound from './pages/NotFound.jsx';
@@ -78,6 +80,8 @@ export default function App() {
               <Route path="/stock-adjustments" element={<RequirePermission module="stock"><StockAdjustmentsPage /></RequirePermission>} />
               <Route path="/purchases" element={<RequirePermission module="purchases"><PurchasesPage /></RequirePermission>} />
               <Route path="/purchases/vendor-balances" element={<RequirePermission module="purchases"><VendorBalancesPage /></RequirePermission>} />
+              <Route path="/all-branches" element={<RequirePermission superAdmin><AllBranchesPage /></RequirePermission>} />
+              <Route path="/branches" element={<RequirePermission superAdmin><BranchesPage /></RequirePermission>} />
               <Route path="/salaries" element={<RequirePermission roles={['admin', 'manager']}><SalariesPage /></RequirePermission>} />
               <Route path="/salaries/statement" element={<RequirePermission roles={['admin', 'manager']}><SalaryStatementPage /></RequirePermission>} />
               <Route path="/salaries/:id" element={<RequirePermission roles={['admin', 'manager']}><SalariesPage /></RequirePermission>} />

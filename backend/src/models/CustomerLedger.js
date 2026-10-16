@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // The append-only source of truth for every customer balance change.
 // Customer.balanceCents is a cached, always-atomically-updated projection
@@ -25,5 +26,7 @@ const customerLedgerSchema = new mongoose.Schema(
 
 customerLedgerSchema.index({ customer: 1, createdAt: 1 });
 customerLedgerSchema.index({ sale: 1 });
+
+customerLedgerSchema.plugin(branchScoped);
 
 export default mongoose.model('CustomerLedger', customerLedgerSchema);

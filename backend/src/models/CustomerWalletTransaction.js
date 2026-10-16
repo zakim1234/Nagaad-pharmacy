@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // The append-only ledger behind Customer.walletBalanceCents, mirroring how
 // CustomerLedger backs balanceCents (debt). Kept entirely separate from
@@ -23,5 +24,7 @@ const schema = new mongoose.Schema(
 
 schema.index({ customer: 1, createdAt: -1 });
 schema.index({ sale: 1 });
+
+schema.plugin(branchScoped);
 
 export default mongoose.model('CustomerWalletTransaction', schema);

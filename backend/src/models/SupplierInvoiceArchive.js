@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // One manually-entered row of a supplier's paper invoice: item name (free
 // text -- not required to match a canonical InventoryItem), quantity, cost,
@@ -44,7 +45,9 @@ const schema = new mongoose.Schema(
   { timestamps: true, autoIndex: false }
 );
 
-schema.index({ serialNumber: 1 }, { unique: true });
+schema.index({ branch: 1, serialNumber: 1 }, { unique: true });
 schema.index({ supplier: 1, createdAt: -1 });
+
+schema.plugin(branchScoped);
 
 export default mongoose.model('SupplierInvoiceArchive', schema);

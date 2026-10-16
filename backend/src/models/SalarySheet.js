@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // One person's line on a salary sheet: who, how much, and (once paid) the
 // expense that paid it.
@@ -40,5 +41,7 @@ const schema = new mongoose.Schema(
 );
 
 schema.index({ status: 1, createdAt: -1 });
+
+schema.plugin(branchScoped);
 
 export default mongoose.model('SalarySheet', schema);

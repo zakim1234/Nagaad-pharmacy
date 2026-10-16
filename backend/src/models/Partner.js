@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // A shareholder/investor in the business. currentEquityCents is a cached,
 // atomically-updated projection (contributions minus withdrawals) kept for
@@ -19,5 +20,7 @@ const partnerSchema = new mongoose.Schema(
 );
 
 partnerSchema.index({ name: 1 });
+
+partnerSchema.plugin(branchScoped);
 
 export default mongoose.model('Partner', partnerSchema);

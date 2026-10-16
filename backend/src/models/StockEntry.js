@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 const schema = new mongoose.Schema({
   stockSerial: { type: String, required: true, unique: true },
   // The shop/supplier's own invoice/serial number for this receipt -- distinct
@@ -10,4 +11,6 @@ const schema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 schema.index({ externalSerialNumber: 1 });
+schema.plugin(branchScoped);
+
 export default mongoose.model('StockEntry', schema);

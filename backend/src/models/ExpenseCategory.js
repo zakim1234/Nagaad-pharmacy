@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // The list of categories an expense can be filed under (and therefore the
 // expense rows of the Profit & Loss report). Admins/managers can add more;
@@ -12,6 +13,8 @@ const expenseCategorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-expenseCategorySchema.index({ name: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } });
+expenseCategorySchema.index({ branch: 1, name: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } });
+
+expenseCategorySchema.plugin(branchScoped);
 
 export default mongoose.model('ExpenseCategory', expenseCategorySchema);

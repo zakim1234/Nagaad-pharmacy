@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // A purchase batch of stock at a specific cost from a specific supplier.
 // Sales consume lots oldest-first (FIFO) so that COGS/profit can always be
@@ -29,5 +30,7 @@ const inventoryLotSchema = new mongoose.Schema(
 inventoryLotSchema.index({ item: 1, remainingQuantity: 1, createdAt: 1 });
 inventoryLotSchema.index({ supplier: 1 });
 inventoryLotSchema.index({ purchase: 1 });
+
+inventoryLotSchema.plugin(branchScoped);
 
 export default mongoose.model('InventoryLot', inventoryLotSchema);

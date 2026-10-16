@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // A singleton document (_id is always the literal string 'current') tracking
 // whether the business day is OPEN or CLOSED right now. Kept separate from
@@ -20,5 +21,7 @@ const schema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+schema.plugin(branchScoped);
 
 export default mongoose.model('BusinessDay', schema);

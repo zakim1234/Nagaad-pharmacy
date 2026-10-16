@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 const supplierSchema = new mongoose.Schema(
   {
@@ -13,5 +14,7 @@ const supplierSchema = new mongoose.Schema(
 );
 
 supplierSchema.index({ name: 'text', phone: 'text' });
+
+supplierSchema.plugin(branchScoped);
 
 export default mongoose.model('Supplier', supplierSchema);

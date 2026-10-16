@@ -12,6 +12,7 @@ import { logAudit } from '../services/auditService.js';
 import { postExpense, voidExpenseDoc } from '../services/expenseService.js';
 import { resolveExpenseCategory } from '../services/expenseCategoryService.js';
 import { parseExpenseDate } from './expenseController.js';
+import { currentBranch } from '../services/branchContext.js';
 
 const PERIOD = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -49,7 +50,7 @@ function sheetToDTO(s) {
 // pre-fill a new month.
 export const getSalarySheet = asyncHandler(async (req, res) => {
   const [users, open, lastPaid] = await Promise.all([
-    User.find({ active: { $ne: false } }).select('name username role').sort({ name: 1 }),
+    User.find({ active: { $ne: false }, ...(currentBranch() ? { branch: currentBranch() } : {}) }).select('name username role').sort({ name: 1 }),
     SalarySheet.findOne({ status: 'OPEN' }).sort({ createdAt: -1 }),
     SalarySheet.findOne({ status: 'PAID' }).sort({ paidAt: -1 }),
   ]);

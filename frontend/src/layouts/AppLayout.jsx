@@ -22,16 +22,20 @@ import {
   CalendarCheck,
   SlidersHorizontal,
   Banknote,
+  Globe2,
+  Store,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { hasPermission } from '../constants/permissions.js';
 import { BUSINESS } from '../constants/business.js';
 import logo from '../images/logo.png';
+import BranchSwitcher from '../components/BranchSwitcher.jsx';
 
 // `module: null` means always visible to any authenticated user (no
 // standalone permission gate) -- Dashboard only, per the deliberate choice
 // to leave it ungated ("if appropriate").
 const navItems = [
+  { to: '/all-branches', label: 'All Branches', icon: Globe2, module: null, superAdmin: true },
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, module: null },
   { to: '/stock', label: 'Stock', icon: Boxes, module: 'stock' },
   { to: '/stock-adjustments', label: 'Stock Adjustment', icon: SlidersHorizontal, module: 'stock' },
@@ -72,10 +76,12 @@ function SidebarContent({ onNavigate }) {
         </div>
       </div>
 
+      <BranchSwitcher />
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-2.5 pt-1">
         {navItems
-          .filter(({ module, roles }) => (roles ? roles.includes(user?.role) : module === null || hasPermission(user, module)))
+          .filter(({ module, roles, superAdmin }) => (superAdmin ? !!user?.isSuperAdmin : roles ? roles.includes(user?.role) : module === null || hasPermission(user, module)))
           .concat(user?.role === 'admin' ? [{ to: '/users', label: 'Users', icon: UserCog, module: null }] : [])
+          .concat(user?.isSuperAdmin ? [{ to: '/branches', label: 'Branches', icon: Store, module: null }] : [])
           .map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}

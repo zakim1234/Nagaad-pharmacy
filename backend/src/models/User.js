@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema(
     // is not a role-template shortcut.
     permissions: { type: [String], enum: PERMISSION_MODULES, default: [] },
     active: { type: Boolean, default: true },
+    // The branch this user works in. The Super Admin has none: they see
+    // every branch and switch between them.
+    branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', default: null },
+    isSuperAdmin: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

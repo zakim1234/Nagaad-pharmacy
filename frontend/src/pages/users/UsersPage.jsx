@@ -13,18 +13,20 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import Modal from '../../components/ui/Modal.jsx';
 import { FormField, Input, Select } from '../../components/ui/Field.jsx';
 
-function UserFormModal({ open, onClose, user, onSaved }) {
+// Branches the Super Admin can put a user in (empty without branches or
+// for branch admins, whose new users always join their own branch).
+function UserFormModal({ open, onClose, user, onSaved, branches = [] }) {
   const toast = useToast();
   const isEdit = !!user;
-  const [form, setForm] = useState({ username: '', password: '', name: '', role: 'cashier', permissions: [] });
+  const [form, setForm] = useState({ username: '', password: '', name: '', role: 'cashier', permissions: [], branchId: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setForm(
       user
-        ? { username: user.username, password: '', name: user.name, role: user.role, permissions: user.permissions || [] }
-        : { username: '', password: '', name: '', role: 'cashier', permissions: [] }
+        ? { username: user.username, password: '', name: user.name, role: user.role, permissions: user.permissions || [], branchId: user.branch ? String(user.branch) : '' }
+        : { username: '', password: '', name: '', role: 'cashier', permissions: [], branchId: branches[0] ? String(branches[0].id) : '' }
     );
   }, [open, user]);
 
@@ -39,12 +41,12 @@ function UserFormModal({ open, onClose, user, onSaved }) {
     setSaving(true);
     try {
       if (isEdit) {
-        const payload = { name: form.name, role: form.role, permissions: form.permissions };
+        const payload = { name: form.name, role: form.role, permissions: form.permissions, ...(branches.length && !user.isSuperAdmin ? { branchId: form.branchId } : {}) };
         if (form.password) payload.password = form.password;
         await client.put(`/users/${user.id}`, payload);
         toast.success('User updated.');
       } else {
-        await client.post('/users', { username: form.username, password: form.password, name: form.name, role: form.role, permissions: form.permissions });
+        await client.post('/users', { username: form.username, password: form.password, name: form.name, role: form.role, permissions: form.permissions, ...(branches.length ? { branchId: form.branchId } : {}) });
         toast.success('User created.');
       }
       onSaved();
@@ -80,8 +82,23 @@ function UserFormModal({ open, onClose, user, onSaved }) {
           </FormField>
         </div>
 
+        {branches.length > 0 && !user?.isSuperAdmin && (
+          <FormField label="Branch" required>
+            <Select value={form.branchId} onChange={(e) => setForm((f) => ({ ...f, branchId: e.target.value }))}>
+              {branches.map((b) => (
+                <option key={b.id} value={String(b.id)}>
+                  {b.name}
+                  {b.active ? '' : ' (closed)'}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+        )}
+
         {form.role === 'admin' ? (
-          <p className="rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-700">Admins always have access to every module.</p>
+          <p className="rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-700">
+            Admins always have access to every module{branches.length ? ' of their branch' : ''}.
+          </p>
         ) : (
           <FormField label="Permissions">
             <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 p-3 sm:grid-cols-3">
@@ -113,6 +130,13 @@ export default function UsersPage() {
   const [editUser, setEditUser] = useState(null);
   const [toggleTarget, setToggleTarget] = useState(null);
   const [toggling, setToggling] = useState(false);
+  const [branches, setBranches] = useState([]);
+
+  useEffect(() => {
+    if (!me?.isSuperAdmin) return;
+    client.get('/branches').then((r) => setBranches(r.data.data)).catch(() => setBranches([]));
+  }, [me]);
+  const showBranch = users.some((u) => u.branchName || u.isSuperAdmin);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -157,6 +181,7 @@ export default function UsersPage() {
             <Th>Name</Th>
             <Th>Username</Th>
             <Th>Role</Th>
+            {showBranch && <Th>Branch</Th>}
             <Th>Permissions</Th>
             <Th>Status</Th>
             <Th>Created</Th>
@@ -165,15 +190,16 @@ export default function UsersPage() {
         </THead>
         <TBody>
           {loading ? (
-            <TableLoading colSpan={7} />
+            <TableLoading colSpan={showBranch ? 8 : 7} />
           ) : users.length === 0 ? (
-            <TableEmpty colSpan={7} message="No users found." />
+            <TableEmpty colSpan={showBranch ? 8 : 7} message="No users found." />
           ) : (
             users.map((u) => (
               <tr key={u.id} className="hover:bg-slate-50">
                 <Td className="font-medium text-slate-900">{u.name}</Td>
                 <Td className="text-slate-500">{u.username}</Td>
                 <Td><Badge color={u.role === 'admin' ? 'blue' : 'slate'}>{u.role}</Badge></Td>
+                {showBranch && <Td>{u.isSuperAdmin ? <Badge color="red">Super Admin · all branches</Badge> : <span className="text-sm text-slate-700">{u.branchName || '—'}</span>}</Td>}
                 <Td>
                   {u.role === 'admin' ? (
                     <span className="text-xs text-slate-400">All modules</span>
@@ -206,7 +232,7 @@ export default function UsersPage() {
         </TBody>
       </Table>
 
-      <UserFormModal open={formOpen} onClose={() => setFormOpen(false)} user={editUser} onSaved={load} />
+      <UserFormModal branches={branches} open={formOpen} onClose={() => setFormOpen(false)} user={editUser} onSaved={load} />
       <ConfirmDialog
         open={!!toggleTarget}
         title={toggleTarget?.active ? 'Deactivate User' : 'Activate User'}

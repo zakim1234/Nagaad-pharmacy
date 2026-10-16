@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // The append-only ledger behind Partner.currentEquityCents, mirroring how
 // AccountTransaction backs Account.currentBalanceCents.
@@ -22,5 +23,7 @@ const schema = new mongoose.Schema(
 
 schema.index({ partner: 1, createdAt: -1 });
 schema.index({ date: -1 });
+
+schema.plugin(branchScoped);
 
 export default mongoose.model('PartnerCapitalTransaction', schema);

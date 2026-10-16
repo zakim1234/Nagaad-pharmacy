@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // One payment made to a supplier that is spread across several of their
 // purchase invoices (oldest first). The money leaves the account as ONE
@@ -43,5 +44,7 @@ const schema = new mongoose.Schema(
 );
 
 schema.index({ supplier: 1, createdAt: -1 });
+
+schema.plugin(branchScoped);
 
 export default mongoose.model('BulkPurchasePayment', schema);

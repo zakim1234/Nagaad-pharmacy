@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // One payment made toward a Purchase invoice's balance -- there can be many
 // of these over time as a supplier is paid in installments. Distinct from
@@ -32,5 +33,7 @@ const schema = new mongoose.Schema(
 );
 
 schema.index({ purchase: 1, createdAt: -1 });
+
+schema.plugin(branchScoped);
 
 export default mongoose.model('PurchasePayment', schema);

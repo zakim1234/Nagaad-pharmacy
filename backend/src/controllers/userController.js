@@ -3,6 +3,7 @@ import User, { PERMISSION_MODULES } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { logAudit } from '../services/auditService.js';
+import Branch from '../models/Branch.js';
 
 function toDTO(u) {
   return {
@@ -12,8 +13,27 @@ function toDTO(u) {
     role: u.role,
     permissions: u.role === 'admin' ? PERMISSION_MODULES : u.permissions || [],
     active: u.active,
+    branch: u.branch?._id || u.branch || null,
+    branchName: u.branch?.name || '',
+    isSuperAdmin: !!u.isSuperAdmin,
     createdAt: u.createdAt,
   };
+}
+
+// With branches, a branch admin only sees and manages their own branch's
+// users; the Super Admin manages everyone. Without branches: everyone.
+function userScope(req) {
+  if (!req.branchId || req.user.isSuperAdmin) return {};
+  return { branch: req.user.branch, isSuperAdmin: { $ne: true } };
+}
+
+async function resolveUserBranch(req, requested) {
+  if (!req.branchId) return null; // no branches
+  if (!req.user.isSuperAdmin) return req.user.branch;
+  const id = requested || req.branchId;
+  const branch = await Branch.findById(id);
+  if (!branch) throw new ApiError(400, 'Choose a valid branch for this user.');
+  return branch._id;
 }
 
 function validatePermissions(permissions) {
@@ -26,7 +46,7 @@ function validatePermissions(permissions) {
 }
 
 export const listUsers = asyncHandler(async (req, res) => {
-  const users = await User.find().sort({ createdAt: -1 });
+  const users = await User.find(userScope(req)).populate('branch', 'name').sort({ createdAt: -1 });
   res.json({ success: true, data: users.map(toDTO) });
 });
 
@@ -47,7 +67,9 @@ export const createUser = asyncHandler(async (req, res) => {
     name: name.trim(),
     role,
     permissions: validatePermissions(permissions) || [],
+    branch: await resolveUserBranch(req, req.body.branchId),
   });
+  await user.populate('branch', 'name');
 
   await logAudit({ user: req.user, action: 'user.create', entityType: 'User', entityId: user._id, details: { username: user.username, role: user.role } });
 
@@ -55,7 +77,7 @@ export const createUser = asyncHandler(async (req, res) => {
 });
 
 export const updateUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const user = await User.findOne({ _id: req.params.id, ...userScope(req) });
   if (!user) throw new ApiError(404, 'User not found.');
 
   const { name, role, permissions, password } = req.body;
@@ -77,7 +99,9 @@ export const updateUser = asyncHandler(async (req, res) => {
     user.passwordHash = await bcrypt.hash(password, 10);
   }
 
+  if (req.body.branchId !== undefined && req.user.isSuperAdmin && !user.isSuperAdmin) user.branch = await resolveUserBranch(req, req.body.branchId);
   await user.save();
+  await user.populate('branch', 'name');
 
   await logAudit({ user: req.user, action: 'user.update', entityType: 'User', entityId: user._id, details: { role: user.role } });
 
@@ -89,7 +113,7 @@ export const updateUser = asyncHandler(async (req, res) => {
 // their very next request (no lingering session/JWT window), while every
 // historical sale/action they created stays exactly as it is.
 export const setUserActive = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const user = await User.findOne({ _id: req.params.id, ...userScope(req) });
   if (!user) throw new ApiError(404, 'User not found.');
   if (user._id.equals(req.user._id)) throw new ApiError(400, 'You cannot deactivate your own account.');
 

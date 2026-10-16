@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 const purchaseItemSchema = new mongoose.Schema(
   {
@@ -37,5 +38,7 @@ const purchaseSchema = new mongoose.Schema(
 
 purchaseSchema.index({ supplier: 1, createdAt: -1 });
 purchaseSchema.index({ createdAt: -1 });
+
+purchaseSchema.plugin(branchScoped);
 
 export default mongoose.model('Purchase', purchaseSchema);

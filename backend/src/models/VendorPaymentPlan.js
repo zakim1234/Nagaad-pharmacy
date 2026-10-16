@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { branchScoped } from '../services/branchContext.js';
 
 // The Vendor Balance Summary sheet: what each supplier is owed and how much
 // the owner allocates to pay each of them this round. Saved while OPEN so
@@ -40,5 +41,7 @@ const schema = new mongoose.Schema(
 );
 
 schema.index({ status: 1, createdAt: -1 });
+
+schema.plugin(branchScoped);
 
 export default mongoose.model('VendorPaymentPlan', schema);
