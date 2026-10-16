@@ -35,7 +35,7 @@ export default function BranchSwitcher() {
   const go = (id) => {
     setSelectedBranch(id);
     // Every page reloads for the newly chosen place.
-    window.location.href = id ? '/dashboard' : '/all-branches';
+    window.location.href = id ? '/dashboard' : '/super-dashboard';
   };
 
   if (!inside) {

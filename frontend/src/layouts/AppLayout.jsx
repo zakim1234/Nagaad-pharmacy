@@ -34,13 +34,14 @@ import { getSelectedBranch } from '../api/client.js';
 
 // The Super Admin outside any branch sees only the company-wide pages; a
 // branch's own pages appear once they open a branch.
-const OVERVIEW_PATHS = ['/all-branches', '/users', '/branches'];
+const OVERVIEW_PATHS = ['/super-dashboard', '/all-branches', '/users', '/branches'];
 const inOverview = (user) => !!user?.isSuperAdmin && !getSelectedBranch();
 
 // `module: null` means always visible to any authenticated user (no
 // standalone permission gate) -- Dashboard only, per the deliberate choice
 // to leave it ungated ("if appropriate").
 const navItems = [
+  { to: '/super-dashboard', label: 'Dashboard', icon: LayoutDashboard, module: null, superAdmin: true },
   { to: '/all-branches', label: 'All Branches', icon: Globe2, module: null, superAdmin: true },
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, module: null },
   { to: '/stock', label: 'Stock', icon: Boxes, module: 'stock' },
@@ -88,7 +89,7 @@ function SidebarContent({ onNavigate }) {
           .filter(({ module, roles, superAdmin }) => (superAdmin ? !!user?.isSuperAdmin : roles ? roles.includes(user?.role) : module === null || hasPermission(user, module)))
           .concat(user?.role === 'admin' ? [{ to: '/users', label: 'Users', icon: UserCog, module: null }] : [])
           .concat(user?.isSuperAdmin ? [{ to: '/branches', label: 'Branches', icon: Store, module: null }] : [])
-          .filter(({ to }) => (inOverview(user) ? OVERVIEW_PATHS.includes(to) : to !== '/all-branches'))
+          .filter(({ to }) => (inOverview(user) ? OVERVIEW_PATHS.includes(to) : !['/all-branches', '/super-dashboard'].includes(to)))
           .map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
@@ -140,7 +141,7 @@ export default function AppLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (inOverview(user) && !OVERVIEW_PATHS.includes(location.pathname)) navigate('/all-branches', { replace: true });
+    if (inOverview(user) && !OVERVIEW_PATHS.includes(location.pathname)) navigate('/super-dashboard', { replace: true });
   }, [user, location.pathname, navigate]);
 
   return (

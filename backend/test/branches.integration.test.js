@@ -124,3 +124,33 @@ test('BRANCHES -- day close is per branch; the Super Admin dashboard adds every 
     await teardown(server);
   }
 });
+
+test('BRANCHES -- Super Admin home: today, pending, day status and staff per branch', { timeout: 120000 }, async () => {
+  const { server, hodan, bakaal, owner, hodanAdmin, bakaalAdmin, as } = await setup('branches_overview');
+  try {
+    for (const [branch, admin, qty] of [[hodan, hodanAdmin, 3], [bakaal, bakaalAdmin, 1]]) {
+      const account = await runWithBranch(branch._id, () => Account.create({ name: 'Cash' }));
+      const item = await runWithBranch(branch._id, () => InventoryItem.create({ name: 'Bio', itemCode: 'B-1', quantity: 100, costPriceCents: 500, sellingPriceCents: 1000 }));
+      const customer = await runWithBranch(branch._id, () => Customer.create({ name: 'Buyer', phone: '1' }));
+      await as(admin)('/sales', { customerId: customer.id, items: [{ itemId: item.id, quantity: qty }], paidAmount: 0, paymentAccountId: account.id });
+    }
+    await runWithBranch(hodan._id, () => closeDay({ user: hodanAdmin })); // Hodan confirmed, Bakaal still pending
+
+    const res = await as(owner)('/branches/overview');
+    assert.equal(res.status, 200, JSON.stringify(res));
+    const byName = Object.fromEntries(res.data.branches.map((b) => [b.name, b]));
+    assert.equal(byName['Hodan Branch'].todaySales, 30);
+    assert.equal(byName['Hodan Branch'].dayStatus, 'CLOSED');
+    assert.equal(byName['Bakaal Branch'].todaySales, 0);
+    assert.equal(byName['Bakaal Branch'].pendingSales, 10);
+    assert.equal(byName['Bakaal Branch'].dayStatus, 'OPEN');
+    assert.equal(byName['Hodan Branch'].staff, 1);
+    assert.equal(res.data.totals.todaySales, 30);
+    assert.equal(res.data.totals.pendingSales, 10);
+    assert.equal(res.data.days.length, 14);
+    assert.equal(res.data.recent.length, 2);
+    assert.equal((await as(hodanAdmin)('/branches/overview')).status, 403);
+  } finally {
+    await teardown(server);
+  }
+});
