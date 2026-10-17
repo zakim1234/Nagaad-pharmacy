@@ -97,8 +97,9 @@ export default function InventoryFormModal({ open, onClose, item, onSaved }) {
         category: form.category || null,
       };
       if (item) {
-        await client.put(`/inventory/${item.id}`, payload);
-        toast.success('Item updated successfully.');
+        const res = await client.put(`/inventory/${item.id}`, payload);
+        const renamed = res.data.renamedDocuments || 0;
+        toast.success(renamed ? `Item updated. The new name is now on ${renamed} past invoice${renamed === 1 ? '' : 's'}/document${renamed === 1 ? '' : 's'} too.` : 'Item updated successfully.');
       } else {
         await client.post('/inventory', payload);
         toast.success('Item added to inventory.');

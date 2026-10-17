@@ -9,6 +9,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { toCents, fromCents } from '../utils/money.js';
 import { logAudit } from '../services/auditService.js';
+import { renameItemEverywhere } from '../services/itemRenameService.js';
 
 function toDTO(item) {
   const obj = item.toObject ? item.toObject({ virtuals: true }) : item;
@@ -304,6 +305,8 @@ export const updateInventoryItem = asyncHandler(async (req, res) => {
   if (body.status !== undefined) item.status = body.status;
 
   await item.save();
+  // A corrected name also goes onto every past invoice/document with this item.
+  const renamedLines = body.name !== undefined ? await renameItemEverywhere(item._id, item.name) : 0;
   await item.populate('category', 'name');
   await item.populate('supplier', 'name');
 
@@ -312,10 +315,10 @@ export const updateInventoryItem = asyncHandler(async (req, res) => {
     action: 'inventory.update',
     entityType: 'InventoryItem',
     entityId: item._id,
-    details: req.body,
+    details: { ...req.body, ...(renamedLines ? { renamedDocuments: renamedLines } : {}) },
   });
 
-  res.json({ success: true, data: toDTO(item) });
+  res.json({ success: true, data: toDTO(item), renamedDocuments: renamedLines });
 });
 
 export const deleteInventoryItem = asyncHandler(async (req, res) => {
