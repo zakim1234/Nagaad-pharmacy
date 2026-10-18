@@ -11,3 +11,13 @@ npm-debug.log*
 
 # Local server logs -- never commit
 *.log
+
+# Never commit settings/secrets or database data
+.env.*
+!.env.example
+!frontend/.env.development
+!frontend/.env.production
+mongo-data/
+backup-*/
+*.bson
+*.archive
