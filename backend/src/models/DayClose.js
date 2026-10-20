@@ -21,6 +21,13 @@ const cashierBreakdownSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// One row per item sold by this close: units, their cost (the WAC snapshot
+// taken at closing) and what they sold for after line discounts.
+const itemSoldSchema = new mongoose.Schema(
+  { item: { type: mongoose.Schema.Types.ObjectId, ref: 'InventoryItem' }, itemName: String, quantity: Number, costCents: Number, salesCents: Number },
+  { _id: false }
+);
+
 const accountResetSchema = new mongoose.Schema(
   { account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' }, accountName: String, balanceBeforeResetCents: Number },
   { _id: false }
@@ -56,6 +63,10 @@ const dayCloseSchema = new mongoose.Schema(
     cashCollectedCents: { type: Number, default: 0 },
     customerCreditCents: { type: Number, default: 0 },
     paymentBreakdown: { type: [paymentBreakdownSchema], default: [] },
+    // Items sold report. Null on closes recorded before it existed -- those
+    // are rebuilt from their invoices (see getDayItemsSold).
+    itemsSold: { type: [itemSoldSchema], default: undefined },
+    invoiceDiscountCents: { type: Number, default: 0 }, // whole-invoice discounts, not tied to one item
     cashierBreakdown: { type: [cashierBreakdownSchema], default: [] },
     // The pre-reset balance of every account zeroed by this close, so a
     // historical report can always show what each account actually held

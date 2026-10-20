@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, requireRole, requirePermission } from '../middleware/auth.js';
-import { getPreview, confirmClose, listHistory, listDaily, getStatus, openDayHandler, reopenDayCloseHandler } from '../controllers/dayCloseController.js';
+import { getPreview, confirmClose, listHistory, listDaily, getStatus, openDayHandler, reopenDayCloseHandler, listDayItems } from '../controllers/dayCloseController.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -10,6 +10,7 @@ router.get('/status', getStatus);
 router.get('/preview', getPreview);
 router.get('/history', listHistory);
 router.get('/daily', listDaily);
+router.get('/daily/items', listDayItems);
 // Closing/opening the business day is a critical, irreversible financial
 // operation -- restricted to admin/manager the same way voiding a
 // sale/purchase already is. Open Day is admin-only per spec.

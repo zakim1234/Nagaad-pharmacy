@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import {
   RotateCcw,
@@ -15,6 +16,7 @@ import {
   Calculator,
   CreditCard,
   LineChart as LineChartIcon,
+  PackageCheck,
 } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -314,7 +316,18 @@ function DayCard({ day, open, onToggle, isAdmin, onReopen }) {
       </button>
 
       {open && (
-        <div className="grid grid-cols-1 gap-4 border-t border-slate-100 bg-slate-50/50 p-4 sm:p-5 lg:grid-cols-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/50 px-4 pt-4 sm:px-5">
+          <p className="text-sm text-slate-500">Each item sold this day: quantity, cost, selling price and profit.</p>
+          <Link
+            to={`/daily-closing/items?date=${encodeURIComponent(day.businessDate)}`}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+          >
+            <PackageCheck className="h-4 w-4" /> Items sold report
+          </Link>
+        </div>
+      )}
+      {open && (
+        <div className="grid grid-cols-1 gap-4 bg-slate-50/50 p-4 sm:p-5 lg:grid-cols-3">
           {/* Profit breakdown */}
           <DetailCard icon={Calculator} title="How the day added up">
             <div className="space-y-2 text-sm">

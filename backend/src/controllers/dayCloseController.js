@@ -1,7 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { fromCents } from '../utils/money.js';
 import { logAudit } from '../services/auditService.js';
-import { buildDayClosePreview, closeDay, getDayCloseHistory, getDailyClosings, getBusinessDayStatus, openDay, reopenDayClose } from '../services/dayCloseService.js';
+import { buildDayClosePreview, closeDay, getDayCloseHistory, getDailyClosings, getDayItemsSold, getBusinessDayStatus, openDay, reopenDayClose } from '../services/dayCloseService.js';
 import { saleToDTO } from './saleController.js';
 
 function businessDayDTO(bd) {
@@ -157,6 +157,39 @@ export const listDaily = asyncHandler(async (req, res) => {
       closes: d.closes.map((c) => dayCloseDTO(c, { canReopen: !c.reopened && reopenableId === String(c._id) })),
     })),
     pagination,
+  });
+});
+
+// GET /api/day-close/daily/items?date=<businessDate> -- items sold that day.
+export const listDayItems = asyncHandler(async (req, res) => {
+  const r = await getDayItemsSold({ date: req.query.date });
+  const money = (c) => fromCents(c);
+  res.json({
+    success: true,
+    data: {
+      businessDate: r.businessDate,
+      closeCount: r.closeCount,
+      items: r.items.map((i) => ({
+        itemId: i.item,
+        name: i.itemName,
+        quantity: i.quantity,
+        unitCost: i.quantity ? money(Math.round(i.costCents / i.quantity)) : 0,
+        unitPrice: i.quantity ? money(Math.round(i.salesCents / i.quantity)) : 0,
+        cost: money(i.costCents),
+        sales: money(i.salesCents),
+        profit: money(i.salesCents - i.costCents),
+      })),
+      totals: {
+        items: r.items.length,
+        quantity: r.totals.quantity,
+        cost: money(r.totals.costCents),
+        sales: money(r.totals.salesCents),
+        invoiceDiscount: money(r.totals.invoiceDiscountCents),
+        grossProfit: money(r.totals.grossProfitCents),
+        expenses: money(r.totals.expensesCents),
+        netProfit: money(r.totals.netProfitCents),
+      },
+    },
   });
 });
 
