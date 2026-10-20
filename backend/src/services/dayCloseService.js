@@ -8,6 +8,7 @@ import DayClose from '../models/DayClose.js';
 import Expense from '../models/Expense.js';
 import BusinessDay from '../models/BusinessDay.js';
 import { currentBranch } from './branchContext.js';
+import { tallySaleItems } from './itemsSoldService.js';
 
 // The live OPEN/CLOSED record of the current branch ('current' when there
 // are no branches).
@@ -399,72 +400,6 @@ export async function closeDay({ user } = {}) {
   });
 
   return result;
-}
-
-// Adds a confirmed sale's lines to a per-item tally; returns the part of its
-// discount given on the whole invoice rather than on a line.
-function tallySaleItems(sale, byItem) {
-  let lineDiscountCents = 0;
-  for (const line of sale.items) {
-    const key = String(line.item);
-    const row = byItem.get(key) || { item: line.item, itemName: line.itemName, quantity: 0, costCents: 0, salesCents: 0 };
-    row.quantity += line.quantity;
-    row.costCents += line.quantity * (line.costPriceCents || 0);
-    row.salesCents += line.subtotalCents - (line.discountCents || 0);
-    byItem.set(key, row);
-    lineDiscountCents += line.discountCents || 0;
-  }
-  return Math.max(0, (sale.discountCents || 0) - lineDiscountCents);
-}
-
-// Items sold on one business day, across every close recorded that day:
-// per item the units, cost and sales, and the profit each one made.
-export async function getDayItemsSold({ date }) {
-  const businessDate = new Date(date);
-  if (Number.isNaN(businessDate.getTime())) throw new ApiError(400, 'Choose a valid day.');
-  const closes = await DayClose.find({ businessDate }).sort({ closedAt: 1 });
-  if (!closes.length) throw new ApiError(404, 'No closing found for that day.');
-
-  const byItem = new Map();
-  let invoiceDiscountCents = 0;
-  for (const c of closes) {
-    if (c.itemsSold) {
-      for (const r of c.itemsSold) {
-        const key = String(r.item);
-        const row = byItem.get(key) || { item: r.item, itemName: r.itemName, quantity: 0, costCents: 0, salesCents: 0 };
-        row.quantity += r.quantity;
-        row.costCents += r.costCents;
-        row.salesCents += r.salesCents;
-        byItem.set(key, row);
-      }
-      invoiceDiscountCents += c.invoiceDiscountCents || 0;
-    } else {
-      // Closed before this report existed: rebuild from its invoices.
-      const sales = await Sale.find({ receiptNumber: { $in: c.invoiceReferences } });
-      for (const sale of sales) invoiceDiscountCents += tallySaleItems(sale, byItem);
-    }
-  }
-
-  const items = Array.from(byItem.values()).sort((a, b) => b.salesCents - a.salesCents);
-  const totals = items.reduce(
-    (t, r) => ({ quantity: t.quantity + r.quantity, costCents: t.costCents + r.costCents, salesCents: t.salesCents + r.salesCents }),
-    { quantity: 0, costCents: 0, salesCents: 0 }
-  );
-  // That day's posted expenses, as on the Daily Closing card.
-  const dayEnd = new Date(businessDate);
-  dayEnd.setDate(dayEnd.getDate() + 1);
-  const [exp] = await Expense.aggregate([
-    { $match: { status: 'POSTED', date: { $gte: businessDate, $lt: dayEnd } } },
-    { $group: { _id: null, cents: { $sum: '$amountCents' } } },
-  ]);
-  const expensesCents = exp?.cents || 0;
-  const grossProfitCents = totals.salesCents - invoiceDiscountCents - totals.costCents;
-  return {
-    businessDate,
-    closeCount: closes.length,
-    items,
-    totals: { ...totals, invoiceDiscountCents, grossProfitCents, expensesCents, netProfitCents: grossProfitCents - expensesCents },
-  };
 }
 
 export async function getDayCloseHistory({ page = 1, limit = 20 } = {}) {

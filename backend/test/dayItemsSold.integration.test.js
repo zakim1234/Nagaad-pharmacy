@@ -8,7 +8,7 @@ import Customer from '../src/models/Customer.js';
 import Account from '../src/models/Account.js';
 import InventoryItem from '../src/models/InventoryItem.js';
 import DayClose from '../src/models/DayClose.js';
-import { closeDay } from '../src/services/dayCloseService.js';
+import { closeDay, openDay } from '../src/services/dayCloseService.js';
 
 test('DAY CLOSE -- items sold report: per item units, cost, sales, profit; totals equal the day', { timeout: 90000 }, async () => {
   await mongoose.connect(`mongodb://127.0.0.1:27028/day_items_${Date.now()}?replicaSet=stocktest`);
@@ -59,6 +59,40 @@ test('DAY CLOSE -- items sold report: per item units, cost, sales, profit; total
     assert.deepEqual(old.data.totals, res.data.totals);
 
     assert.equal((await request('/day-close/daily/items?date=2001-01-01', null, 'GET')).status, 404);
+
+    // Move that close to yesterday, sell again today: the month and year add both days up.
+    const today = new Date();
+    const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+    await DayClose.collection.updateMany({}, { $set: { businessDate: yesterday } });
+    await openDay({ user: admin });
+    const s3 = await request('/sales', { customerId: customer.id, items: [{ itemId: biotin.id, quantity: 2 }], paidAmount: 0, paymentAccountId: account.id });
+    assert.equal(s3.status, 201, JSON.stringify(s3));
+    await closeDay({ user: admin });
+
+    const pad = (n) => String(n).padStart(2, '0');
+    const dayKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const days = await request('/reports/items-sold/periods?type=day', null, 'GET');
+    assert.deepEqual(days.data.map((p) => p.key), [dayKey(today), dayKey(yesterday)]);
+    const todayRep = await request(`/reports/items-sold?type=day&key=${dayKey(today)}`, null, 'GET');
+    assert.deepEqual(todayRep.data.items.map((i) => [i.name, i.quantity]), [['Biotin', 2]]);
+
+    const sameMonth = today.getMonth() === yesterday.getMonth();
+    const monthKey = `${today.getFullYear()}-${pad(today.getMonth() + 1)}`;
+    const month = await request(`/reports/items-sold?type=month&key=${monthKey}`, null, 'GET');
+    assert.equal(month.status, 200, JSON.stringify(month));
+    const year = await request(`/reports/items-sold?type=year&key=${today.getFullYear()}`, null, 'GET');
+    const yb = year.data.items.find((i) => i.name === 'Biotin');
+    assert.equal(yb.quantity, 60, 'both days in the year');
+    assert.equal(year.data.dayCount, today.getFullYear() === yesterday.getFullYear() ? 2 : 1);
+    if (sameMonth) {
+      assert.equal(month.data.items.find((i) => i.name === 'Biotin').quantity, 60);
+      assert.equal(month.data.totals.quantity, 150);
+      const months = await request('/reports/items-sold/periods?type=month', null, 'GET');
+      assert.equal(months.data[0].key, monthKey);
+      assert.equal(months.data[0].dayCount, 2);
+      assert.equal(months.data[0].netProfit, month.data.totals.netProfit, 'list total = report total');
+    }
+    assert.equal((await request('/reports/items-sold?type=week&key=1', null, 'GET')).status, 400);
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await mongoose.connection.dropDatabase();

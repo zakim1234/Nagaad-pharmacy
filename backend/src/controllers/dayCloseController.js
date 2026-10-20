@@ -1,8 +1,9 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { fromCents } from '../utils/money.js';
 import { logAudit } from '../services/auditService.js';
-import { buildDayClosePreview, closeDay, getDayCloseHistory, getDailyClosings, getDayItemsSold, getBusinessDayStatus, openDay, reopenDayClose } from '../services/dayCloseService.js';
+import { buildDayClosePreview, closeDay, getDayCloseHistory, getDailyClosings, getBusinessDayStatus, openDay, reopenDayClose } from '../services/dayCloseService.js';
 import { saleToDTO } from './saleController.js';
+import { getItemsSold, listItemsSoldPeriods } from '../services/itemsSoldService.js';
 
 function businessDayDTO(bd) {
   return {
@@ -160,36 +161,66 @@ export const listDaily = asyncHandler(async (req, res) => {
   });
 });
 
-// GET /api/day-close/daily/items?date=<businessDate> -- items sold that day.
-export const listDayItems = asyncHandler(async (req, res) => {
-  const r = await getDayItemsSold({ date: req.query.date });
+function itemsSoldDTO(r) {
   const money = (c) => fromCents(c);
+  return {
+    type: r.type,
+    key: r.key,
+    start: r.start,
+    end: r.end,
+    closeCount: r.closeCount,
+    dayCount: r.dayCount,
+    invoiceCount: r.invoiceCount,
+    items: r.items.map((i) => ({
+      itemId: i.item,
+      name: i.itemName,
+      quantity: i.quantity,
+      unitCost: i.quantity ? money(Math.round(i.costCents / i.quantity)) : 0,
+      unitPrice: i.quantity ? money(Math.round(i.salesCents / i.quantity)) : 0,
+      cost: money(i.costCents),
+      sales: money(i.salesCents),
+      profit: money(i.salesCents - i.costCents),
+    })),
+    totals: {
+      items: r.items.length,
+      quantity: r.totals.quantity,
+      cost: money(r.totals.costCents),
+      sales: money(r.totals.salesCents),
+      invoiceDiscount: money(r.totals.invoiceDiscountCents),
+      grossProfit: money(r.totals.grossProfitCents),
+      expenses: money(r.totals.expensesCents),
+      netProfit: money(r.totals.netProfitCents),
+    },
+  };
+}
+
+// GET /api/day-close/daily/items?date=<businessDate> -- items sold that day
+// (for Daily Closing users without the Reports module).
+export const listDayItems = asyncHandler(async (req, res) => {
+  res.json({ success: true, data: itemsSoldDTO(await getItemsSold({ type: 'day', key: req.query.date })) });
+});
+
+// GET /api/reports/items-sold?type=day|month|year&key=2026-10-19|2026-10|2026
+export const itemsSoldReport = asyncHandler(async (req, res) => {
+  res.json({ success: true, data: itemsSoldDTO(await getItemsSold({ type: req.query.type, key: req.query.key })) });
+});
+
+// GET /api/reports/items-sold/periods?type=day|month|year -- every period
+// with a closing, newest first, with its totals.
+export const itemsSoldPeriods = asyncHandler(async (req, res) => {
+  const periods = await listItemsSoldPeriods({ type: req.query.type });
   res.json({
     success: true,
-    data: {
-      businessDate: r.businessDate,
-      closeCount: r.closeCount,
-      items: r.items.map((i) => ({
-        itemId: i.item,
-        name: i.itemName,
-        quantity: i.quantity,
-        unitCost: i.quantity ? money(Math.round(i.costCents / i.quantity)) : 0,
-        unitPrice: i.quantity ? money(Math.round(i.salesCents / i.quantity)) : 0,
-        cost: money(i.costCents),
-        sales: money(i.salesCents),
-        profit: money(i.salesCents - i.costCents),
-      })),
-      totals: {
-        items: r.items.length,
-        quantity: r.totals.quantity,
-        cost: money(r.totals.costCents),
-        sales: money(r.totals.salesCents),
-        invoiceDiscount: money(r.totals.invoiceDiscountCents),
-        grossProfit: money(r.totals.grossProfitCents),
-        expenses: money(r.totals.expensesCents),
-        netProfit: money(r.totals.netProfitCents),
-      },
-    },
+    data: periods.map((p) => ({
+      key: p.key,
+      dayCount: p.dayCount,
+      invoiceCount: p.invoiceCount,
+      sales: fromCents(p.revenueCents),
+      cost: fromCents(p.cogsCents),
+      grossProfit: fromCents(p.grossProfitCents),
+      expenses: fromCents(p.expensesCents),
+      netProfit: fromCents(p.netProfitCents),
+    })),
   });
 });
 

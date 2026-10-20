@@ -8,6 +8,7 @@ import {
   Users,
   Building2,
   BarChart3,
+  PackageCheck,
   Wallet,
   FileText,
   Receipt,
@@ -34,7 +35,8 @@ import { getSelectedBranch } from '../api/client.js';
 
 // The Super Admin outside any branch sees only the company-wide pages; a
 // branch's own pages appear once they open a branch.
-const OVERVIEW_PATHS = ['/super-dashboard', '/all-branches', '/reports', '/users', '/branches'];
+const OVERVIEW_PATHS = ['/super-dashboard', '/all-branches', '/reports', '/items-sold', '/users', '/branches'];
+const inOverviewPath = (path) => OVERVIEW_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 const inOverview = (user) => !!user?.isSuperAdmin && !getSelectedBranch();
 
 // `module: null` means always visible to any authenticated user (no
@@ -62,6 +64,7 @@ const navItems = [
   { to: '/expenses', label: 'Expenses', icon: HandCoins, module: 'expenses' },
   { to: '/salaries', label: 'Salaries', icon: Banknote, module: null, roles: ['admin', 'manager'] },
   { to: '/reports', label: 'Reports', icon: BarChart3, module: 'reports' },
+  { to: '/items-sold', label: 'Items Sold', icon: PackageCheck, module: 'reports' },
 ];
 
 function SidebarContent({ onNavigate }) {
@@ -141,7 +144,7 @@ export default function AppLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (inOverview(user) && !OVERVIEW_PATHS.includes(location.pathname)) navigate('/super-dashboard', { replace: true });
+    if (inOverview(user) && !inOverviewPath(location.pathname)) navigate('/super-dashboard', { replace: true });
   }, [user, location.pathname, navigate]);
 
   return (

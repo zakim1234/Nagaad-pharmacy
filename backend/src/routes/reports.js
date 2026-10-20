@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { itemsSoldReport, itemsSoldPeriods } from '../controllers/dayCloseController.js';
 import { quotationReport } from '../controllers/quotationController.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import {
@@ -31,6 +32,8 @@ router.use(requireAuth);
 router.use(requirePermission('reports'));
 
 router.get('/sales', salesReport);
+router.get('/items-sold', itemsSoldReport);
+router.get('/items-sold/periods', itemsSoldPeriods);
 router.get('/quotations', quotationReport);
 router.get('/profit', profitReport);
 router.get('/profit/items/:itemId', profitByItemDrilldown);

@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Printer } from 'lucide-react';
 import client from '../../api/client.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { hasPermission } from '../../constants/permissions.js';
 import { formatCurrency } from '../../utils/format.js';
 import { printReport } from '../../utils/printReport.js';
 import { BUSINESS } from '../../constants/business.js';
@@ -12,36 +14,50 @@ import SharePdfButton from '../../components/SharePdfButton.jsx';
 import DocHeader, { DocTotals, DocFooter, DOC_TH, DOC_THEAD_ROW, docRow } from '../../components/docs/DocHeader.jsx';
 
 const num = (v) => Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const dayTitle = (d) => new Date(d).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-// Items sold on one closed day: per item the units sold, unit cost / unit
-// selling price, total cost / total sales and the profit it made, with the
-// day's totals underneath -- printable and sendable.
+// "2026-10-19" -> Monday, 19 October 2026 · "2026-10" -> October 2026 · "2026"
+export function periodTitle(type, key) {
+  const [y, m, d] = String(key).split('-').map(Number);
+  if (type === 'year') return String(y);
+  if (type === 'month') return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+const NOUN = { day: 'day', month: 'month', year: 'year' };
+
+// Items sold in one closed day, month or year: per item the units sold,
+// unit cost / unit selling price, total cost / total sales and the profit it
+// made, with the totals underneath -- printable and sendable.
 export default function DayItemsSoldPage() {
   const toast = useToast();
+  const { user } = useAuth();
   const [params] = useSearchParams();
-  const date = params.get('date');
+  const date = params.get('date'); // from Daily Closing
+  const type = params.get('type') || 'day';
+  const key = params.get('key');
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    client
-      .get('/day-close/daily/items', { params: { date } })
-      .then((r) => setData(r.data.data))
-      .catch((err) => toast.error(err.friendlyMessage || 'Could not load the items sold.'));
-  }, [date]); // eslint-disable-line react-hooks/exhaustive-deps
+    setData(null);
+    const req =
+      key && hasPermission(user, 'reports')
+        ? client.get('/reports/items-sold', { params: { type, key } })
+        : client.get('/day-close/daily/items', { params: { date: date || key } });
+    req.then((r) => setData(r.data.data)).catch((err) => toast.error(err.friendlyMessage || 'Could not load the items sold.'));
+  }, [date, type, key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!data) return <PageSpinner />;
   const { items, totals } = data;
-  const day = dayTitle(data.businessDate);
+  const day = periodTitle(data.type, data.key);
+  const backTo = date ? '/daily-closing' : `/items-sold?type=${data.type}`;
 
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
-        <Link to="/daily-closing" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
-          <ArrowLeft className="h-4 w-4" /> Back to Daily Closing
+        <Link to={backTo} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+          <ArrowLeft className="h-4 w-4" /> {date ? 'Back to Daily Closing' : 'Back to Items Sold'}
         </Link>
         <div className="flex flex-wrap items-center gap-2">
-          <SharePdfButton fileName={`Items-Sold_${String(date).slice(0, 10)}`} message={`${BUSINESS.name} — items sold ${day}: profit ${formatCurrency(totals.netProfit)}`} />
+          <SharePdfButton fileName={`Items-Sold_${data.key}`} message={`${BUSINESS.name} — items sold ${day}: profit ${formatCurrency(totals.netProfit)}`} />
           <Button onClick={() => printReport('portrait')}>
             <Printer className="h-4 w-4" /> Print
           </Button>
@@ -49,8 +65,11 @@ export default function DayItemsSoldPage() {
       </div>
 
       <div id="print-area" className="mx-auto max-w-5xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
-        <DocHeader title="Items Sold" meta={<span className="font-semibold">{day}</span>} />
-        <p className="mt-3 text-xs text-neutral-500">Every item sold in this day's closing{data.closeCount > 1 ? `s (${data.closeCount})` : ''}, highest sales first.</p>
+        <DocHeader title={data.type === 'day' ? 'Items Sold' : data.type === 'month' ? 'Items Sold — Month' : 'Items Sold — Year'} meta={<span className="font-semibold">{day}</span>} />
+        <p className="mt-3 text-xs text-neutral-500">
+          Every item sold this {NOUN[data.type]}
+          {data.type === 'day' ? (data.closeCount > 1 ? ` (${data.closeCount} closings)` : '') : ` — ${data.dayCount} closed day${data.dayCount === 1 ? '' : 's'}, ${data.invoiceCount} invoices`}, highest sales first.
+        </p>
 
         <div className="overflow-x-auto">
           <table className="mt-3 w-full border-collapse text-xs">
