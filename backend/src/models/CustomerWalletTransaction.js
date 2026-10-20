@@ -9,9 +9,12 @@ import { branchScoped } from '../services/branchContext.js';
 const schema = new mongoose.Schema(
   {
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
-    type: { type: String, enum: ['DEPOSIT', 'SALE_PAYMENT', 'ADJUSTMENT', 'REFUND'], required: true },
+    type: { type: String, enum: ['DEPOSIT', 'WITHDRAWAL', 'SALE_PAYMENT', 'ADJUSTMENT', 'REFUND'], required: true },
     amountCents: { type: Number, required: true }, // signed: +increases wallet, -decreases wallet
-    account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', default: null }, // set for DEPOSIT: which Account received the cash
+    account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', default: null }, // DEPOSIT: Account that received the cash; WITHDRAWAL: Account it was paid from
+    // The number/account the money came from (deposit) or was sent to
+    // (withdrawal), e.g. the customer's EVC number or bank account.
+    reference: { type: String, default: '', trim: true, maxlength: 100 },
     accountTransaction: { type: mongoose.Schema.Types.ObjectId, ref: 'AccountTransaction', default: null },
     sale: { type: mongoose.Schema.Types.ObjectId, ref: 'Sale', default: null }, // set for SALE_PAYMENT: which invoice consumed the credit
     note: { type: String, default: '', maxlength: 500 },

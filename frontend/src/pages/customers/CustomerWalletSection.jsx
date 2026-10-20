@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { PiggyBank, Search, HandCoins } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { PiggyBank, Search, HandCoins, ArrowUpRight, FileText } from 'lucide-react';
 import client from '../../api/client.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDateTime } from '../../utils/format.js';
@@ -11,6 +12,7 @@ import { FormField, Input, Select, Textarea } from '../../components/ui/Field.js
 
 const TYPE_LABEL = {
   DEPOSIT: { label: 'Deposit', color: 'green' },
+  WITHDRAWAL: { label: 'Withdrawal', color: 'red' },
   SALE_PAYMENT: { label: 'Used', color: 'amber' },
   REFUND: { label: 'Restored', color: 'blue' },
   ADJUSTMENT: { label: 'Adjustment', color: 'slate' },
@@ -41,6 +43,7 @@ function AddDepositModal({ open, onClose, customerId, customerName, customerDebt
   const [amount, setAmount] = useState('');
   const [accountId, setAccountId] = useState('');
   const [note, setNote] = useState('');
+  const [reference, setReference] = useState('');
   const [applyToDebt, setApplyToDebt] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -50,6 +53,7 @@ function AddDepositModal({ open, onClose, customerId, customerName, customerDebt
     setAmount('');
     setAccountId('');
     setNote('');
+    setReference('');
     setApplyToDebt(walletAutoPay);
     client.get('/accounts').then((r) => setAccounts(r.data.data.accounts.filter((a) => a.isActive))).catch(() => setAccounts([]));
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -60,7 +64,7 @@ function AddDepositModal({ open, onClose, customerId, customerName, customerDebt
     if (!accountId) return toast.error('Select a payment account.');
     setSaving(true);
     try {
-      const res = await client.post(`/customers/${customerId}/wallet/deposit`, { amount: amt, paymentAccountId: accountId, note, applyToDebt: customerDebt > 0 ? applyToDebt : false });
+      const res = await client.post(`/customers/${customerId}/wallet/deposit`, { amount: amt, paymentAccountId: accountId, reference, note, applyToDebt: customerDebt > 0 ? applyToDebt : false });
       const { debtCleared, walletCredited } = res.data.data;
       toast.success(
         debtCleared > 0
@@ -92,6 +96,9 @@ function AddDepositModal({ open, onClose, customerId, customerName, customerDebt
             ))}
           </Select>
         </FormField>
+        <FormField label="Number / account the money came from">
+          <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="e.g. 615123456" />
+        </FormField>
         {customerDebt > 0 && (
           <div className="space-y-2">
             <p className="text-sm font-medium text-slate-700">This customer owes {formatCurrency(customerDebt)}. What should this money do?</p>
@@ -118,6 +125,83 @@ function AddDepositModal({ open, onClose, customerId, customerName, customerDebt
           </Button>
           <Button loading={saving} onClick={handleSave}>
             Confirm Deposit
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// The customer takes money back out of the wallet: paid from an account,
+// sent to a number/account that is recorded on the statement.
+function WithdrawModal({ open, onClose, customerId, customerName, walletBalance, onDone }) {
+  const toast = useToast();
+  const [amount, setAmount] = useState('');
+  const [accountId, setAccountId] = useState('');
+  const [reference, setReference] = useState('');
+  const [note, setNote] = useState('');
+  const [accounts, setAccounts] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setAmount('');
+    setAccountId('');
+    setReference('');
+    setNote('');
+    client.get('/accounts').then((r) => setAccounts(r.data.data.accounts.filter((a) => a.isActive))).catch(() => setAccounts([]));
+  }, [open]);
+
+  const save = async () => {
+    const amt = Number(amount);
+    if (!Number.isFinite(amt) || amt <= 0) return toast.error('Enter a valid amount.');
+    if (amt > walletBalance + 0.0001) return toast.error(`The wallet only holds ${formatCurrency(walletBalance)}.`);
+    if (!accountId) return toast.error('Select the account the money is paid from.');
+    setSaving(true);
+    try {
+      await client.post(`/customers/${customerId}/wallet/withdraw`, { amount: amt, paymentAccountId: accountId, reference, note });
+      toast.success(`${formatCurrency(amt)} withdrawn from the wallet${reference ? ` and sent to ${reference}` : ''}.`);
+      onDone();
+      onClose();
+    } catch (err) {
+      toast.error(err.friendlyMessage || 'Could not withdraw.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} title={`Withdraw – ${customerName}`} size="sm">
+      <div className="space-y-4">
+        <div className="rounded-lg border border-slate-200 px-3 py-2 text-center">
+          <p className="text-[10px] uppercase tracking-wide text-slate-500">In wallet</p>
+          <p className="text-lg font-bold text-slate-900">{formatCurrency(walletBalance)}</p>
+        </div>
+        <FormField label={`Amount (up to ${formatCurrency(walletBalance)})`} required>
+          <Input type="number" min="0.01" step="0.01" max={walletBalance} value={amount} onChange={(e) => setAmount(e.target.value)} autoFocus />
+        </FormField>
+        <FormField label="Paid from account" required>
+          <Select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+            <option value="">Select account</option>
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </Select>
+        </FormField>
+        <FormField label="Number / account it was sent to">
+          <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="e.g. 615123456" />
+        </FormField>
+        <FormField label="Note">
+          <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" />
+        </FormField>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button loading={saving} onClick={save}>
+            <ArrowUpRight className="h-4 w-4" /> Confirm Withdrawal
           </Button>
         </div>
       </div>
@@ -187,6 +271,7 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
   const toast = useToast();
   const [depositOpen, setDepositOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -233,6 +318,17 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
             {canPayFromWallet && (
               <Button variant="secondary" onClick={() => setPayOpen(true)}>
                 <HandCoins className="h-4 w-4" /> Pay debt from wallet
+              </Button>
+            )}
+            <Link
+              to={`/customers/${customerId}/wallet-statement`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <FileText className="h-4 w-4" /> Wallet statement
+            </Link>
+            {walletBalance > 0 && (
+              <Button variant="secondary" onClick={() => setWithdrawOpen(true)}>
+                <ArrowUpRight className="h-4 w-4" /> Withdraw
               </Button>
             )}
             <Button onClick={() => setDepositOpen(true)}>
@@ -285,6 +381,11 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
                     <Badge color={meta.color}>{meta.label}</Badge>
                     {t.saleReceiptNumber && <span className="text-xs text-slate-500">{t.saleReceiptNumber}</span>}
                     {t.accountName && <span className="text-xs text-slate-500">{t.accountName}</span>}
+                    {t.reference && (
+                      <span className="text-xs font-medium text-slate-600">
+                        {t.type === 'WITHDRAWAL' ? 'to' : 'from'} {t.reference}
+                      </span>
+                    )}
                     {t.note && <span className="text-xs text-slate-400">{t.note}</span>}
                   </div>
                   <span className="text-xs text-slate-400">{formatDateTime(t.createdAt)}</span>
@@ -303,6 +404,17 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
         customerDebt={customerDebt}
         walletAutoPay={walletAutoPay}
         onDeposited={() => {
+          load();
+          onChanged();
+        }}
+      />
+      <WithdrawModal
+        open={withdrawOpen}
+        onClose={() => setWithdrawOpen(false)}
+        customerId={customerId}
+        customerName={customerName}
+        walletBalance={walletBalance}
+        onDone={() => {
           load();
           onChanged();
         }}

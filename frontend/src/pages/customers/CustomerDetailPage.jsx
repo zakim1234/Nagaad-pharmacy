@@ -248,7 +248,7 @@ export default function CustomerDetailPage() {
                 {debt.invoices.map((inv) => (
                   <tr key={inv.id}>
                     <td className="px-4 py-2.5">
-                      <Link to={`/receipt/${inv.id}`} className="font-semibold text-brand-600 hover:underline">
+                      <Link to={`/receipt/${inv.id}`} state={{ backLabel: 'Back to customer' }} className="font-semibold text-brand-600 hover:underline">
                         {inv.receiptNumber}
                       </Link>
                     </td>
@@ -381,7 +381,7 @@ export default function CustomerDetailPage() {
                               </td>
                               <td className="px-3 py-3 no-print">
                                 <div className="flex justify-end gap-1.5">
-                                  <IconAction label="View" title="View / Print" onClick={() => navigate(`/receipt/${s.id}`)} icon={Eye} />
+                                  <IconAction label="View" title="View / Print" onClick={() => navigate(`/receipt/${s.id}`, { state: { backLabel: 'Back to customer' } })} icon={Eye} />
                                   {s.status === 'DRAFT' && (
                                     <>
                                       <IconAction label="Edit" title="Edit" onClick={() => navigate(`/pos?edit=${s.id}`)} icon={Pencil} />
@@ -516,7 +516,7 @@ export default function CustomerDetailPage() {
                       </td>
                       <td className="px-4 py-3 text-slate-500">{s.cancelledReason || '—'}</td>
                       <td className="px-4 py-3 text-right">
-                        <Link to={`/receipt/${s.id}`} className="text-xs font-semibold text-brand-600 hover:underline">
+                        <Link to={`/receipt/${s.id}`} state={{ backLabel: 'Back to customer' }} className="text-xs font-semibold text-brand-600 hover:underline">
                           View
                         </Link>
                       </td>

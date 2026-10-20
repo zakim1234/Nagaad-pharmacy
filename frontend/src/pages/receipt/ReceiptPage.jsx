@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Printer, ArrowLeft, Pencil, XCircle, Undo2 } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -17,6 +17,12 @@ import { BUSINESS } from '../../constants/business.js';
 export default function ReceiptPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Back returns to wherever the invoice was opened from (a customer, the
+  // invoice list, a report); opened directly, it goes to POS.
+  const cameFromApp = (window.history.state?.idx ?? 0) > 0;
+  const backLabel = location.state?.backLabel || (cameFromApp ? 'Back' : 'Back to POS');
+  const goBack = () => (cameFromApp ? navigate(-1) : navigate('/pos'));
   const toast = useToast();
   const [sale, setSale] = useState(null);
   const [error, setError] = useState('');
@@ -56,9 +62,9 @@ export default function ReceiptPage() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between no-print">
-        <Link to="/pos" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
-          <ArrowLeft className="h-4 w-4" /> Back to POS
-        </Link>
+        <button type="button" onClick={goBack} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+          <ArrowLeft className="h-4 w-4" /> {backLabel}
+        </button>
         <div className="flex gap-2">
           {sale.status === 'DRAFT' && (
             <>

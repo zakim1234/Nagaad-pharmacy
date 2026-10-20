@@ -449,6 +449,7 @@ function walletTxnToDTO(t) {
     amount: fromCents(t.amountCents),
     account: t.account?._id || t.account,
     accountName: t.account?.name || '',
+    reference: t.reference || '',
     sale: t.sale?._id || t.sale,
     saleReceiptNumber: t.sale?.receiptNumber || '',
     note: t.note,
@@ -475,6 +476,7 @@ export const depositToWallet = asyncHandler(async (req, res) => {
   if (!Number.isFinite(amount) || amount <= 0 || !Number.isSafeInteger(toCents(amount))) throw new ApiError(400, 'Enter a valid deposit amount.');
   if (!req.body.paymentAccountId) throw new ApiError(400, 'Please select an account for this deposit.');
   const amountCents = toCents(amount);
+  const reference = String(req.body.reference || '').trim().slice(0, 100);
 
   const result = await runInTransaction(async (session) => {
     const customer = await Customer.findById(req.params.id).session(session);
@@ -490,7 +492,7 @@ export const depositToWallet = asyncHandler(async (req, res) => {
         amountCents,
         referenceType: 'CustomerWalletTransaction',
         referenceId: customer._id,
-        description: `Wallet deposit for ${customer.name}`,
+        description: `Wallet deposit for ${customer.name}${reference ? ` (from ${reference})` : ''}`,
         createdBy: req.user,
       },
       session
@@ -588,6 +590,7 @@ export const depositToWallet = asyncHandler(async (req, res) => {
             amountCents: walletCreditedCents,
             account: account._id,
             accountTransaction: txn?._id || null,
+            reference,
             note,
             balanceBeforeCents: previousWalletBalanceCents,
             balanceAfterCents: customer.walletBalanceCents,
@@ -621,6 +624,73 @@ export const depositToWallet = asyncHandler(async (req, res) => {
   });
 });
 
+// POST /api/customers/:id/wallet/withdraw -- the customer takes money back
+// out of their wallet: it leaves the chosen Account, and the number/account
+// it was sent to is recorded. Never more than the wallet holds.
+export const withdrawFromWallet = asyncHandler(async (req, res) => {
+  const amount = Number(req.body.amount);
+  if (!Number.isFinite(amount) || amount <= 0 || !Number.isSafeInteger(toCents(amount))) throw new ApiError(400, 'Enter a valid amount.');
+  if (!req.body.paymentAccountId) throw new ApiError(400, 'Select the account the money is paid from.');
+  const amountCents = toCents(amount);
+  const reference = String(req.body.reference || '').trim().slice(0, 100);
+  const note = String(req.body.note || '').trim().slice(0, 500);
+
+  const result = await runInTransaction(async (session) => {
+    const customer = await Customer.findById(req.params.id).session(session);
+    if (!customer) throw new ApiError(404, 'Customer not found.');
+    if (amountCents > customer.walletBalanceCents) {
+      throw new ApiError(400, `The wallet only holds ${fromCents(customer.walletBalanceCents).toFixed(2)}.`);
+    }
+    const account = await Account.findById(req.body.paymentAccountId).session(session);
+    if (!account || !account.isActive) throw new ApiError(400, 'Selected account is not available.');
+
+    const txn = await postImmediateTransaction(
+      {
+        account,
+        direction: 'OUT',
+        type: 'WITHDRAWAL',
+        amountCents,
+        referenceType: 'CustomerWalletTransaction',
+        referenceId: customer._id,
+        description: `Wallet withdrawal for ${customer.name}${reference ? ` (sent to ${reference})` : ''}`,
+        createdBy: req.user,
+      },
+      session
+    );
+    const before = customer.walletBalanceCents;
+    customer.walletBalanceCents -= amountCents;
+    const [walletTxn] = await CustomerWalletTransaction.create(
+      [
+        {
+          customer: customer._id,
+          type: 'WITHDRAWAL',
+          amountCents: -amountCents,
+          account: account._id,
+          accountTransaction: txn?._id || null,
+          reference,
+          note,
+          balanceBeforeCents: before,
+          balanceAfterCents: customer.walletBalanceCents,
+          createdBy: req.user?._id,
+        },
+      ],
+      { session }
+    );
+    await customer.save({ session });
+    await walletTxn.populate('account', 'name');
+    return { customer, walletTxn };
+  });
+
+  await logAudit({
+    user: req.user,
+    action: 'customer.wallet.withdraw',
+    entityType: 'Customer',
+    entityId: result.customer._id,
+    details: { amount, reference },
+  });
+  res.status(201).json({ success: true, data: { customer: toDTO(result.customer), transaction: walletTxnToDTO(result.walletTxn) } });
+});
+
 // GET /api/customers/:id/wallet/history?q=
 export const getWalletHistory = asyncHandler(async (req, res) => {
   const customer = await Customer.findById(req.params.id);
@@ -638,7 +708,8 @@ export const getWalletHistory = asyncHandler(async (req, res) => {
         t.type.toLowerCase().includes(needle) ||
         (t.note || '').toLowerCase().includes(needle) ||
         (t.sale?.receiptNumber || '').toLowerCase().includes(needle) ||
-        (t.account?.name || '').toLowerCase().includes(needle)
+        (t.account?.name || '').toLowerCase().includes(needle) ||
+        (t.reference || '').toLowerCase().includes(needle)
     );
   }
   res.json({ success: true, data: { walletBalance: fromCents(customer.walletBalanceCents), transactions: transactions.map(walletTxnToDTO) } });

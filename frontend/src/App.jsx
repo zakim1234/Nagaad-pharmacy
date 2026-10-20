@@ -48,6 +48,7 @@ import DebtorsStatementPage from './pages/customers/DebtorsStatementPage.jsx';
 import BranchesPage from './pages/branches/BranchesPage.jsx';
 import ReturnReceiptPage from './pages/receipt/ReturnReceiptPage.jsx';
 import UsersPage from './pages/users/UsersPage.jsx';
+import WalletStatementPage from './pages/customers/WalletStatementPage.jsx';
 import NotFound from './pages/NotFound.jsx';
 
 function POSWorkspace() { const location = useLocation(); return <POSPage key={location.search} />; }
@@ -101,6 +102,7 @@ export default function App() {
               <Route path="/customers" element={<RequirePermission module="customers"><CustomersPage /></RequirePermission>} />
               <Route path="/customers/debtors" element={<RequirePermission module="customers"><DebtorsStatementPage /></RequirePermission>} />
               <Route path="/customers/:id" element={<RequirePermission module="customers"><CustomerDetailPage /></RequirePermission>} />
+              <Route path="/customers/:id/wallet-statement" element={<RequirePermission module="customers"><WalletStatementPage /></RequirePermission>} />
               <Route path="/customers/:id/statement" element={<RequirePermission module="customers"><CustomerStatementPage /></RequirePermission>} />
               <Route path="/suppliers" element={<RequirePermission module="suppliers"><SuppliersPage /></RequirePermission>} />
               <Route path="/suppliers/:id" element={<RequirePermission module="suppliers"><SupplierDetailPage /></RequirePermission>} />

@@ -13,6 +13,7 @@ import {
   cancelCustomerPayment,
   getCustomerStatement,
   depositToWallet,
+  withdrawFromWallet,
   payDebtFromWallet,
   setWalletAutoPay,
   getWalletHistory,
@@ -40,6 +41,7 @@ router.get('/:id/debt', requirePermission('customers'), getCustomerDebt);
 router.post('/:id/payments', requirePermission('customers'), payCustomerDebt);
 router.post('/:id/payments/:paymentId/cancel', requirePermission('customers'), requireRole('admin', 'manager'), cancelCustomerPayment);
 router.post('/:id/wallet/deposit', requirePermission('customers'), depositToWallet);
+router.post('/:id/wallet/withdraw', requirePermission('customers'), withdrawFromWallet);
 router.post('/:id/wallet/pay-debt', requirePermission('customers'), payDebtFromWallet);
 router.put('/:id/wallet/auto-pay', requirePermission('customers'), setWalletAutoPay);
 router.get('/:id/wallet/history', requirePermission('customers'), getWalletHistory);
