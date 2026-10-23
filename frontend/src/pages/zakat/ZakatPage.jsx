@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Calculator as CalculatorIcon, History as HistoryIcon, CheckCircle2, Pencil, Trash2, Moon, Wallet, Package, Users, Building2, Truck } from 'lucide-react';
 import client, { isAllBranchesView } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import PageBranchPicker from '../../components/PageBranchPicker.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
 import { formatCurrency, formatDate } from '../../utils/format.js';
@@ -210,7 +211,7 @@ function ZakatCalculator({ onConfirmed }) {
                 <p className="text-xs text-slate-400">How will it be paid?</p>
               </div>
               {overview ? (
-                <p className="p-5 text-sm text-slate-500">This is all branches together. Open a branch to confirm its Zakat.</p>
+                <p className="p-5 text-sm text-slate-500">This is all branches together. Choose a branch above to confirm its Zakat.</p>
               ) : (
               <div className="space-y-3 p-5">
                 {modeCard('AUTO', 'Deduct automatically', 'Taken from an account as an Expense (category "Zakat").')}
@@ -495,6 +496,14 @@ function HistoryTab() {
 }
 
 export default function ZakatPage() {
+  return (
+    <PageBranchPicker>
+      <ZakatForBranch />
+    </PageBranchPicker>
+  );
+}
+
+function ZakatForBranch() {
   const overview = isAllBranchesView(useAuth().user);
   const [tab, setTab] = useState('calculator');
   const [historyKey, setHistoryKey] = useState(0);
@@ -510,7 +519,7 @@ export default function ZakatPage() {
         title="Zakat"
         subtitle={
           overview
-            ? `Showing: All branches. Open a branch to confirm its Zakat.`
+            ? 'All branches together, to look at only. Choose a branch above to confirm its Zakat.'
             : "Calculate Zakat on the business's net zakatable wealth and split it across partners."
         }
       />

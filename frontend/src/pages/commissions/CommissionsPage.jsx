@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { BadgePercent, FileText, XCircle, Plus, Trash2 } from 'lucide-react';
 import client, { isAllBranchesView } from '../../api/client.js';
 import { useBranchNames } from '../../hooks/useBranchNames.js';
+import PageBranchPicker from '../../components/PageBranchPicker.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate } from '../../utils/format.js';
@@ -29,6 +30,14 @@ export function periodLabel(type, key) {
 // typed in for them, of that period's profit before commission. Paid as a
 // "Commission" expense, so the partners later share what is left.
 export default function CommissionsPage() {
+  return (
+    <PageBranchPicker>
+      <CommissionsForBranch />
+    </PageBranchPicker>
+  );
+}
+
+function CommissionsForBranch() {
   const { user } = useAuth();
   const toast = useToast();
   const [params, setParams] = useSearchParams();
@@ -125,7 +134,7 @@ export default function CommissionsPage() {
         title="Commissions"
         subtitle={
           overview
-            ? `Showing: All branches. Open a branch to pay commission.`
+            ? 'All branches together, to look at only. Choose a branch above to pay commission.'
             : "A percentage of the month's or year's profit, paid before the partners share the profit."
         }
       />
@@ -294,7 +303,7 @@ export default function CommissionsPage() {
               </Button>
             ) : (
               <p className="text-xs text-slate-500">
-                {overview ? 'Open a branch to pay commission.' : 'Only the Super Admin pays commission.'}
+                {overview ? 'Choose a branch above to pay commission.' : 'Only the Super Admin pays commission.'}
               </p>
             )}
           </div>

@@ -13,8 +13,10 @@ client.interceptors.request.use((config) => {
   const token = localStorage.getItem('pos_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   const branch = getSelectedBranch();
-  // No branch chosen: the Super Admin's all-branches view (reports only).
-  config.headers['X-Branch-Id'] = branch || 'all';
+  // No branch chosen: the Super Admin's all-branches view (reports only) --
+  // unless an overview page (Zakat, Commissions) is working on one branch
+  // it picked itself.
+  config.headers['X-Branch-Id'] = branch || pageBranch || 'all';
   return config;
 });
 
@@ -22,7 +24,14 @@ client.interceptors.request.use((config) => {
 // anyone else, who always works in their own branch).
 // The Super Admin with no branch open: reports add every branch together.
 export function isAllBranchesView(user) {
-  return !!user?.isSuperAdmin && !getSelectedBranch();
+  return !!user?.isSuperAdmin && !getSelectedBranch() && !pageBranch;
+}
+
+// The branch an overview page (Zakat, Commissions) is working on, picked on
+// the page itself; null = all branches, read-only. Cleared when the page closes.
+let pageBranch = null;
+export function setPageBranch(id) {
+  pageBranch = id ? String(id) : null;
 }
 
 export function getSelectedBranch() {

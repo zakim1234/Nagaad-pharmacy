@@ -38,6 +38,9 @@ import { getSelectedBranch } from '../api/client.js';
 // branch's own pages appear once they open a branch.
 const OVERVIEW_PATHS = ['/super-dashboard', '/all-branches', '/reports', '/items-sold', '/partners', '/commissions', '/zakat', '/users', '/branches'];
 const inOverviewPath = (path) => OVERVIEW_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
+// Only on the Super Admin's own screen, never inside a branch.
+const SUPER_ONLY_PATHS = ['/all-branches', '/super-dashboard', '/zakat', '/commissions'];
+const isSuperOnlyPath = (path) => SUPER_ONLY_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 const inOverview = (user) => !!user?.isSuperAdmin && !getSelectedBranch();
 
 // `module: null` means always visible to any authenticated user (no
@@ -94,7 +97,7 @@ function SidebarContent({ onNavigate }) {
           .filter(({ module, roles, superAdmin }) => (superAdmin ? !!user?.isSuperAdmin : roles ? roles.includes(user?.role) : module === null || hasPermission(user, module)))
           .concat(user?.role === 'admin' ? [{ to: '/users', label: 'Users', icon: UserCog, module: null }] : [])
           .concat(user?.isSuperAdmin ? [{ to: '/branches', label: 'Branches', icon: Store, module: null }] : [])
-          .filter(({ to }) => (inOverview(user) ? OVERVIEW_PATHS.includes(to) : !['/all-branches', '/super-dashboard'].includes(to)))
+          .filter(({ to }) => (inOverview(user) ? OVERVIEW_PATHS.includes(to) : !SUPER_ONLY_PATHS.includes(to)))
           .map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
@@ -147,6 +150,7 @@ export default function AppLayout() {
 
   useEffect(() => {
     if (inOverview(user) && !inOverviewPath(location.pathname)) navigate('/super-dashboard', { replace: true });
+    else if (!inOverview(user) && isSuperOnlyPath(location.pathname)) navigate('/dashboard', { replace: true });
   }, [user, location.pathname, navigate]);
 
   return (
