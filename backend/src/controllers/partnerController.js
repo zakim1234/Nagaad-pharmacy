@@ -20,6 +20,7 @@ function toDTO(p) {
     totalWithdrawn: fromCents(p.totalWithdrawnCents),
     currentEquity: fromCents(p.currentEquityCents),
     totalProfit: fromCents(p.totalProfitCents || 0),
+    branch: p.branch || null,
     isActive: p.isActive,
     createdAt: p.createdAt,
   };
@@ -247,6 +248,7 @@ function distributionDTO(d) {
   return {
     id: d._id,
     distributionNumber: d.distributionNumber,
+    branch: d.branch || null, // null = company-wide (shared from the all-branches view)
     year: d.year,
     netProfit: fromCents(d.netProfitCents),
     mode: d.mode,

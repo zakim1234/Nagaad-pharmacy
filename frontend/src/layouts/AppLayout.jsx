@@ -36,7 +36,7 @@ import { getSelectedBranch } from '../api/client.js';
 
 // The Super Admin outside any branch sees only the company-wide pages; a
 // branch's own pages appear once they open a branch.
-const OVERVIEW_PATHS = ['/super-dashboard', '/all-branches', '/reports', '/items-sold', '/users', '/branches'];
+const OVERVIEW_PATHS = ['/super-dashboard', '/all-branches', '/reports', '/items-sold', '/partners', '/commissions', '/zakat', '/users', '/branches'];
 const inOverviewPath = (path) => OVERVIEW_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 const inOverview = (user) => !!user?.isSuperAdmin && !getSelectedBranch();
 

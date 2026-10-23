@@ -31,10 +31,13 @@ export async function requireAuth(req, res, next) {
     if (branches.length) {
       if (user.isSuperAdmin) {
         const wanted = String(req.headers['x-branch-id'] || '');
-        if (wanted === 'all' && isAllBranchesRead(req)) {
+        if (wanted === 'all' && (isAllBranchesRead(req) || isCompanyWideWrite(req))) {
           // Reports for the whole company: nothing filtered, read-only.
           req.branchId = 'all';
           return runWithBranch(null, () => next());
+        }
+        if (wanted === 'all' && isOverviewOnlyWrite(req)) {
+          throw new ApiError(400, 'You are viewing all branches. Open a branch first to make changes.');
         }
         branch = branches.includes(wanted) ? wanted : branches[0];
       } else {
@@ -54,9 +57,21 @@ export async function requireAuth(req, res, next) {
 // The Super Admin's "all branches" view covers reading reports only (and the
 // lookups report screens use); anything else always runs in one branch, so
 // nothing can ever be written without a branch.
-const ALL_BRANCHES_READS = ['/api/reports', '/api/quotations', '/api/sales', '/api/customers/search'];
+const ALL_BRANCHES_READS = ['/api/reports', '/api/quotations', '/api/sales', '/api/customers/search', '/api/partners', '/api/commissions', '/api/zakat'];
 function isAllBranchesRead(req) {
   return req.method === 'GET' && ALL_BRANCHES_READS.some((p) => req.originalUrl.startsWith(p));
+}
+// Year-end profit sharing is company-wide: from the overview it shares every
+// branch's combined profit between all partners.
+const COMPANY_WIDE_WRITES = ['/api/partners/profit-sharing'];
+function isCompanyWideWrite(req) {
+  return req.method !== 'GET' && COMPANY_WIDE_WRITES.some((p) => req.originalUrl.startsWith(p));
+}
+// Pages the overview shows read-only: a change there must name a branch,
+// never silently land in the first one.
+const OVERVIEW_ONLY = ['/api/partners', '/api/commissions', '/api/zakat'];
+function isOverviewOnlyWrite(req) {
+  return req.method !== 'GET' && OVERVIEW_ONLY.some((p) => req.originalUrl.startsWith(p));
 }
 
 // Open branch ids, oldest first; cached briefly (branches rarely change).

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Calculator as CalculatorIcon, History as HistoryIcon, CheckCircle2, Pencil, Trash2, Moon, Wallet, Package, Users, Building2, Truck } from 'lucide-react';
-import client from '../../api/client.js';
+import client, { isAllBranchesView } from '../../api/client.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
 import { formatCurrency, formatDate } from '../../utils/format.js';
@@ -21,6 +22,8 @@ function today() {
 }
 
 function ZakatCalculator({ onConfirmed }) {
+  // All-branches view: the whole company's Zakat, to look at only.
+  const overview = isAllBranchesView(useAuth().user);
   const toast = useToast();
   const [date, setDate] = useState(today());
   const [rate, setRate] = useState('2.5');
@@ -206,6 +209,9 @@ function ZakatCalculator({ onConfirmed }) {
                 <h3 className="text-sm font-semibold text-slate-900">Confirm Zakat</h3>
                 <p className="text-xs text-slate-400">How will it be paid?</p>
               </div>
+              {overview ? (
+                <p className="p-5 text-sm text-slate-500">This is all branches together. Open a branch to confirm its Zakat.</p>
+              ) : (
               <div className="space-y-3 p-5">
                 {modeCard('AUTO', 'Deduct automatically', 'Taken from an account as an Expense (category "Zakat").')}
                 {modeCard('MANUAL', 'Just record it', 'Each partner pays their own share; no money moves in the system.')}
@@ -222,6 +228,7 @@ function ZakatCalculator({ onConfirmed }) {
                 </Button>
                 {!(preview.zakatDue > 0) && <p className="text-center text-xs text-slate-400">Zakat due is zero — nothing to confirm for this date/rate.</p>}
               </div>
+              )}
             </div>
           </div>
         </div>
@@ -356,6 +363,7 @@ function ZakatEditModal({ record, onClose, onSaved }) {
 
 function HistoryTab() {
   const toast = useToast();
+  const overview = isAllBranchesView(useAuth().user);
   const [records, setRecords] = useState(null);
   const [markingId, setMarkingId] = useState(null);
   const [editRecord, setEditRecord] = useState(null);
@@ -436,15 +444,17 @@ function HistoryTab() {
                   ) : (
                     <div className="flex items-center gap-2">
                       <Badge color="amber">Recorded</Badge>
-                      <Button size="sm" variant="secondary" loading={markingId === r.id} onClick={() => markPaid(r.id)}>
-                        Mark Paid
-                      </Button>
+                      {!overview && (
+                        <Button size="sm" variant="secondary" loading={markingId === r.id} onClick={() => markPaid(r.id)}>
+                          Mark Paid
+                        </Button>
+                      )}
                     </div>
                   )}
                 </Td>
                 <Td>{r.note || '—'}</Td>
                 <Td>
-                  <div className="flex gap-1.5">
+                  <div className={`flex gap-1.5 ${overview ? 'hidden' : ''}`}>
                     <Button size="sm" variant="secondary" onClick={() => setEditRecord(r)}>
                       <Pencil className="h-3.5 w-3.5" /> Edit
                     </Button>

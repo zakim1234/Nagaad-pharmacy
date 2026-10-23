@@ -52,8 +52,10 @@ export async function previewCommission({ type, key }) {
   return { type, key, start, end, baseProfitCents, staff, earlier };
 }
 
-export async function payCommission({ type, key, paymentAccountId, lines, note = '', user }) {
+export async function payCommission({ type, key, kind = 'STAFF', paymentAccountId, lines, note = '', user }) {
   const { start, end } = range(type, key);
+  if (!['STAFF', 'ADMIN'].includes(kind)) throw new ApiError(400, 'Choose staff or admin commission.');
+  if (kind === 'ADMIN' && !user?.isSuperAdmin) throw new ApiError(403, 'Only the Super Admin pays commission to branch admins.');
   if (!Array.isArray(lines) || !lines.length) throw new ApiError(400, 'Choose who gets commission and their percentage.');
   if (!paymentAccountId) throw new ApiError(400, 'Choose the account the commission is paid from.');
   if (String(note).length > 500) throw new ApiError(400, 'Note is too long (500 characters max).');
@@ -98,6 +100,9 @@ export async function payCommission({ type, key, paymentAccountId, lines, note =
       }
       const name = person?.name || l.name;
       if (!name) throw new ApiError(400, 'Enter the name of each person.');
+      // Staff commission never goes to an admin, admin commission only to admins.
+      if (kind === 'STAFF' && person?.role === 'admin') throw new ApiError(403, `${name} is an admin: their commission is paid by the Super Admin (Admin commission).`);
+      if (kind === 'ADMIN' && person?.role !== 'admin') throw new ApiError(400, `${name} is not a branch admin; pay them under Staff commission.`);
       const who = person ? String(person._id) : `name:${name.toLowerCase()}`;
       if (seen.has(who)) throw new ApiError(400, `${name} is listed twice.`);
       seen.add(who);
@@ -116,6 +121,7 @@ export async function payCommission({ type, key, paymentAccountId, lines, note =
       [
         {
           commissionNumber,
+          kind,
           periodType: type,
           periodKey: key,
           baseProfitCents,
@@ -140,6 +146,7 @@ export async function cancelCommission({ id, reason = '', user }) {
     const doc = await CommissionPayment.findById(id).session(session);
     if (!doc) throw new ApiError(404, 'Commission payment not found.');
     if (doc.status === 'CANCELLED') throw new ApiError(409, 'This commission payment is already cancelled.');
+    if (doc.kind === 'ADMIN' && !user?.isSuperAdmin) throw new ApiError(403, 'Only the Super Admin can cancel admin commission.');
     for (const line of doc.lines) {
       if (!line.expense) continue;
       const exp = await Expense.findById(line.expense).session(session);

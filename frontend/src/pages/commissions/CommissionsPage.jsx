@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { BadgePercent, FileText, XCircle, Plus, Trash2 } from 'lucide-react';
-import client from '../../api/client.js';
+import client, { isAllBranchesView } from '../../api/client.js';
+import { useBranchNames } from '../../hooks/useBranchNames.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate } from '../../utils/format.js';
@@ -30,10 +31,16 @@ export function periodLabel(type, key) {
 export default function CommissionsPage() {
   const { user } = useAuth();
   const toast = useToast();
-  const isAdmin = user?.role === 'admin';
   const [params, setParams] = useSearchParams();
   const type = params.get('type') === 'year' ? 'year' : 'month';
   const key = params.get('key') || DEFAULT_KEY[type];
+  // Two kinds: staff commission (paid by the branch admin) and admin
+  // commission (branch admins, paid only by the Super Admin).
+  const kind = params.get('kind') === 'admin' ? 'ADMIN' : 'STAFF';
+  const overview = isAllBranchesView(user);
+  const branchName = useBranchNames(overview);
+  const isAdmin = !overview && (kind === 'ADMIN' ? !!user?.isSuperAdmin : user?.role === 'admin');
+  const go = (next) => setParams({ kind: kind === 'ADMIN' ? 'admin' : 'staff', type, key, ...next });
   const [preview, setPreview] = useState(null);
   const [percents, setPercents] = useState({});
   const [others, setOthers] = useState([]);
@@ -71,7 +78,8 @@ export default function CommissionsPage() {
 
   const base = preview?.baseProfit || 0;
   const paidIds = new Set((preview?.earlier || []).flatMap((c) => c.lines.map((l) => String(l.user || ''))).filter(Boolean));
-  const staffLines = (preview?.staff || []).filter((s) => !paidIds.has(String(s.id))).map((s) => ({ ...s, percent: Number(percents[s.id]) || 0 }));
+  const eligible = (s) => (kind === 'ADMIN' ? s.role === 'admin' && !s.isSuperAdmin : s.role !== 'admin');
+  const staffLines = (preview?.staff || []).filter((s) => eligible(s) && !paidIds.has(String(s.id))).map((s) => ({ ...s, percent: Number(percents[s.id]) || 0 }));
   const otherLines = others.map((o) => ({ ...o, percent: Number(o.percent) || 0 }));
   const chosen = [...staffLines.filter((s) => s.percent > 0).map((s) => ({ userId: s.id, percent: s.percent })), ...otherLines.filter((o) => o.name.trim() && o.percent > 0).map((o) => ({ name: o.name.trim(), percent: o.percent }))];
   const totalPercent = round2(chosen.reduce((s, l) => s + l.percent, 0));
@@ -83,7 +91,7 @@ export default function CommissionsPage() {
     if (!accountId) return toast.error('Choose the account the commission is paid from.');
     setSaving(true);
     try {
-      const r = await client.post('/commissions', { type, key, paymentAccountId: accountId, note, lines: chosen });
+      const r = await client.post('/commissions', { kind, type, key, paymentAccountId: accountId, note, lines: chosen });
       toast.success(`${formatCurrency(r.data.data.total)} commission paid to ${chosen.length} ${chosen.length === 1 ? 'person' : 'people'}.`);
       setNote('');
       loadPreview();
@@ -113,7 +121,34 @@ export default function CommissionsPage() {
 
   return (
     <div>
-      <PageHeader title="Commissions" subtitle="Give staff and branch admins a percentage of the month's or year's profit. Paid before the partners share the profit." />
+      <PageHeader
+        title="Commissions"
+        subtitle={
+          overview
+            ? 'All branches together. Open a branch to pay commission.'
+            : "A percentage of the month's or year's profit, paid before the partners share the profit."
+        }
+      />
+
+      <div className="mb-4 flex gap-1 border-b border-slate-200">
+        {[
+          ['staff', 'Staff commission', 'Cashiers and managers · paid by the branch admin'],
+          ['admin', 'Admin commission', 'Branch admins · paid by the Super Admin'],
+        ].map(([k, label, hint]) => {
+          const active = (k === 'admin') === (kind === 'ADMIN');
+          return (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setParams({ kind: k, type, key })}
+              className={`-mb-px border-b-2 px-4 py-2 text-left ${active ? 'border-brand-600 text-brand-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+            >
+              <span className="block text-sm font-semibold">{label}</span>
+              <span className="block text-[11px] text-slate-400">{hint}</span>
+            </button>
+          );
+        })}
+      </div>
 
       <div className="mb-5 flex flex-wrap items-end gap-4">
         <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
@@ -124,7 +159,7 @@ export default function CommissionsPage() {
             <button
               key={t}
               type="button"
-              onClick={() => setParams({ type: t, key: DEFAULT_KEY[t] })}
+              onClick={() => go({ type: t, key: DEFAULT_KEY[t] })}
               className={`rounded-md px-4 py-1.5 text-sm font-semibold transition ${type === t ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
             >
               {label}
@@ -133,11 +168,11 @@ export default function CommissionsPage() {
         </div>
         {type === 'month' ? (
           <div className="w-44">
-          <Input type="month" value={key} onChange={(e) => e.target.value && setParams({ type, key: e.target.value })} />
+          <Input type="month" value={key} onChange={(e) => e.target.value && go({ key: e.target.value })} />
         </div>
         ) : (
           <div className="w-28">
-          <Input type="number" min="2000" max="2100" value={key} onChange={(e) => e.target.value.length === 4 && setParams({ type, key: e.target.value })} />
+          <Input type="number" min="2000" max="2100" value={key} onChange={(e) => e.target.value.length === 4 && go({ key: e.target.value })} />
         </div>
         )}
         {preview && (
@@ -220,7 +255,7 @@ export default function CommissionsPage() {
                 </tr>
               </tfoot>
             </table>
-            {isAdmin && (
+            {isAdmin && kind === 'STAFF' && (
               <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                 <Button size="sm" variant="secondary" onClick={() => setOthers((list) => [...list, { name: '', percent: '' }])}>
                   <Plus className="h-3.5 w-3.5" /> Add someone else
@@ -248,7 +283,9 @@ export default function CommissionsPage() {
                 <BadgePercent className="h-4 w-4" /> Pay {formatCurrency(amountOf(totalPercent))} commission
               </Button>
             ) : (
-              <p className="text-xs text-slate-500">Only an admin can pay commission.</p>
+              <p className="text-xs text-slate-500">
+                {overview ? 'Open a branch to pay commission.' : kind === 'ADMIN' ? 'Only the Super Admin pays admin commission.' : 'Only an admin can pay commission.'}
+              </p>
             )}
           </div>
         </div>
@@ -260,6 +297,8 @@ export default function CommissionsPage() {
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               <th className="px-4 py-2.5">Number</th>
+              {overview && <th className="px-4 py-2.5">Branch</th>}
+              <th className="px-4 py-2.5">Kind</th>
               <th className="px-4 py-2.5">Period</th>
               <th className="px-4 py-2.5">People</th>
               <th className="px-4 py-2.5 text-right">Total</th>
@@ -271,13 +310,13 @@ export default function CommissionsPage() {
           <tbody>
             {history === null ? (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={9} className="px-4 py-6 text-center text-slate-400">
                   Loading…
                 </td>
               </tr>
             ) : history.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={9} className="px-4 py-6 text-center text-slate-400">
                   No commission paid yet.
                 </td>
               </tr>
@@ -285,6 +324,8 @@ export default function CommissionsPage() {
               history.map((c) => (
                 <tr key={c.id} className="border-b border-slate-100 last:border-0">
                   <td className="px-4 py-2.5 font-semibold text-slate-800">{c.commissionNumber}</td>
+                  {overview && <td className="px-4 py-2.5 text-slate-500">{branchName(c.branch)}</td>}
+                  <td className="px-4 py-2.5 text-slate-600">{c.kind === 'ADMIN' ? 'Admin' : 'Staff'}</td>
                   <td className="px-4 py-2.5">
                     {periodLabel(c.periodType, c.periodKey)} <span className="text-xs text-slate-400">{c.periodType === 'year' ? 'yearly' : 'monthly'}</span>
                   </td>
@@ -299,7 +340,7 @@ export default function CommissionsPage() {
                       <Link to={`/commissions/${c.id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">
                         <FileText className="h-3.5 w-3.5" /> View
                       </Link>
-                      {isAdmin && c.status === 'ACTIVE' && (
+                      {!overview && c.status === 'ACTIVE' && (c.kind === 'ADMIN' ? user?.isSuperAdmin : user?.role === 'admin') && (
                         <Button size="sm" variant="secondary" onClick={() => setCancelTarget(c)}>
                           <XCircle className="h-3.5 w-3.5 text-brand-600" /> Cancel
                         </Button>

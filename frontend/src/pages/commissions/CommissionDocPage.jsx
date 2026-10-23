@@ -43,7 +43,7 @@ export default function CommissionDocPage() {
       </div>
 
       <div id="print-area" className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
-        <DocHeader title={`Commission ${period}`} meta={<span className="font-semibold">{c.commissionNumber} · {formatDate(c.createdAt)}</span>} />
+        <DocHeader title={`${c.kind === 'ADMIN' ? 'Admin' : 'Staff'} Commission ${period}`} meta={<span className="font-semibold">{c.commissionNumber} · {formatDate(c.createdAt)}</span>} />
         {c.status === 'CANCELLED' && (
           <p className="mt-3 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-xs font-semibold text-brand-800">
             CANCELLED {formatDateTime(c.cancelledAt)} by {c.cancelledByName}

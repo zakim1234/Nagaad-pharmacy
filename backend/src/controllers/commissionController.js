@@ -9,6 +9,8 @@ function toDTO(c) {
   return {
     id: c._id,
     commissionNumber: c.commissionNumber,
+    branch: c.branch || null,
+    kind: c.kind || 'STAFF',
     periodType: c.periodType,
     periodKey: c.periodKey,
     baseProfit: fromCents(c.baseProfitCents),
@@ -35,7 +37,7 @@ export const commissionPreview = asyncHandler(async (req, res) => {
       type: r.type,
       key: r.key,
       baseProfit: fromCents(r.baseProfitCents),
-      staff: r.staff.map((u) => ({ id: u._id, name: u.name, username: u.username, role: u.role })),
+      staff: r.staff.map((u) => ({ id: u._id, name: u.name, username: u.username, role: u.role, isSuperAdmin: !!u.isSuperAdmin })),
       earlier: r.earlier.map(toDTO),
     },
   });
@@ -43,7 +45,7 @@ export const commissionPreview = asyncHandler(async (req, res) => {
 
 // GET /api/commissions -- every commission payment, newest first.
 export const listCommissions = asyncHandler(async (req, res) => {
-  const filter = req.query.type ? { periodType: req.query.type } : {};
+  const filter = { ...(req.query.type ? { periodType: req.query.type } : {}), ...(req.query.kind ? { kind: req.query.kind } : {}) };
   const docs = await CommissionPayment.find(filter).sort({ periodKey: -1, createdAt: -1 });
   res.json({ success: true, data: docs.map(toDTO) });
 });

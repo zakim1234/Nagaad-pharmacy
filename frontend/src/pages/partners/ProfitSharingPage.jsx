@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, PieChart, FileText, XCircle } from 'lucide-react';
-import client from '../../api/client.js';
+import client, { isAllBranchesView } from '../../api/client.js';
+import { useBranchNames } from '../../hooks/useBranchNames.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate } from '../../utils/format.js';
@@ -43,6 +44,10 @@ export default function ProfitSharingPage() {
   const { user } = useAuth();
   const toast = useToast();
   const isAdmin = user?.role === 'admin';
+  // From the all-branches view the Super Admin shares the whole company's
+  // profit (every branch) between all partners.
+  const overview = isAllBranchesView(user);
+  const branchName = useBranchNames(overview);
   const [year, setYear] = useState(thisYear);
   const [preview, setPreview] = useState(null);
   const [percents, setPercents] = useState({});
@@ -134,7 +139,14 @@ export default function ProfitSharingPage() {
       <Link to="/partners" className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
         <ArrowLeft className="h-4 w-4" /> Back to Partners
       </Link>
-      <PageHeader title="Share Year Profit" subtitle="At year end, each partner gets their percentage of the year's net profit." />
+      <PageHeader
+        title="Share Year Profit"
+        subtitle={
+          overview
+            ? 'Company-wide: the profit of all branches together, shared between all partners.'
+            : "At year end, each partner gets their percentage of the year's net profit."
+        }
+      />
 
       <div className="mb-5 flex flex-wrap items-end gap-4">
         <FormField label="Year">
@@ -243,6 +255,7 @@ export default function ProfitSharingPage() {
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               <th className="px-4 py-2.5">Number</th>
+              {overview && <th className="px-4 py-2.5">Branch</th>}
               <th className="px-4 py-2.5">Year</th>
               <th className="px-4 py-2.5 text-right">Profit</th>
               <th className="px-4 py-2.5">How</th>
@@ -254,13 +267,13 @@ export default function ProfitSharingPage() {
           <tbody>
             {history === null ? (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={8} className="px-4 py-6 text-center text-slate-400">
                   Loading…
                 </td>
               </tr>
             ) : history.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={8} className="px-4 py-6 text-center text-slate-400">
                   No profit shared yet.
                 </td>
               </tr>
@@ -268,6 +281,7 @@ export default function ProfitSharingPage() {
               history.map((d) => (
                 <tr key={d.id} className="border-b border-slate-100 last:border-0">
                   <td className="px-4 py-2.5 font-semibold text-slate-800">{d.distributionNumber}</td>
+                  {overview && <td className="px-4 py-2.5 text-slate-500">{branchName(d.branch)}</td>}
                   <td className="px-4 py-2.5">{d.year}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums">{formatCurrency(d.netProfit)}</td>
                   <td className="px-4 py-2.5 text-slate-600">{d.mode === 'PAYOUT' ? `Paid from ${d.accountName}` : 'Added to capital'}</td>

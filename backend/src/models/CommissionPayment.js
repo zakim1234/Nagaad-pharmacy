@@ -21,6 +21,9 @@ const lineSchema = new mongoose.Schema(
 const schema = new mongoose.Schema(
   {
     commissionNumber: { type: String, required: true }, // CM-2026-0001
+    // STAFF: cashiers/managers (and non-users), paid by the branch admin.
+    // ADMIN: branch admins, paid only by the Super Admin.
+    kind: { type: String, enum: ['STAFF', 'ADMIN'], default: 'STAFF' },
     periodType: { type: String, enum: ['month', 'year'], required: true },
     periodKey: { type: String, required: true }, // "2026-10" or "2026"
     baseProfitCents: { type: Number, required: true }, // profit before commissions when paid

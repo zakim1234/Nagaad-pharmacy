@@ -7,6 +7,7 @@ import { computePeriod } from './profitLossService.js';
 import { postImmediateTransaction } from './accountService.js';
 import { ApiError } from '../utils/ApiError.js';
 import { runInTransaction } from '../utils/transaction.js';
+import { currentBranch } from './branchContext.js';
 
 // Year-end profit sharing: the year's net profit (the same accrual figure as
 // Profit & Loss and the Balance Sheet) split between the partners by
@@ -43,7 +44,7 @@ export async function previewDistribution({ year: rawYear }) {
   const [netProfitCents, partners, existing] = await Promise.all([
     yearNetProfitCents(year),
     Partner.find({ isActive: true }).sort({ createdAt: 1 }),
-    ProfitDistribution.findOne({ year, status: 'ACTIVE' }),
+    ProfitDistribution.findOne({ year, status: 'ACTIVE', ...(currentBranch() ? { branch: { $in: [currentBranch(), null] } } : {}) }).setOptions({ skipBranch: true }),
   ]);
   const totalEquity = partners.reduce((s, p) => s + Math.max(0, p.currentEquityCents), 0);
   const raw = partners.map((p) => (totalEquity > 0 ? (Math.max(0, p.currentEquityCents) / totalEquity) * 100 : partners.length ? 100 / partners.length : 0));
@@ -76,7 +77,10 @@ export async function createDistribution({ year: rawYear, mode, paymentAccountId
   if (Number.isNaN(when.getTime())) throw new ApiError(400, 'Enter a valid date.');
 
   return runInTransaction(async (session) => {
-    if (await ProfitDistribution.exists({ year, status: 'ACTIVE' }).session(session)) {
+    // A year is shared once: by a branch, or company-wide from the overview
+    // (which also sees every branch's own sharing).
+    const companyWide = await ProfitDistribution.exists({ year, status: 'ACTIVE', branch: null }).setOptions({ skipBranch: true }).session(session);
+    if (companyWide || (await ProfitDistribution.exists({ year, status: 'ACTIVE' }).session(session))) {
       throw new ApiError(409, `The ${year} profit has already been shared. Cancel that one first to share it again.`);
     }
     let account = null;

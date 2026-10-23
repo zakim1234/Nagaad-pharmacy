@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Pencil, ArrowDownCircle, ArrowUpCircle, History, PieChart } from 'lucide-react';
-import client from '../../api/client.js';
+import client, { isAllBranchesView } from '../../api/client.js';
+import { useBranchNames } from '../../hooks/useBranchNames.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDateTime } from '../../utils/format.js';
@@ -221,7 +222,11 @@ function HistoryModal({ partner, onClose }) {
 export default function PartnersPage() {
   const { user } = useAuth();
   const toast = useToast();
-  const canManage = user?.role === 'admin' || user?.role === 'manager';
+  // All-branches view: every branch's partners together, to look at only.
+  const overview = isAllBranchesView(user);
+  const branchName = useBranchNames(overview);
+  const canManage = !overview && (user?.role === 'admin' || user?.role === 'manager');
+  const showActions = canManage || overview;
   const [data, setData] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editPartner, setEditPartner] = useState(null);
@@ -243,7 +248,7 @@ export default function PartnersPage() {
     <div>
       <PageHeader
         title="Partners / Investors"
-        subtitle="Each partner's capital contributions and withdrawals, and their current equity in the business."
+        subtitle={overview ? 'All branches together. Open a branch to add a partner or move capital.' : "Each partner's capital contributions and withdrawals, and their current equity in the business."}
         actions={
           <>
             <Link
@@ -270,41 +275,49 @@ export default function PartnersPage() {
         <THead>
           <tr>
             <Th>Name</Th>
+            {overview && <Th>Branch</Th>}
             <Th>Total Contributed</Th>
             <Th>Total Withdrawn</Th>
             <Th>Current Equity</Th>
             <Th>Profit Received</Th>
-            {canManage && <Th />}
+            {showActions && <Th />}
           </tr>
         </THead>
         <TBody>
           {data === null ? (
-            <TableLoading colSpan={canManage ? 6 : 5} />
+            <TableLoading colSpan={7} />
           ) : data.partners.length === 0 ? (
-            <TableEmpty colSpan={canManage ? 6 : 5} message="No partners yet." />
+            <TableEmpty colSpan={7} message="No partners yet." />
           ) : (
             data.partners.map((p) => (
               <tr key={p.id}>
                 <Td className="font-medium text-slate-900">{p.name}</Td>
+                {overview && <Td className="text-slate-500">{branchName(p.branch)}</Td>}
                 <Td>{formatCurrency(p.totalContributed)}</Td>
                 <Td>{formatCurrency(p.totalWithdrawn)}</Td>
                 <Td className="font-semibold">{formatCurrency(p.currentEquity)}</Td>
                 <Td>{formatCurrency(p.totalProfit || 0)}</Td>
-                {canManage && (
+                {showActions && (
                   <Td>
                     <div className="flex justify-end gap-1.5">
-                      <Button size="sm" variant="secondary" onClick={() => setEditPartner(p)}>
-                        <Pencil className="h-3.5 w-3.5" /> Edit
-                      </Button>
+                      {canManage && (
+                        <Button size="sm" variant="secondary" onClick={() => setEditPartner(p)}>
+                          <Pencil className="h-3.5 w-3.5" /> Edit
+                        </Button>
+                      )}
                       <Button size="sm" variant="secondary" onClick={() => setHistoryPartner(p)} title="History">
-                        <History className="h-3.5 w-3.5" />
+                        <History className="h-3.5 w-3.5" /> History
                       </Button>
+                      {canManage && (
+                      <>
                       <Button size="sm" variant="secondary" onClick={() => setCapitalModal({ mode: 'contribute', partner: p })}>
                         <ArrowDownCircle className="h-3.5 w-3.5 text-emerald-600" /> Contribute
                       </Button>
                       <Button size="sm" variant="secondary" onClick={() => setCapitalModal({ mode: 'withdraw', partner: p })}>
                         <ArrowUpCircle className="h-3.5 w-3.5 text-rose-600" /> Withdraw
                       </Button>
+                      </>
+                      )}
                     </div>
                   </Td>
                 )}

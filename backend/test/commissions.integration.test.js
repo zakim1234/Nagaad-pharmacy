@@ -14,7 +14,7 @@ test('COMMISSIONS -- monthly/yearly % of profit per person, paid as expense befo
   await mongoose.connect(`mongodb://127.0.0.1:27028/commissions_${Date.now()}?replicaSet=stocktest`);
   process.env.JWT_SECRET = 'isolated-commissions-secret';
   await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
-  const admin = await User.create({ username: 'admin', name: 'Admin', passwordHash: 'unused', role: 'admin' });
+  const admin = await User.create({ username: 'admin', name: 'Admin', passwordHash: 'unused', role: 'admin', isSuperAdmin: true });
   const cashier = await User.create({ username: 'cashier', name: 'Faadumo', passwordHash: 'unused', role: 'cashier', permissions: ['pos'] });
   const branchAdmin = await User.create({ username: 'badmin', name: 'Hodan Admin', passwordHash: 'unused', role: 'admin' });
   const server = app.listen(0, '127.0.0.1');
@@ -45,22 +45,33 @@ test('COMMISSIONS -- monthly/yearly % of profit per person, paid as expense befo
 
     // Cashiers cannot pay commission.
     assert.equal((await request('/commissions', { type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: cashier.id, percent: 10 }] }, 'POST', cashier)).status, 403);
-    assert.equal((await request('/commissions', { type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: cashier.id, percent: 60 }, { userId: branchAdmin.id, percent: 50 }] })).status, 400, 'over 100%');
+    assert.equal((await request('/commissions', { type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: cashier.id, percent: 60 }, { name: 'Guard Cabdi', percent: 50 }] })).status, 400, 'over 100%');
+
+    // Staff commission: paid by the branch admin -- never to an admin.
+    const asBranchAdmin = (path, body) => request(path, body, 'POST', branchAdmin);
+    assert.equal((await asBranchAdmin('/commissions', { type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: branchAdmin.id, percent: 20 }] })).status, 403);
+    assert.equal((await asBranchAdmin('/commissions', { kind: 'ADMIN', type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: branchAdmin.id, percent: 20 }] })).status, 403, 'admin commission is for the Super Admin');
 
     const bankBefore = (await Account.findById(bank.id)).currentBalanceCents;
-    const paid = await request('/commissions', {
+    const paid = await asBranchAdmin('/commissions', {
       type: 'month',
       key: month,
       paymentAccountId: bank.id,
       lines: [
         { userId: cashier.id, percent: 10 },
-        { userId: branchAdmin.id, percent: 20 },
         { name: 'Guard Cabdi', percent: 5 },
       ],
     });
     assert.equal(paid.status, 201, JSON.stringify(paid));
-    assert.deepEqual(paid.data.lines.map((l) => [l.name, l.percent, l.amount]), [['Faadumo', 10, 100], ['Hodan Admin', 20, 200], ['Guard Cabdi', 5, 50]]);
-    assert.equal(paid.data.total, 350);
+    assert.equal(paid.data.kind, 'STAFF');
+    assert.deepEqual(paid.data.lines.map((l) => [l.name, l.percent, l.amount]), [['Faadumo', 10, 100], ['Guard Cabdi', 5, 50]]);
+
+    // Admin commission: only the Super Admin, only to admins.
+    assert.equal((await request('/commissions', { kind: 'ADMIN', type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: cashier.id, percent: 5 }] })).status, 400);
+    const adminPaid = await request('/commissions', { kind: 'ADMIN', type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: branchAdmin.id, percent: 20 }] });
+    assert.equal(adminPaid.status, 201, JSON.stringify(adminPaid));
+    assert.equal(adminPaid.data.kind, 'ADMIN');
+    assert.equal(adminPaid.data.total, 200);
     assert.equal((await Account.findById(bank.id)).currentBalanceCents, bankBefore - 35000);
     assert.equal(await Expense.countDocuments({ category: 'Commission', status: 'POSTED' }), 3);
 
@@ -68,20 +79,21 @@ test('COMMISSIONS -- monthly/yearly % of profit per person, paid as expense befo
     assert.equal((await request(`/commissions/preview?type=month&key=${month}`, null, 'GET')).data.baseProfit, 1000);
     assert.equal((await request('/commissions', { type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: cashier.id, percent: 5 }] })).status, 409);
     // A yearly commission is separate from the monthly one.
-    const yearly = await request('/commissions', { type: 'year', key: year, paymentAccountId: bank.id, lines: [{ userId: branchAdmin.id, percent: 10 }] });
+    const yearly = await request('/commissions', { kind: 'ADMIN', type: 'year', key: year, paymentAccountId: bank.id, lines: [{ userId: branchAdmin.id, percent: 10 }] });
     assert.equal(yearly.status, 201, JSON.stringify(yearly));
     assert.equal(yearly.data.lines[0].amount, 100, '10% of the year profit before commission');
 
-    // Partners share what is left after commission: 1000 - 350 - 100.
+    // Partners share what is left after commission: 1000 - 150 - 200 - 100.
     const share = await request(`/partners/profit-sharing/preview?year=${year}`, null, 'GET');
     assert.equal(share.data.netProfit, 550);
 
-    // Cancel the monthly one: the money comes back, partner profit goes back up.
+    // Cancel the staff one: the money comes back, partner profit goes back up.
     const cancelled = await request(`/commissions/${paid.data.id}/cancel`, { reason: 'wrong %' });
     assert.equal(cancelled.status, 200, JSON.stringify(cancelled));
-    assert.equal((await Account.findById(bank.id)).currentBalanceCents, bankBefore - 10000);
-    assert.equal((await request(`/partners/profit-sharing/preview?year=${year}`, null, 'GET')).data.netProfit, 900);
-    assert.equal((await request('/commissions', null, 'GET')).data.length, 2);
+    assert.equal((await Account.findById(bank.id)).currentBalanceCents, bankBefore - 30000);
+    assert.equal((await request(`/partners/profit-sharing/preview?year=${year}`, null, 'GET')).data.netProfit, 700);
+    assert.equal((await request('/commissions', null, 'GET')).data.length, 3);
+    assert.equal((await request('/commissions?kind=ADMIN', null, 'GET')).data.length, 2);
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await mongoose.connection.dropDatabase();
