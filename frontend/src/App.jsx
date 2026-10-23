@@ -50,6 +50,8 @@ import DebtorsStatementPage from './pages/customers/DebtorsStatementPage.jsx';
 import BranchesPage from './pages/branches/BranchesPage.jsx';
 import ReturnReceiptPage from './pages/receipt/ReturnReceiptPage.jsx';
 import UsersPage from './pages/users/UsersPage.jsx';
+import CommissionsPage from './pages/commissions/CommissionsPage.jsx';
+import CommissionDocPage from './pages/commissions/CommissionDocPage.jsx';
 import WalletStatementPage from './pages/customers/WalletStatementPage.jsx';
 import CustomerItemsPage from './pages/customers/CustomerItemsPage.jsx';
 import NotFound from './pages/NotFound.jsx';
@@ -94,6 +96,8 @@ export default function App() {
               <Route path="/super-dashboard" element={<RequirePermission superAdmin><SuperDashboardPage /></RequirePermission>} />
               <Route path="/all-branches" element={<RequirePermission superAdmin><AllBranchesPage /></RequirePermission>} />
               <Route path="/branches" element={<RequirePermission superAdmin><BranchesPage /></RequirePermission>} />
+              <Route path="/commissions" element={<RequirePermission roles={['admin', 'manager']}><CommissionsPage /></RequirePermission>} />
+              <Route path="/commissions/:id" element={<RequirePermission roles={['admin', 'manager']}><CommissionDocPage /></RequirePermission>} />
               <Route path="/salaries" element={<RequirePermission roles={['admin', 'manager']}><SalariesPage /></RequirePermission>} />
               <Route path="/salaries/statement" element={<RequirePermission roles={['admin', 'manager']}><SalaryStatementPage /></RequirePermission>} />
               <Route path="/salaries/:id" element={<RequirePermission roles={['admin', 'manager']}><SalariesPage /></RequirePermission>} />

@@ -82,9 +82,15 @@ export default function CustomerItemsPage() {
             </button>
           ))}
         </div>
-        {type === 'year' && <Input type="number" className="w-28" min="2000" max="2100" value={key} onChange={(e) => e.target.value.length === 4 && choose('year', e.target.value)} />}
-        {type === 'month' && <Input type="month" className="w-44" value={key} onChange={(e) => e.target.value && choose('month', e.target.value)} />}
-        {type === 'day' && <Input type="date" className="w-44" value={key} onChange={(e) => e.target.value && choose('day', e.target.value)} />}
+        {type === 'year' && <div className="w-28">
+          <Input type="number" min="2000" max="2100" value={key} onChange={(e) => e.target.value.length === 4 && choose('year', e.target.value)} />
+        </div>}
+        {type === 'month' && <div className="w-44">
+          <Input type="month" value={key} onChange={(e) => e.target.value && choose('month', e.target.value)} />
+        </div>}
+        {type === 'day' && <div className="w-44">
+          <Input type="date" value={key} onChange={(e) => e.target.value && choose('day', e.target.value)} />
+        </div>}
       </div>
 
       {!data ? (

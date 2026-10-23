@@ -8,6 +8,7 @@ import {
   Users,
   Building2,
   BarChart3,
+  BadgePercent,
   PackageCheck,
   Wallet,
   FileText,
@@ -63,6 +64,7 @@ const navItems = [
   { to: '/supplier-invoices', label: 'Supplier Invoices', icon: Receipt, module: 'supplierInvoices' },
   { to: '/expenses', label: 'Expenses', icon: HandCoins, module: 'expenses' },
   { to: '/salaries', label: 'Salaries', icon: Banknote, module: null, roles: ['admin', 'manager'] },
+  { to: '/commissions', label: 'Commissions', icon: BadgePercent, module: null, roles: ['admin', 'manager'] },
   { to: '/reports', label: 'Reports', icon: BarChart3, module: 'reports' },
   { to: '/items-sold', label: 'Items Sold', icon: PackageCheck, module: 'reports' },
 ];

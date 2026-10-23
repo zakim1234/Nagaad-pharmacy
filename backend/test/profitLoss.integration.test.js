@@ -64,7 +64,7 @@ test('PROFIT & LOSS -- accrual vs cash basis, expense categories, month columns,
 
     // Expense categories: a default one, and a brand-new one added by an admin.
     const cats = await request('/expenses/categories', null, 'GET');
-    assert.deepEqual(cats.data.slice(0, 3), ['Rent', 'Salaries', 'Labor']);
+    assert.deepEqual(cats.data.slice(0, 3), ['Rent', 'Salaries', 'Commission']);
     const created = await request('/expenses/categories', { name: 'Zako Expense' });
     assert.equal(created.status, 201, JSON.stringify(created));
     assert.equal((await request('/expenses/categories', { name: 'zako expense' })).status, 409, 'duplicates are case-insensitive');

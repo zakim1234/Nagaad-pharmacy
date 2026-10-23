@@ -253,7 +253,7 @@ test('EXPENSE CATEGORIES -- Water and Electric appear on new and already-seeded 
   await mongoose.connect(`mongodb://127.0.0.1:27028/expense_cats_${Date.now()}?replicaSet=stocktest`);
   try {
     await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
-    const expected = ['Rent', 'Salaries', 'Labor', 'Transport', 'Fuel', 'Office Supplies', 'Security & Hygiene', 'Refreshments', 'Water', 'Electric', 'Other'];
+    const expected = ['Rent', 'Salaries', 'Commission', 'Labor', 'Transport', 'Fuel', 'Office Supplies', 'Security & Hygiene', 'Refreshments', 'Water', 'Electric', 'Other'];
 
     // Brand-new database.
     assert.deepEqual(await listExpenseCategories(), expected);
@@ -264,7 +264,7 @@ test('EXPENSE CATEGORIES -- Water and Electric appear on new and already-seeded 
     await ExpenseCategory.insertMany(old.map((name, i) => ({ name, sortOrder: i })));
     await ExpenseCategory.create({ name: 'Zakat', sortOrder: 9 });
     assert.deepEqual(await listExpenseCategories(), [...expected, 'Zakat']);
-    assert.equal(await ExpenseCategory.countDocuments(), 12, 'nothing duplicated');
+    assert.equal(await ExpenseCategory.countDocuments(), 13, 'nothing duplicated');
     assert.deepEqual(await listExpenseCategories(), [...expected, 'Zakat'], 'stable on the next read');
   } finally {
     await mongoose.connection.dropDatabase();

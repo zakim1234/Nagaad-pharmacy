@@ -7,6 +7,7 @@ import { currentBranch } from './branchContext.js';
 export const DEFAULT_EXPENSE_CATEGORIES = [
   'Rent',
   'Salaries',
+  'Commission',
   'Labor',
   'Transport',
   'Fuel',
