@@ -269,12 +269,14 @@ export default function PartnersPage() {
         subtitle={overview ? `Showing: All branches. Open a branch to add a partner or move capital.` : "Each partner's capital contributions and withdrawals, and their current equity in the business."}
         actions={
           <>
+            {overview && (
             <Link
               to="/partners/profit-sharing"
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               <PieChart className="h-4 w-4" /> Share Year Profit
             </Link>
+            )}
             {canManage && (
               <Button onClick={() => setAddOpen(true)}>
                 <Plus className="h-4 w-4" /> Add Partner

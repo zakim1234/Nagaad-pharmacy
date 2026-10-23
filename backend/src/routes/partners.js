@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth, requireRole, requirePermission } from '../middleware/auth.js';
+import { requireAuth, requireRole, requirePermission, requireSuperAdmin } from '../middleware/auth.js';
 import {
   listPartners,
   createPartner,
@@ -22,8 +22,9 @@ router.get('/', listPartners);
 router.get('/profit-sharing', listProfitDistributions);
 router.get('/profit-sharing/preview', profitSharingPreview);
 router.get('/profit-sharing/:id', getProfitDistribution);
-router.post('/profit-sharing', requireRole('admin'), shareProfit);
-router.post('/profit-sharing/:id/cancel', requireRole('admin'), cancelProfitShare);
+// Year-end profit sharing is the Super Admin's only (company-wide, from the overview).
+router.post('/profit-sharing', requireSuperAdmin, shareProfit);
+router.post('/profit-sharing/:id/cancel', requireSuperAdmin, cancelProfitShare);
 router.post('/', requireRole('admin', 'manager'), createPartner);
 router.put('/:id', requireRole('admin', 'manager'), updatePartner);
 router.get('/:id/transactions', listPartnerTransactions);

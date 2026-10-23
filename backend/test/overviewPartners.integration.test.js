@@ -83,9 +83,11 @@ test('OVERVIEW -- partners, zakat, commissions read-only for all branches; year 
     const sheetAfter = (await all('/reports/balance-sheet')).data;
     assert.equal(sheetAfter.difference, sheetBefore.difference, 'the company balance sheet still balances');
 
-    // A branch cannot share the same year again.
+    // Only the Super Admin shares profit; a branch admin is refused.
     const again = await as(hodanAdmin)('/partners/profit-sharing', { year, mode: 'CAPITAL', shares: [{ partnerId: byName.Cali.id, percent: 100 }] });
-    assert.equal(again.status, 409, JSON.stringify(again));
+    assert.equal(again.status, 403, JSON.stringify(again));
+    // ...and the Super Admin cannot share the same year twice.
+    assert.equal((await all('/partners/profit-sharing', { year, mode: 'CAPITAL', shares: [{ partnerId: byName.Cali.id, percent: 100 }] })).status, 409);
 
     // Cancel it from the overview.
     const cancelled = await all(`/partners/profit-sharing/${shared.data.id}/cancel`, { reason: 'test' });

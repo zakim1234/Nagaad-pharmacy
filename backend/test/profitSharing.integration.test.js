@@ -14,7 +14,7 @@ test('PROFIT SHARING -- the year profit split 50/30/20, paid out or added to cap
   await mongoose.connect(`mongodb://127.0.0.1:27028/profit_sharing_${Date.now()}?replicaSet=stocktest`);
   process.env.JWT_SECRET = 'isolated-profit-sharing-secret';
   await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
-  const admin = await User.create({ username: 'admin', name: 'Admin', passwordHash: 'unused', role: 'admin' });
+  const admin = await User.create({ username: 'admin', name: 'Admin', passwordHash: 'unused', role: 'admin', isSuperAdmin: true });
   const server = app.listen(0, '127.0.0.1');
   await new Promise((resolve) => server.once('listening', resolve));
   const token = jwt.sign({ sub: String(admin._id) }, process.env.JWT_SECRET);
