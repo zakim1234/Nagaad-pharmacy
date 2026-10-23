@@ -32,6 +32,13 @@ export async function requireAuth(req, res, next) {
       if (user.isSuperAdmin) {
         const wanted = String(req.headers['x-branch-id'] || '');
         if (wanted === 'all' && (isAllBranchesRead(req) || isCompanyWideWrite(req))) {
+          // Reading one branch from the overview (?branch=<id>, the sidebar's
+          // branch selector), still read-only.
+          const only = String(req.query?.branch || '');
+          if (req.method === 'GET' && branches.includes(only)) {
+            req.branchId = only;
+            return runWithBranch(only, () => next());
+          }
           // Reports for the whole company: nothing filtered, read-only.
           req.branchId = 'all';
           return runWithBranch(null, () => next());

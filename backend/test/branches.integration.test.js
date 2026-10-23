@@ -153,6 +153,7 @@ test('BRANCHES -- Super Admin reports in the all-branches view add every branch 
     const add = (a, b) => Math.round((a + b) * 100) / 100;
     for (const part of ['assets', 'liabilities', 'equity']) {
       for (const [key, value] of Object.entries(sheet.data[part])) {
+        if (typeof value !== 'number') continue; // e.g. the list of partner names
         assert.equal(value, add(hodanSheet.data[part][key], bakaalSheet.data[part][key]), `${part}.${key}`);
       }
     }

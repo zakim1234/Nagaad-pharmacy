@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Pencil, ArrowDownCircle, ArrowUpCircle, History, PieChart } from 'lucide-react';
-import client, { isAllBranchesView } from '../../api/client.js';
+import client, { isAllBranchesView, overviewScopeLabel, getViewBranch } from '../../api/client.js';
 import { useBranchNames } from '../../hooks/useBranchNames.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -227,6 +227,24 @@ export default function PartnersPage() {
   const branchName = useBranchNames(overview);
   const canManage = !overview && (user?.role === 'admin' || user?.role === 'manager');
   const showActions = canManage || overview;
+  // All branches together: partners grouped by branch, each branch with a
+  // subtotal of what its partners put in.
+  const grouped = overview && !getViewBranch();
+  const buildPartnerRows = () => {
+    const list = data?.partners || [];
+    if (!grouped) return list.map((p) => ({ p }));
+    const byBranch = new Map();
+    for (const p of list) {
+      const k = String(p.branch || '');
+      if (!byBranch.has(k)) byBranch.set(k, []);
+      byBranch.get(k).push(p);
+    }
+    const sum = (ps, f) => Math.round(ps.reduce((t, p) => t + (p[f] || 0), 0) * 100) / 100;
+    return [...byBranch.entries()].flatMap(([k, ps]) => [
+      ...ps.map((p) => ({ p })),
+      { sub: true, key: `sub-${k}`, label: `${branchName(k || null)} total`, contributed: sum(ps, 'totalContributed'), withdrawn: sum(ps, 'totalWithdrawn'), equity: sum(ps, 'currentEquity'), profit: sum(ps, 'totalProfit') },
+    ]);
+  };
   const [data, setData] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editPartner, setEditPartner] = useState(null);
@@ -248,7 +266,7 @@ export default function PartnersPage() {
     <div>
       <PageHeader
         title="Partners / Investors"
-        subtitle={overview ? 'All branches together. Open a branch to add a partner or move capital.' : "Each partner's capital contributions and withdrawals, and their current equity in the business."}
+        subtitle={overview ? `Showing: ${overviewScopeLabel()}. Open a branch to add a partner or move capital.` : "Each partner's capital contributions and withdrawals, and their current equity in the business."}
         actions={
           <>
             <Link
@@ -289,7 +307,18 @@ export default function PartnersPage() {
           ) : data.partners.length === 0 ? (
             <TableEmpty colSpan={7} message="No partners yet." />
           ) : (
-            data.partners.map((p) => (
+            buildPartnerRows().map((r) =>
+              r.sub ? (
+                <tr key={r.key} className="border-b-2 border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700">
+                  <Td>{r.label}</Td>
+                  <Td />
+                  <Td>{formatCurrency(r.contributed)}</Td>
+                  <Td>{formatCurrency(r.withdrawn)}</Td>
+                  <Td>{formatCurrency(r.equity)}</Td>
+                  <Td>{formatCurrency(r.profit)}</Td>
+                  <Td />
+                </tr>
+              ) : ((p) => (
               <tr key={p.id}>
                 <Td className="font-medium text-slate-900">{p.name}</Td>
                 {overview && <Td className="text-slate-500">{branchName(p.branch)}</Td>}
@@ -322,7 +351,7 @@ export default function PartnersPage() {
                   </Td>
                 )}
               </tr>
-            ))
+            ))(r.p))
           )}
         </TBody>
       </Table>

@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     localStorage.removeItem('pos_token');
     localStorage.removeItem('pos_branch'); // the Super Admin starts in the all-branches overview
+    localStorage.removeItem('pos_view_branch');
     setUser(null);
   }, []);
 

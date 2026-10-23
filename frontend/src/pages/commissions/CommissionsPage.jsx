@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { BadgePercent, FileText, XCircle, Plus, Trash2 } from 'lucide-react';
-import client, { isAllBranchesView } from '../../api/client.js';
+import client, { isAllBranchesView, overviewScopeLabel } from '../../api/client.js';
 import { useBranchNames } from '../../hooks/useBranchNames.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -39,7 +39,7 @@ export default function CommissionsPage() {
   const kind = params.get('kind') === 'admin' ? 'ADMIN' : 'STAFF';
   const overview = isAllBranchesView(user);
   const branchName = useBranchNames(overview);
-  const isAdmin = !overview && (kind === 'ADMIN' ? !!user?.isSuperAdmin : user?.role === 'admin');
+  const isAdmin = !overview && !!user?.isSuperAdmin;
   const go = (next) => setParams({ kind: kind === 'ADMIN' ? 'admin' : 'staff', type, key, ...next });
   const [preview, setPreview] = useState(null);
   const [percents, setPercents] = useState({});
@@ -125,15 +125,15 @@ export default function CommissionsPage() {
         title="Commissions"
         subtitle={
           overview
-            ? 'All branches together. Open a branch to pay commission.'
+            ? `Showing: ${overviewScopeLabel()}. Open a branch to pay commission.`
             : "A percentage of the month's or year's profit, paid before the partners share the profit."
         }
       />
 
       <div className="mb-4 flex gap-1 border-b border-slate-200">
         {[
-          ['staff', 'Staff commission', 'Cashiers and managers · paid by the branch admin'],
-          ['admin', 'Admin commission', 'Branch admins · paid by the Super Admin'],
+          ['staff', 'Staff commission', 'Cashiers and managers'],
+          ['admin', 'Admin commission', 'Branch admins'],
         ].map(([k, label, hint]) => {
           const active = (k === 'admin') === (kind === 'ADMIN');
           return (
@@ -200,9 +200,19 @@ export default function CommissionsPage() {
                 </tr>
               </thead>
               <tbody>
+                {staffLines.length === 0 && others.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-500">
+                      {kind === 'ADMIN' ? 'No branch admins here yet.' : 'No cashiers or managers here yet.'} Add them on the Users page (with their branch).
+                    </td>
+                  </tr>
+                )}
                 {staffLines.map((s) => (
                   <tr key={s.id} className="border-b border-slate-100">
-                    <td className="px-4 py-2 font-semibold text-slate-800">{s.name}</td>
+                    <td className="px-4 py-2 font-semibold text-slate-800">
+                      {s.name}
+                      {overview && <span className="block text-[11px] font-normal text-slate-400">{branchName(s.branch)}</span>}
+                    </td>
                     <td className="px-4 py-2 capitalize text-slate-500">{s.role}</td>
                     <td className="px-4 py-2 text-right">
                       <Input
@@ -284,7 +294,7 @@ export default function CommissionsPage() {
               </Button>
             ) : (
               <p className="text-xs text-slate-500">
-                {overview ? 'Open a branch to pay commission.' : kind === 'ADMIN' ? 'Only the Super Admin pays admin commission.' : 'Only an admin can pay commission.'}
+                {overview ? 'Open a branch to pay commission.' : 'Only the Super Admin pays commission.'}
               </p>
             )}
           </div>
@@ -340,7 +350,7 @@ export default function CommissionsPage() {
                       <Link to={`/commissions/${c.id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">
                         <FileText className="h-3.5 w-3.5" /> View
                       </Link>
-                      {!overview && c.status === 'ACTIVE' && (c.kind === 'ADMIN' ? user?.isSuperAdmin : user?.role === 'admin') && (
+                      {!overview && c.status === 'ACTIVE' && user?.isSuperAdmin && (
                         <Button size="sm" variant="secondary" onClick={() => setCancelTarget(c)}>
                           <XCircle className="h-3.5 w-3.5 text-brand-600" /> Cancel
                         </Button>

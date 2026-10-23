@@ -47,13 +47,14 @@ test('COMMISSIONS -- monthly/yearly % of profit per person, paid as expense befo
     assert.equal((await request('/commissions', { type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: cashier.id, percent: 10 }] }, 'POST', cashier)).status, 403);
     assert.equal((await request('/commissions', { type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: cashier.id, percent: 60 }, { name: 'Guard Cabdi', percent: 50 }] })).status, 400, 'over 100%');
 
-    // Staff commission: paid by the branch admin -- never to an admin.
-    const asBranchAdmin = (path, body) => request(path, body, 'POST', branchAdmin);
-    assert.equal((await asBranchAdmin('/commissions', { type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: branchAdmin.id, percent: 20 }] })).status, 403);
-    assert.equal((await asBranchAdmin('/commissions', { kind: 'ADMIN', type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: branchAdmin.id, percent: 20 }] })).status, 403, 'admin commission is for the Super Admin');
+    // Commission is the Super Admin's only: a branch admin cannot even look.
+    assert.equal((await request(`/commissions/preview?type=month&key=${month}`, null, 'GET', branchAdmin)).status, 403);
+    assert.equal((await request('/commissions', { type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: cashier.id, percent: 10 }] }, 'POST', branchAdmin)).status, 403);
+    // Staff commission never goes to an admin.
+    assert.equal((await request('/commissions', { type: 'month', key: month, paymentAccountId: bank.id, lines: [{ userId: branchAdmin.id, percent: 20 }] })).status, 403);
 
     const bankBefore = (await Account.findById(bank.id)).currentBalanceCents;
-    const paid = await asBranchAdmin('/commissions', {
+    const paid = await request('/commissions', {
       type: 'month',
       key: month,
       paymentAccountId: bank.id,

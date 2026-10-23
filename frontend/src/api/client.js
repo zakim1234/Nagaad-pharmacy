@@ -15,6 +15,10 @@ client.interceptors.request.use((config) => {
   const branch = getSelectedBranch();
   // No branch chosen: the Super Admin's all-branches view (reports only).
   config.headers['X-Branch-Id'] = branch || 'all';
+  // In the overview, the sidebar's "Show" selector can narrow what is read
+  // to one branch (the server only honours it for the Super Admin's reads).
+  const view = !branch && (config.method || 'get').toLowerCase() === 'get' ? getViewBranch() : null;
+  if (view) config.params = { ...(config.params || {}), branch: view.id };
   return config;
 });
 
@@ -39,6 +43,29 @@ export function setSelectedBranch(id) {
   } catch {
     // storage unavailable: the server falls back to the first branch
   }
+}
+
+// The overview's "Show" selector: null = all branches together, otherwise
+// { id, name } of the one branch being looked at.
+export function getViewBranch() {
+  try {
+    const v = JSON.parse(localStorage.getItem('pos_view_branch') || 'null');
+    return v && v.id ? v : null;
+  } catch {
+    return null;
+  }
+}
+export function setViewBranch(view) {
+  try {
+    if (view?.id) localStorage.setItem('pos_view_branch', JSON.stringify({ id: String(view.id), name: view.name }));
+    else localStorage.removeItem('pos_view_branch');
+  } catch {
+    // storage unavailable: everything shows all branches
+  }
+}
+// What the overview is showing: "All branches" or the one branch's name.
+export function overviewScopeLabel() {
+  return getViewBranch()?.name || 'All branches';
 }
 
 let onUnauthorized = null;

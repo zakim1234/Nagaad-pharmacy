@@ -96,8 +96,8 @@ export default function App() {
               <Route path="/super-dashboard" element={<RequirePermission superAdmin><SuperDashboardPage /></RequirePermission>} />
               <Route path="/all-branches" element={<RequirePermission superAdmin><AllBranchesPage /></RequirePermission>} />
               <Route path="/branches" element={<RequirePermission superAdmin><BranchesPage /></RequirePermission>} />
-              <Route path="/commissions" element={<RequirePermission roles={['admin', 'manager']}><CommissionsPage /></RequirePermission>} />
-              <Route path="/commissions/:id" element={<RequirePermission roles={['admin', 'manager']}><CommissionDocPage /></RequirePermission>} />
+              <Route path="/commissions" element={<RequirePermission superAdmin><CommissionsPage /></RequirePermission>} />
+              <Route path="/commissions/:id" element={<RequirePermission superAdmin><CommissionDocPage /></RequirePermission>} />
               <Route path="/salaries" element={<RequirePermission roles={['admin', 'manager']}><SalariesPage /></RequirePermission>} />
               <Route path="/salaries/statement" element={<RequirePermission roles={['admin', 'manager']}><SalaryStatementPage /></RequirePermission>} />
               <Route path="/salaries/:id" element={<RequirePermission roles={['admin', 'manager']}><SalariesPage /></RequirePermission>} />
@@ -121,7 +121,7 @@ export default function App() {
               <Route path="/partners/profit-sharing" element={<RequirePermission module="partners"><ProfitSharingPage /></RequirePermission>} />
               <Route path="/partners/profit-sharing/:id" element={<RequirePermission module="partners"><ProfitDistributionPage /></RequirePermission>} />
               <Route path="/fixed-assets" element={<RequirePermission module="fixedAssets"><FixedAssetsPage /></RequirePermission>} />
-              <Route path="/zakat" element={<RequirePermission module="zakat"><ZakatPage /></RequirePermission>} />
+              <Route path="/zakat" element={<RequirePermission superAdmin><ZakatPage /></RequirePermission>} />
               <Route path="/reports" element={<RequirePermission module="reports"><ReportsPage /></RequirePermission>} />
               <Route path="/receipt/:id" element={<RequirePermission module="pos"><ReceiptPage /></RequirePermission>} />
               <Route path="/receipt/:id/return/:index" element={<RequirePermission module="pos"><ReturnReceiptPage /></RequirePermission>} />

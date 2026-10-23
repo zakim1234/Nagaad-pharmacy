@@ -62,6 +62,15 @@ test('OVERVIEW -- partners, zakat, commissions read-only for all branches; year 
     assert.equal(partners.status, 200, JSON.stringify(partners));
     assert.deepEqual(partners.data.partners.map((p) => p.name).sort(), ['Cali', 'Cumar']);
     assert.ok(partners.data.partners.every((p) => p.branch), 'each partner says which branch it is in');
+
+    // The overview's 'Show figures for' selector: one branch only, still read-only.
+    const onlyHodan = await all(`/partners?branch=${hodan.id}`);
+    assert.deepEqual(onlyHodan.data.partners.map((p) => p.name), ['Cali']);
+    const daysHodan = await all(`/reports/items-sold/periods?type=day&branch=${hodan.id}`);
+    const daysAll = await all('/reports/items-sold/periods?type=day');
+    assert.equal(daysHodan.data[0].sales, 800);
+    assert.equal(daysAll.data[0].sales, 1200);
+    assert.equal((await all(`/partners?branch=${hodan.id}`, { name: 'X' })).status, 400, 'writes still refused');
     assert.equal((await all('/commissions')).status, 200);
     assert.equal((await all('/zakat/preview')).status, 200);
 

@@ -86,10 +86,12 @@ export const balanceSheetExport = asyncHandler(async (req, res) => {
   ws.addRow([]);
   line('LIABILITIES', '', { bold: true });
   line('Accounts Payable', report.liabilities.payable, { indent: 1 });
+  line('Customer Deposits (Wallets)', report.liabilities.customerDeposits, { indent: 1 });
   line('Total Liabilities', report.liabilities.totalLiabilities, { bold: true, topBorder: true });
   ws.addRow([]);
   line('EQUITY', '', { bold: true });
   line("Partners' Capital", report.equity.partnersCapital, { indent: 1 });
+  for (const p of report.equity.partners || []) line(p.name, p.capital, { indent: 2 });
   line('Retained Earnings', report.equity.retainedEarnings, { indent: 1 });
   line('Net Income', report.equity.netIncome, { indent: 1 });
   line('Total Equity', report.equity.totalEquity, { bold: true, topBorder: true });

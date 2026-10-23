@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FileText } from 'lucide-react';
-import client, { isAllBranchesView } from '../../api/client.js';
+import client, { isAllBranchesView, overviewScopeLabel } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency } from '../../utils/format.js';
@@ -42,7 +42,7 @@ export default function ItemsSoldPage() {
     <div>
       <PageHeader
         title="Items Sold"
-        subtitle={`What was sold each ${noun}: open one to see every item, its quantity, cost, selling price and profit.${isAllBranchesView(user) ? ' All branches together.' : ''}`}
+        subtitle={`What was sold each ${noun}: open one to see every item, its quantity, cost, selling price and profit.${isAllBranchesView(user) ? ` Showing: ${overviewScopeLabel()}.` : ''}`}
       />
 
       <div className="mb-4 inline-flex rounded-lg border border-slate-200 bg-white p-1">

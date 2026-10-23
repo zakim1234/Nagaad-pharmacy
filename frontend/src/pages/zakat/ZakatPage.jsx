@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Calculator as CalculatorIcon, History as HistoryIcon, CheckCircle2, Pencil, Trash2, Moon, Wallet, Package, Users, Building2, Truck } from 'lucide-react';
-import client, { isAllBranchesView } from '../../api/client.js';
+import client, { isAllBranchesView, overviewScopeLabel } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
@@ -495,6 +495,7 @@ function HistoryTab() {
 }
 
 export default function ZakatPage() {
+  const overview = isAllBranchesView(useAuth().user);
   const [tab, setTab] = useState('calculator');
   const [historyKey, setHistoryKey] = useState(0);
 
@@ -505,7 +506,14 @@ export default function ZakatPage() {
 
   return (
     <div>
-      <PageHeader title="Zakat" subtitle="Calculate Zakat on the business's net zakatable wealth and split it across partners." />
+      <PageHeader
+        title="Zakat"
+        subtitle={
+          overview
+            ? `Showing: ${overviewScopeLabel()}. Open a branch to confirm its Zakat.`
+            : "Calculate Zakat on the business's net zakatable wealth and split it across partners."
+        }
+      />
 
       <div className="mb-5 flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 no-print sm:inline-flex">
         <button

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Download, Printer, RefreshCw, CheckCircle2, AlertTriangle, Wallet, Scale } from 'lucide-react';
-import client, { isAllBranchesView } from '../../api/client.js';
+import client, { isAllBranchesView, overviewScopeLabel } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { printReport } from '../../utils/printReport.js';
@@ -179,7 +179,7 @@ export default function BalanceSheetReport() {
           <div className="mt-4 h-1 bg-brand-600" />
           <div className="flex flex-wrap items-center justify-between gap-2 bg-neutral-950 px-4 py-2 text-white">
             <p className="text-sm font-bold uppercase tracking-[0.25em]">
-              Balance Sheet{allBranches && <span className="ml-2 tracking-wider text-brand-300">· All branches</span>}
+              Balance Sheet{allBranches && <span className="ml-2 tracking-wider text-brand-300">· {overviewScopeLabel()}</span>}
             </p>
             <p className="text-[11px]">
               As of <span className="font-semibold">{longDay(report.asOf)}</span>
@@ -222,10 +222,19 @@ export default function BalanceSheetReport() {
             <Side title="Liabilities & Equity" icon={Scale}>
               <Group label="Liabilities">
                 <Line label="Accounts payable" hint="Supplier debt" value={report.liabilities.payable} />
+                <Line label="Customer deposits" hint="Money in customers' wallets" value={report.liabilities.customerDeposits ?? 0} />
                 <Subtotal label="Total liabilities" value={report.liabilities.totalLiabilities} />
               </Group>
               <Group label="Equity">
                 <Line label="Partners' capital" value={report.equity.partnersCapital} />
+                {(report.equity.partners || []).map((p, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 py-0.5 pl-6 pr-2 text-xs text-neutral-500">
+                    <span>{p.name}</span>
+                    <span className="tabular-nums">
+                      <Amount value={p.capital} />
+                    </span>
+                  </div>
+                ))}
                 <Line label="Retained earnings" value={report.equity.retainedEarnings} />
                 <Line label="Net income" hint="This fiscal year" value={report.equity.netIncome} />
                 <Subtotal label="Total equity" value={report.equity.totalEquity} />

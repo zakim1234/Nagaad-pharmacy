@@ -38,7 +38,7 @@ export async function profitBeforeCommissionCents(type, key) {
 // Who can receive commission: the branch's active users (staff and admins).
 export async function commissionStaff() {
   return User.find({ active: { $ne: false }, ...(currentBranch() ? { branch: currentBranch() } : {}) })
-    .select('name username role')
+    .select('name username role branch isSuperAdmin')
     .sort({ name: 1 });
 }
 

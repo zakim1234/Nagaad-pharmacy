@@ -44,6 +44,20 @@ export async function getTotalPartnerEquityCents() {
   return agg?.total || 0;
 }
 
+// Money customers have deposited into their wallets: it sits in the
+// accounts (Cash) but still belongs to the customer, so it is owed back --
+// a liability until it is spent on an invoice or withdrawn.
+export async function getTotalCustomerDepositsCents() {
+  const [agg] = await Customer.aggregate([{ $match: { walletBalanceCents: { $gt: 0 } } }, { $group: { _id: null, total: { $sum: '$walletBalanceCents' } } }]);
+  return agg?.total || 0;
+}
+
+// Each active partner's capital, by name -- the lines behind Partners' Capital.
+export async function getPartnerCapitalLines() {
+  const partners = await Partner.find({ isActive: true }).sort({ createdAt: 1 }).select('name currentEquityCents branch').lean();
+  return partners.map((p) => ({ name: p.name, branch: p.branch || null, capitalCents: p.currentEquityCents }));
+}
+
 export async function getTotalFixedAssetsCents() {
   const [agg] = await FixedAsset.aggregate([{ $match: { isActive: true } }, { $group: { _id: null, total: { $sum: '$valueCents' } } }]);
   return agg?.total || 0;
@@ -95,7 +109,7 @@ export async function buildBalanceSheet({ date } = {}) {
   // today" note.
   const isToday = !date || String(date).slice(0, 10) === toDayString(new Date());
 
-  const [cashCents, receivableCents, inventoryCents, payableCents, fixedAssetsCents, partnersEquityCents, { netIncomeCents, retainedEarningsCents }] =
+  const [cashCents, receivableCents, inventoryCents, payableCents, fixedAssetsCents, partnersEquityCents, { netIncomeCents, retainedEarningsCents }, customerDepositsCents, partnerLines] =
     await Promise.all([
       getTotalCashCents(),
       getTotalReceivableCents(),
@@ -104,11 +118,13 @@ export async function buildBalanceSheet({ date } = {}) {
       getTotalFixedAssetsCents(),
       getTotalPartnerEquityCents(),
       getNetIncomeAndRetainedEarnings(asOf),
+      getTotalCustomerDepositsCents(),
+      getPartnerCapitalLines(),
     ]);
 
   const totalCurrentAssetsCents = cashCents + receivableCents + inventoryCents;
   const totalAssetsCents = totalCurrentAssetsCents + fixedAssetsCents;
-  const totalLiabilitiesCents = payableCents;
+  const totalLiabilitiesCents = payableCents + customerDepositsCents;
   const totalEquityCents = partnersEquityCents + retainedEarningsCents + netIncomeCents;
   const totalLiabilitiesAndEquityCents = totalLiabilitiesCents + totalEquityCents;
 
@@ -134,11 +150,13 @@ export async function buildBalanceSheet({ date } = {}) {
     },
     liabilities: {
       payable: fromCents(payableCents),
+      customerDeposits: fromCents(customerDepositsCents),
       totalCurrentLiabilities: fromCents(totalLiabilitiesCents),
       totalLiabilities: fromCents(totalLiabilitiesCents),
     },
     equity: {
       partnersCapital: fromCents(partnersEquityCents),
+      partners: partnerLines.map((p) => ({ name: p.name, branch: p.branch, capital: fromCents(p.capitalCents) })),
       retainedEarnings: fromCents(retainedEarningsCents),
       netIncome: fromCents(netIncomeCents),
       totalEquity: fromCents(totalEquityCents),

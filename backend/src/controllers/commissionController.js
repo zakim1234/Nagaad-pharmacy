@@ -37,7 +37,7 @@ export const commissionPreview = asyncHandler(async (req, res) => {
       type: r.type,
       key: r.key,
       baseProfit: fromCents(r.baseProfitCents),
-      staff: r.staff.map((u) => ({ id: u._id, name: u.name, username: u.username, role: u.role, isSuperAdmin: !!u.isSuperAdmin })),
+      staff: r.staff.map((u) => ({ id: u._id, name: u.name, username: u.username, role: u.role, isSuperAdmin: !!u.isSuperAdmin, branch: u.branch || null })),
       earlier: r.earlier.map(toDTO),
     },
   });

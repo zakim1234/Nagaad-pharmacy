@@ -17,7 +17,7 @@ async function setup(dbName) {
   await mongoose.connect(`mongodb://127.0.0.1:27028/${dbName}_${Date.now()}?replicaSet=stocktest`);
   process.env.JWT_SECRET = 'isolated-zakat-test-secret';
   await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
-  const admin = await User.create({ username: 'admin', name: 'Admin', passwordHash: 'unused' });
+  const admin = await User.create({ username: 'admin', name: 'Admin', passwordHash: 'unused', isSuperAdmin: true });
   const server = app.listen(0, '127.0.0.1');
   await new Promise((resolve) => server.once('listening', resolve));
   const tokenFor = (u) => jwt.sign({ sub: String(u._id) }, process.env.JWT_SECRET);
@@ -78,7 +78,7 @@ test('ZAKAT -- preview arithmetic, proportional breakdown, AUTO deducts as an Ex
     const readOnly = await User.create({ username: 'rz', name: 'RZ', passwordHash: 'unused', role: 'cashier', permissions: ['zakat'] });
 
     assert.equal((await request('/zakat/preview', null, 'GET', noAccess)).status, 403);
-    assert.equal((await request('/zakat/preview', null, 'GET', readOnly)).status, 200, 'read-only user may preview');
+    assert.equal((await request('/zakat/preview', null, 'GET', readOnly)).status, 403, 'only the Super Admin sees Zakat');
 
     // Cash 1800 (500+300 seeded, +600+400 contributed) + inventory 50 + receivable 200
     // = 2050; minus payable 150 = 1900; * 2.5% = 47.50.

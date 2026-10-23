@@ -1,9 +1,11 @@
 import { Router } from 'express';
-import { requireAuth, requireRole, requirePermission } from '../middleware/auth.js';
+import { requireAuth, requireRole, requirePermission, requireSuperAdmin } from '../middleware/auth.js';
 import { previewZakat, confirmZakat, updateZakatRecord, deleteZakatRecord, markZakatPaid, listZakatRecords } from '../controllers/zakatController.js';
 
 const router = Router();
+// Zakat is the Super Admin's only.
 router.use(requireAuth);
+router.use(requireSuperAdmin);
 router.use(requirePermission('zakat'));
 
 router.get('/preview', previewZakat);
