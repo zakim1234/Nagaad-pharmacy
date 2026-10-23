@@ -45,7 +45,8 @@ const schema = new mongoose.Schema(
   { timestamps: true, autoIndex: false }
 );
 
-schema.index({ branch: 1, serialNumber: 1 }, { unique: true });
+// An invoice number is unique per supplier (see invoiceNumberService).
+schema.index({ branch: 1, supplier: 1, serialNumber: 1 }, { unique: true });
 schema.index({ supplier: 1, createdAt: -1 });
 
 schema.plugin(branchScoped);

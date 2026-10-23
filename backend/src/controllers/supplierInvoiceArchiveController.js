@@ -8,6 +8,7 @@ import { logAudit } from '../services/auditService.js';
 import { runInTransaction } from '../utils/transaction.js';
 import Purchase from '../models/Purchase.js';
 import { syncArchivePurchase, removePurchase } from '../services/archivePurchaseService.js';
+import { assertInvoiceNumberFree } from '../services/invoiceNumberService.js';
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -52,14 +53,14 @@ async function buildArchiveFields(body, excludeId = null) {
   // sufficient) -- checked up front for a clear message, with the schema's
   // own unique index (see the model) as the race-condition backstop.
   const trimmedSerial = serialNumber.trim();
-  const existing = await SupplierInvoiceArchive.findOne({ serialNumber: trimmedSerial, ...(excludeId ? { _id: { $ne: excludeId } } : {}) });
-  if (existing) throw new ApiError(409, `An archive with serial number "${trimmedSerial}" already exists (${existing.archiveNumber}).`);
-
   let supplier = null;
   if (supplierId) {
     supplier = await Supplier.findById(supplierId);
     if (!supplier) throw new ApiError(404, 'Selected supplier no longer exists.');
   }
+  // Unique per supplier: 1155 can belong to Cali and to Cumar, never twice to one.
+  const current = excludeId ? await SupplierInvoiceArchive.findById(excludeId).select('purchase') : null;
+  await assertInvoiceNumberFree({ supplierId: supplier?._id, number: trimmedSerial, supplierName: supplier?.name, exceptArchive: excludeId, exceptPurchase: current?.purchase });
 
   let grandTotalCents = 0;
   const builtRows = rows.map((row, i) => {
@@ -108,7 +109,7 @@ export const createArchive = asyncHandler(async (req, res) => {
     // Race-condition backstop: two concurrent saves for the same serial can
     // both pass the pre-check above -- the schema's unique index (once
     // built, see runMigrateSupplierArchive.js) catches that case here.
-    if (err?.code === 11000) throw new ApiError(409, `An archive with serial number "${fields.serialNumber}" already exists.`);
+    if (err?.code === 11000) throw new ApiError(409, `Invoice number "${fields.serialNumber}" is already saved${fields.supplierName ? ` for ${fields.supplierName}` : ''}.`);
     throw err;
   }
 
@@ -131,7 +132,7 @@ export const updateArchive = asyncHandler(async (req, res) => {
       Object.assign(archive, fields, { purchase: doc.purchase, purchaseNumber: purchase?.purchaseNumber || null });
     });
   } catch (err) {
-    if (err?.code === 11000) throw new ApiError(409, `An archive with serial number "${fields.serialNumber}" already exists.`);
+    if (err?.code === 11000) throw new ApiError(409, `Invoice number "${fields.serialNumber}" is already saved${fields.supplierName ? ` for ${fields.supplierName}` : ''}.`);
     throw err;
   }
   await logAudit({

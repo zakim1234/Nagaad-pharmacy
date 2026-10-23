@@ -15,6 +15,7 @@ const OLD_UNIQUE_INDEXES = [
   ['inventoryitems', 'itemCode_1'],
   ['inventoryitems', 'serialNumber_1'],
   ['supplierinvoicearchives', 'serialNumber_1'],
+  ['supplierinvoicearchives', 'branch_1_serialNumber_1'], // now unique per supplier
 ];
 
 // Idempotent, runs at startup. On a deployment from before branches: creates

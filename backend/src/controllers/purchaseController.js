@@ -14,6 +14,8 @@ import { logAudit } from '../services/auditService.js';
 import { postImmediateTransaction } from '../services/accountService.js';
 import { reversePayment } from '../services/supplierPaymentService.js';
 import { removePurchase } from '../services/archivePurchaseService.js';
+import SupplierInvoiceArchive from '../models/SupplierInvoiceArchive.js';
+import { assertInvoiceNumberFree } from '../services/invoiceNumberService.js';
 
 // Derived, never persisted: Unpaid/Partial/Paid always reflects the
 // authoritative paidAmountCents/totalCostCents pair, so it can never drift
@@ -128,6 +130,7 @@ export const createPurchase = asyncHandler(async (req, res) => {
   const result = await runInTransaction(async (session) => {
     const supplier = await Supplier.findById(supplierId).session(session);
     if (!supplier) throw new ApiError(404, 'Supplier not found.');
+    await assertInvoiceNumberFree({ supplierId: supplier._id, number: supplierInvoiceNumber, supplierName: supplier.name, session });
     const balanceCents = totalCostCents - paidAmountCents;
     let account = null;
     if (paidAmountCents > 0) {
@@ -409,6 +412,8 @@ export const updatePurchase = asyncHandler(async (req, res) => {
     }
     const supplier = await Supplier.findById(supplierId).session(session);
     if (!supplier) throw new ApiError(404, 'Supplier not found.');
+    const linkedArchive = await SupplierInvoiceArchive.findOne({ purchase: purchase._id }).select('_id').session(session);
+    await assertInvoiceNumberFree({ supplierId: supplier._id, number: supplierInvoiceNumber, supplierName: supplier.name, exceptPurchase: purchase._id, exceptArchive: linkedArchive?._id, session });
 
     const before = { supplier: purchase.supplierName, supplierInvoiceNumber: purchase.supplierInvoiceNumber, total: fromCents(purchase.totalCostCents) };
     // Keep each supplier's "total spent" in step with the invoice.
