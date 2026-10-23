@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Pencil, ArrowDownCircle, ArrowUpCircle, History, PieChart } from 'lucide-react';
-import client, { isAllBranchesView, overviewScopeLabel, getViewBranch } from '../../api/client.js';
+import client, { isAllBranchesView } from '../../api/client.js';
 import { useBranchNames } from '../../hooks/useBranchNames.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -229,7 +229,7 @@ export default function PartnersPage() {
   const showActions = canManage || overview;
   // All branches together: partners grouped by branch, each branch with a
   // subtotal of what its partners put in.
-  const grouped = overview && !getViewBranch();
+  const grouped = overview;
   const buildPartnerRows = () => {
     const list = data?.partners || [];
     if (!grouped) return list.map((p) => ({ p }));
@@ -266,7 +266,7 @@ export default function PartnersPage() {
     <div>
       <PageHeader
         title="Partners / Investors"
-        subtitle={overview ? `Showing: ${overviewScopeLabel()}. Open a branch to add a partner or move capital.` : "Each partner's capital contributions and withdrawals, and their current equity in the business."}
+        subtitle={overview ? `Showing: All branches. Open a branch to add a partner or move capital.` : "Each partner's capital contributions and withdrawals, and their current equity in the business."}
         actions={
           <>
             <Link

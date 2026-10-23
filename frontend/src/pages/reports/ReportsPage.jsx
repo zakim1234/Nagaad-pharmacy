@@ -35,7 +35,7 @@ import {
   ShieldCheck,
   CalendarRange,
 } from 'lucide-react';
-import client, { isAllBranchesView, overviewScopeLabel } from '../../api/client.js';
+import client, { isAllBranchesView } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate } from '../../utils/format.js';
@@ -154,7 +154,7 @@ export default function ReportsPage() {
               <ActiveIcon className="h-7 w-7" />
             </div>
             <div>
-              <p className="text-sm text-white/70">Reports{allBranches && <span className="ml-2 rounded bg-white px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-700">{overviewScopeLabel()}</span>}</p>
+              <p className="text-sm text-white/70">Reports{allBranches && <span className="ml-2 rounded bg-white px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-700">All branches</span>}</p>
               <h1 className="text-2xl font-bold leading-tight">{activeTab.title}</h1>
               <p className="mt-0.5 text-sm text-white/70">{activeTab.hint}</p>
             </div>

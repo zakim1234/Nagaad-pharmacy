@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { BadgePercent, FileText, XCircle, Plus, Trash2 } from 'lucide-react';
-import client, { isAllBranchesView, overviewScopeLabel } from '../../api/client.js';
+import client, { isAllBranchesView } from '../../api/client.js';
 import { useBranchNames } from '../../hooks/useBranchNames.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -125,7 +125,7 @@ export default function CommissionsPage() {
         title="Commissions"
         subtitle={
           overview
-            ? `Showing: ${overviewScopeLabel()}. Open a branch to pay commission.`
+            ? `Showing: All branches. Open a branch to pay commission.`
             : "A percentage of the month's or year's profit, paid before the partners share the profit."
         }
       />

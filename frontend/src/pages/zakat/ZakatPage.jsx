@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Calculator as CalculatorIcon, History as HistoryIcon, CheckCircle2, Pencil, Trash2, Moon, Wallet, Package, Users, Building2, Truck } from 'lucide-react';
-import client, { isAllBranchesView, overviewScopeLabel } from '../../api/client.js';
+import client, { isAllBranchesView } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
@@ -510,7 +510,7 @@ export default function ZakatPage() {
         title="Zakat"
         subtitle={
           overview
-            ? `Showing: ${overviewScopeLabel()}. Open a branch to confirm its Zakat.`
+            ? `Showing: All branches. Open a branch to confirm its Zakat.`
             : "Calculate Zakat on the business's net zakatable wealth and split it across partners."
         }
       />

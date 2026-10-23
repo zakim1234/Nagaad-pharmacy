@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Download, Printer, RefreshCw, CheckCircle2, AlertTriangle, Wallet, Scale } from 'lucide-react';
-import client, { isAllBranchesView, overviewScopeLabel } from '../../api/client.js';
+import client, { isAllBranchesView } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { printReport } from '../../utils/printReport.js';
@@ -179,7 +179,7 @@ export default function BalanceSheetReport() {
           <div className="mt-4 h-1 bg-brand-600" />
           <div className="flex flex-wrap items-center justify-between gap-2 bg-neutral-950 px-4 py-2 text-white">
             <p className="text-sm font-bold uppercase tracking-[0.25em]">
-              Balance Sheet{allBranches && <span className="ml-2 tracking-wider text-brand-300">· {overviewScopeLabel()}</span>}
+              Balance Sheet{allBranches && <span className="ml-2 tracking-wider text-brand-300">· All branches</span>}
             </p>
             <p className="text-[11px]">
               As of <span className="font-semibold">{longDay(report.asOf)}</span>
