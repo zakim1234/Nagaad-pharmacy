@@ -1,20 +1,20 @@
 export function Table({ children }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-      <table className="min-w-full divide-y divide-slate-200 text-sm">{children}</table>
+    <div className="overflow-x-auto rounded-2xl border border-neutral-200/80 bg-white">
+      <table className="min-w-full divide-y divide-neutral-100 text-sm">{children}</table>
     </div>
   );
 }
 
 export function THead({ children }) {
-  return <thead className="bg-slate-50">{children}</thead>;
+  return <thead className="bg-neutral-50/70">{children}</thead>;
 }
 
 export function Th({ children, className = '' }) {
   return (
     <th
       scope="col"
-      className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 ${className}`}
+      className={`px-4 py-3 text-left text-[10.5px] font-semibold uppercase tracking-[0.14em] text-neutral-500 ${className}`}
     >
       {children}
     </th>
@@ -22,11 +22,11 @@ export function Th({ children, className = '' }) {
 }
 
 export function TBody({ children }) {
-  return <tbody className="divide-y divide-slate-100 bg-white">{children}</tbody>;
+  return <tbody className="divide-y divide-neutral-100 bg-white">{children}</tbody>;
 }
 
 export function Td({ children, className = '' }) {
-  return <td className={`px-4 py-3 align-middle text-slate-700 ${className}`}>{children}</td>;
+  return <td className={`px-4 py-3 align-middle text-neutral-700 ${className}`}>{children}</td>;
 }
 
 export function TableEmpty({ colSpan, message = 'No records found.' }) {

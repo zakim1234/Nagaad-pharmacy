@@ -32,7 +32,7 @@ import { hasPermission } from '../constants/permissions.js';
 import { BUSINESS } from '../constants/business.js';
 import logo from '../images/logo.png';
 import BranchSwitcher from '../components/BranchSwitcher.jsx';
-import { getSelectedBranch } from '../api/client.js';
+import client, { getSelectedBranch } from '../api/client.js';
 
 // The Super Admin outside any branch sees only the company-wide pages; a
 // branch's own pages appear once they open a branch.
@@ -47,29 +47,29 @@ const inOverview = (user) => !!user?.isSuperAdmin && !getSelectedBranch();
 // standalone permission gate) -- Dashboard only, per the deliberate choice
 // to leave it ungated ("if appropriate").
 const navItems = [
-  { to: '/super-dashboard', label: 'Dashboard', icon: LayoutDashboard, module: null, superAdmin: true },
-  { to: '/all-branches', label: 'All Branches', icon: Globe2, module: null, superAdmin: true },
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, module: null },
-  { to: '/stock', label: 'Stock', icon: Boxes, module: 'stock' },
-  { to: '/stock-adjustments', label: 'Stock Adjustment', icon: SlidersHorizontal, module: 'stock' },
-  { to: '/inventory', label: 'Inventory', icon: Boxes, module: 'inventory' },
-  { to: '/categories', label: 'Categories', icon: Tag, module: 'categories' },
-  { to: '/pos', label: 'Seller / POS', icon: ShoppingCart, module: 'pos' },
-  { to: '/daily-closing', label: 'Daily Closing', icon: CalendarCheck, module: 'pos' },
-  { to: '/quotations', label: 'Quotation', icon: FileText, module: 'quotations' },
-  { to: '/purchases', label: 'Purchase Invoices', icon: FileText, module: 'purchases' },
-  { to: '/accounts', label: 'Accounts', icon: Wallet, module: 'accounts' },
-  { to: '/partners', label: 'Partners / Investors', icon: Handshake, module: 'partners' },
-  { to: '/fixed-assets', label: 'Fixed Assets', icon: Archive, module: 'fixedAssets' },
-  { to: '/zakat', label: 'Zakat', icon: Percent, module: 'zakat', superAdmin: true },
-  { to: '/customers', label: 'Customers', icon: Users, module: 'customers' },
-  { to: '/suppliers', label: 'Suppliers', icon: Building2, module: 'suppliers' },
-  { to: '/supplier-invoices', label: 'Supplier Invoices', icon: Receipt, module: 'supplierInvoices' },
-  { to: '/expenses', label: 'Expenses', icon: HandCoins, module: 'expenses' },
-  { to: '/salaries', label: 'Salaries', icon: Banknote, module: null, roles: ['admin', 'manager'] },
-  { to: '/commissions', label: 'Commissions', icon: BadgePercent, module: null, superAdmin: true },
-  { to: '/reports', label: 'Reports', icon: BarChart3, module: 'reports' },
-  { to: '/items-sold', label: 'Items Sold', icon: PackageCheck, module: 'reports' },
+  { to: '/super-dashboard', label: 'Dashboard', icon: LayoutDashboard, module: null, superAdmin: true, section: 'Overview' },
+  { to: '/all-branches', label: 'All Branches', icon: Globe2, module: null, superAdmin: true, section: 'Overview' },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, module: null, section: 'Overview' },
+  { to: '/pos', label: 'Seller / POS', icon: ShoppingCart, module: 'pos', section: 'Sales' },
+  { to: '/daily-closing', label: 'Daily Closing', icon: CalendarCheck, module: 'pos', section: 'Sales' },
+  { to: '/quotations', label: 'Quotation', icon: FileText, module: 'quotations', section: 'Sales' },
+  { to: '/customers', label: 'Customers', icon: Users, module: 'customers', section: 'Sales' },
+  { to: '/stock', label: 'Stock', icon: Boxes, module: 'stock', section: 'Stock' },
+  { to: '/stock-adjustments', label: 'Stock Adjustment', icon: SlidersHorizontal, module: 'stock', section: 'Stock' },
+  { to: '/inventory', label: 'Inventory', icon: Boxes, module: 'inventory', section: 'Stock' },
+  { to: '/categories', label: 'Categories', icon: Tag, module: 'categories', section: 'Stock' },
+  { to: '/purchases', label: 'Purchase Invoices', icon: FileText, module: 'purchases', section: 'Purchasing' },
+  { to: '/suppliers', label: 'Suppliers', icon: Building2, module: 'suppliers', section: 'Purchasing' },
+  { to: '/supplier-invoices', label: 'Supplier Invoices', icon: Receipt, module: 'supplierInvoices', section: 'Purchasing' },
+  { to: '/accounts', label: 'Accounts', icon: Wallet, module: 'accounts', section: 'Money' },
+  { to: '/expenses', label: 'Expenses', icon: HandCoins, module: 'expenses', section: 'Money' },
+  { to: '/salaries', label: 'Salaries', icon: Banknote, module: null, roles: ['admin', 'manager'], section: 'Money' },
+  { to: '/commissions', label: 'Commissions', icon: BadgePercent, module: null, superAdmin: true, section: 'Money' },
+  { to: '/partners', label: 'Partners / Investors', icon: Handshake, module: 'partners', section: 'Money' },
+  { to: '/fixed-assets', label: 'Fixed Assets', icon: Archive, module: 'fixedAssets', section: 'Money' },
+  { to: '/zakat', label: 'Zakat', icon: Percent, module: 'zakat', superAdmin: true, section: 'Money' },
+  { to: '/reports', label: 'Reports', icon: BarChart3, module: 'reports', section: 'Reports' },
+  { to: '/items-sold', label: 'Items Sold', icon: PackageCheck, module: 'reports', section: 'Reports' },
 ];
 
 function SidebarContent({ onNavigate }) {
@@ -81,63 +81,110 @@ function SidebarContent({ onNavigate }) {
     navigate('/login');
   };
 
+  const items = navItems
+    .filter(({ module, roles, superAdmin }) => (superAdmin ? !!user?.isSuperAdmin : roles ? roles.includes(user?.role) : module === null || hasPermission(user, module)))
+    .concat(user?.role === 'admin' ? [{ to: '/users', label: 'Users', icon: UserCog, module: null, section: 'Admin' }] : [])
+    .concat(user?.isSuperAdmin ? [{ to: '/branches', label: 'Branches', icon: Store, module: null, section: 'Admin' }] : [])
+    .filter(({ to }) => (inOverview(user) ? OVERVIEW_PATHS.includes(to) : !SUPER_ONLY_PATHS.includes(to)));
+  // Grouped under small section headings, in the order they first appear.
+  const sections = [];
+  for (const item of items) {
+    let group = sections.find((g) => g.name === item.section);
+    if (!group) sections.push((group = { name: item.section, items: [] }));
+    group.items.push(item);
+  }
+
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2.5 px-4 py-4">
-        <img src={logo} alt={BUSINESS.name} className="h-9 w-9 shrink-0 rounded-lg object-contain" />
+    <div className="flex h-full flex-col bg-neutral-950 text-neutral-300">
+      <div className="flex items-center gap-3 px-5 pb-4 pt-5">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white p-1">
+          <img src={logo} alt={BUSINESS.name} className="h-full w-full object-contain" />
+        </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold leading-tight text-slate-900">{BUSINESS.name}</p>
-          <p className="truncate text-xs font-normal leading-tight text-slate-400">Inventory &amp; POS</p>
+          <p className="truncate text-[15px] font-bold leading-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
+            {BUSINESS.name}
+          </p>
+          <p className="truncate text-[10.5px] font-medium uppercase tracking-[0.16em] text-neutral-500">Inventory &amp; POS</p>
         </div>
       </div>
 
       <BranchSwitcher />
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-2.5 pt-1">
-        {navItems
-          .filter(({ module, roles, superAdmin }) => (superAdmin ? !!user?.isSuperAdmin : roles ? roles.includes(user?.role) : module === null || hasPermission(user, module)))
-          .concat(user?.role === 'admin' ? [{ to: '/users', label: 'Users', icon: UserCog, module: null }] : [])
-          .concat(user?.isSuperAdmin ? [{ to: '/branches', label: 'Branches', icon: Store, module: null }] : [])
-          .filter(({ to }) => (inOverview(user) ? OVERVIEW_PATHS.includes(to) : !SUPER_ONLY_PATHS.includes(to)))
-          .map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              `group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                isActive ? 'bg-brand-50 font-medium text-brand-700' : 'font-normal text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <span className={`h-4 w-0.5 shrink-0 rounded-full ${isActive ? 'bg-brand-600' : 'bg-transparent'}`} />
-                <Icon className={`h-[18px] w-[18px] shrink-0 ${isActive ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-500'}`} />
-                <span className="truncate">{label}</span>
-              </>
-            )}
-          </NavLink>
+      <nav className="flex-1 overflow-y-auto px-3 pb-3">
+        {sections.map((group) => (
+          <div key={group.name} className="mt-4 first:mt-1">
+            <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-600">{group.name}</p>
+            <div className="space-y-px">
+              {group.items.map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `group relative flex items-center gap-3 rounded-lg px-3 py-[7px] text-[13.5px] transition-colors ${
+                      isActive ? 'bg-white/[0.08] font-semibold text-white' : 'font-medium text-neutral-400 hover:bg-white/[0.04] hover:text-neutral-100'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full ${isActive ? 'bg-brand-500' : 'bg-transparent'}`} />
+                      <Icon className={`h-[17px] w-[17px] shrink-0 ${isActive ? 'text-brand-400' : 'text-neutral-500 group-hover:text-neutral-300'}`} />
+                      <span className="truncate">{label}</span>
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 
-      <div className="border-t border-slate-100 p-2.5">
-        <div className="mb-1.5 flex items-center gap-2.5 rounded-lg px-2.5 py-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-medium text-slate-600">
+      <div className="border-t border-white/[0.06] p-3">
+        <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-bold text-white">
             {user?.name?.slice(0, 2).toUpperCase()}
           </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-slate-800">{user?.name}</p>
-            <p className="truncate text-xs font-normal capitalize text-slate-400">{user?.role}</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-white">{user?.name}</p>
+            <p className="truncate text-[11px] capitalize text-neutral-500">{user?.isSuperAdmin ? 'Super Admin' : user?.role}</p>
           </div>
+          <button onClick={handleLogout} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/10 hover:text-white">
+            <LogOut className="h-4 w-4" /> Logout
+          </button>
         </div>
-        <button
-          onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-normal text-slate-600 transition-colors hover:bg-rose-50 hover:text-rose-600"
-        >
-          <LogOut className="h-[18px] w-[18px]" />
-          Logout
-        </button>
       </div>
+    </div>
+  );
+}
+
+// Thin bar over every page: where you are (a branch, or all branches) and today.
+function TopBar() {
+  const { user } = useAuth();
+  const [branchName, setBranchName] = useState('');
+  useEffect(() => {
+    const id = getSelectedBranch();
+    if (!user || !id) return;
+    client
+      .get('/branches')
+      .then((r) => setBranchName(r.data.data.find((b) => String(b.id) === id)?.name || ''))
+      .catch(() => setBranchName(''));
+  }, [user]);
+  const where = inOverview(user) ? 'All branches' : branchName;
+  return (
+    <div className="hidden items-center justify-between border-b border-neutral-200/70 bg-white/80 px-8 py-2.5 backdrop-blur md:flex no-print">
+      <p className="flex items-center gap-2 text-[13px] text-neutral-500">
+        {where && (
+          <>
+            <Store className="h-3.5 w-3.5 text-brand-600" />
+            <span className="font-semibold text-neutral-900">{where}</span>
+            <span className="text-neutral-300">/</span>
+          </>
+        )}
+        {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+      </p>
+      <p className="text-[13px] text-neutral-500">
+        Signed in as <span className="font-semibold text-neutral-900">{user?.name}</span>
+      </p>
     </div>
   );
 }
@@ -154,9 +201,9 @@ export default function AppLayout() {
   }, [user, location.pathname, navigate]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="flex h-screen overflow-hidden bg-[#f6f6f4]">
       {/* Desktop / tablet sidebar */}
-      <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-white no-print md:block">
+      <aside className="hidden w-64 shrink-0 no-print md:block">
         <SidebarContent />
       </aside>
 
@@ -167,11 +214,11 @@ export default function AppLayout() {
             className="absolute inset-0 bg-slate-900/40 transition-opacity"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute left-0 top-0 h-full w-64 bg-white shadow-xl transition-transform duration-200">
+          <aside className="absolute left-0 top-0 h-full w-64 bg-neutral-950 shadow-xl transition-transform duration-200">
             <div className="flex items-center justify-end px-2.5 pt-2.5">
               <button
                 onClick={() => setMobileOpen(false)}
-                className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                className="relative z-10 rounded-md p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -192,7 +239,8 @@ export default function AppLayout() {
           <p className="text-sm font-semibold text-slate-900">{BUSINESS.name}</p>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <TopBar />
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:px-8">
           <Outlet />
         </main>
       </div>

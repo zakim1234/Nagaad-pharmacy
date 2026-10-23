@@ -2,6 +2,7 @@
 
 @theme {
   --font-sans: 'Roboto', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Roboto', ui-sans-serif, system-ui, sans-serif;
 
   /* Brand accent (white / black / red theme). Used as bg-brand-600, text-brand-700, ... */
   --color-brand-50: #fef2f2;
@@ -26,12 +27,21 @@ html, body, #root {
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-[#f6f6f4] text-neutral-900 antialiased;
   font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif;
 }
 
 * {
   box-sizing: border-box;
+}
+
+.eyebrow {
+  @apply text-[10.5px] font-semibold uppercase tracking-[0.16em] text-neutral-500;
+}
+.figure {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 /* Plain manual-entry numeric inputs (Seller/POS quantity, etc.) -- no

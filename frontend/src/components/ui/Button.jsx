@@ -1,8 +1,8 @@
 const variants = {
   primary: 'bg-brand-600 text-white hover:bg-brand-700 focus-visible:outline-brand-600',
-  secondary: 'bg-white text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50',
+  secondary: 'bg-white text-neutral-800 ring-1 ring-inset ring-neutral-200 hover:ring-neutral-300 hover:bg-neutral-50',
   danger: 'bg-rose-600 text-white hover:bg-rose-700 focus-visible:outline-rose-600',
-  ghost: 'text-slate-600 hover:bg-slate-100',
+  ghost: 'text-neutral-600 hover:bg-neutral-100',
   success: 'bg-emerald-600 text-white hover:bg-emerald-700',
 };
 
@@ -26,7 +26,7 @@ export default function Button({
     <button
       type={type}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {loading && (

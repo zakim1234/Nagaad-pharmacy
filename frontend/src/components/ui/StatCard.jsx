@@ -1,6 +1,6 @@
 export default function StatCard({ label, value, icon: Icon, tone = 'slate', hint }) {
   const tones = {
-    slate: 'bg-slate-100 text-slate-600',
+    slate: 'bg-neutral-100 text-neutral-600',
     indigo: 'bg-brand-100 text-brand-600',
     emerald: 'bg-emerald-100 text-emerald-600',
     amber: 'bg-amber-100 text-amber-600',
@@ -8,11 +8,11 @@ export default function StatCard({ label, value, icon: Icon, tone = 'slate', hin
   };
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-neutral-200/80 bg-white p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-          <p className="mt-1.5 text-2xl font-bold tabular-nums text-slate-900">{value}</p>
+          <p className="eyebrow">{label}</p>
+          <p className="figure mt-1.5 text-[26px] font-extrabold text-neutral-950">{value}</p>
           {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
         </div>
         {Icon && (
