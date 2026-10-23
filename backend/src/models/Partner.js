@@ -14,6 +14,7 @@ const partnerSchema = new mongoose.Schema(
     totalContributedCents: { type: Number, default: 0 },
     totalWithdrawnCents: { type: Number, default: 0 },
     currentEquityCents: { type: Number, default: 0 },
+    totalProfitCents: { type: Number, default: 0 }, // year-end profit shares received (paid out or added to capital)
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

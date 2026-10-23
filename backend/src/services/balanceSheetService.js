@@ -5,6 +5,7 @@ import InventoryItem from '../models/InventoryItem.js';
 import Partner from '../models/Partner.js';
 import FixedAsset from '../models/FixedAsset.js';
 import { computePeriod, toDayString } from './profitLossService.js';
+import { distributedProfitCents } from './profitDistributionService.js';
 import { fromCents } from '../utils/money.js';
 import { ApiError } from '../utils/ApiError.js';
 import { BUSINESS_NAME } from '../config/business.js';
@@ -73,11 +74,14 @@ function parseAsOfDate(value) {
 async function getNetIncomeAndRetainedEarnings(asOf) {
   const fiscalYearStart = new Date(asOf.getFullYear(), 0, 1, 0, 0, 0, 0);
   const inception = new Date(2000, 0, 1); // any date before this system could have real data
-  const [currentYear, priorYears] = await Promise.all([
+  const [currentYear, priorYears, distributedCents] = await Promise.all([
     computePeriod({ start: fiscalYearStart, end: asOf, basis: 'accrual' }),
     computePeriod({ start: inception, end: new Date(fiscalYearStart.getTime() - 1), basis: 'accrual' }),
+    distributedProfitCents(asOf),
   ]);
-  return { netIncomeCents: currentYear.netIncomeCents, retainedEarningsCents: priorYears.netIncomeCents };
+  // Profit already shared out to the partners is no longer retained: paid
+  // out it left the business, added to capital it sits in Partners' Capital.
+  return { netIncomeCents: currentYear.netIncomeCents, retainedEarningsCents: priorYears.netIncomeCents - distributedCents };
 }
 
 export async function buildBalanceSheet({ date } = {}) {

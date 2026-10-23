@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Plus, Pencil, ArrowDownCircle, ArrowUpCircle, History } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, Pencil, ArrowDownCircle, ArrowUpCircle, History, PieChart } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -193,7 +194,17 @@ function HistoryModal({ partner, onClose }) {
             transactions.map((t) => (
               <tr key={t.id}>
                 <Td>{formatDateTime(t.date)}</Td>
-                <Td>{t.type === 'CONTRIBUTION' ? <span className="text-emerald-600">Contribution</span> : <span className="text-rose-600">Withdrawal</span>}</Td>
+                <Td>
+                  {t.type === 'CONTRIBUTION' ? (
+                    <span className="text-emerald-600">Contribution</span>
+                  ) : t.type === 'PROFIT_SHARE' ? (
+                    <span className="font-medium text-slate-900">Profit share</span>
+                  ) : t.type === 'PROFIT_SHARE_CANCELLED' ? (
+                    <span className="text-slate-500">Profit share cancelled</span>
+                  ) : (
+                    <span className="text-rose-600">Withdrawal</span>
+                  )}
+                </Td>
                 <Td className="font-medium">{formatCurrency(t.amount)}</Td>
                 <Td>{t.accountName}</Td>
                 <Td>{formatCurrency(t.equityAfter)}</Td>
@@ -234,11 +245,19 @@ export default function PartnersPage() {
         title="Partners / Investors"
         subtitle="Each partner's capital contributions and withdrawals, and their current equity in the business."
         actions={
-          canManage && (
-            <Button onClick={() => setAddOpen(true)}>
-              <Plus className="h-4 w-4" /> Add Partner
-            </Button>
-          )
+          <>
+            <Link
+              to="/partners/profit-sharing"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <PieChart className="h-4 w-4" /> Share Year Profit
+            </Link>
+            {canManage && (
+              <Button onClick={() => setAddOpen(true)}>
+                <Plus className="h-4 w-4" /> Add Partner
+              </Button>
+            )}
+          </>
         }
       />
 
@@ -254,14 +273,15 @@ export default function PartnersPage() {
             <Th>Total Contributed</Th>
             <Th>Total Withdrawn</Th>
             <Th>Current Equity</Th>
+            <Th>Profit Received</Th>
             {canManage && <Th />}
           </tr>
         </THead>
         <TBody>
           {data === null ? (
-            <TableLoading colSpan={canManage ? 5 : 4} />
+            <TableLoading colSpan={canManage ? 6 : 5} />
           ) : data.partners.length === 0 ? (
-            <TableEmpty colSpan={canManage ? 5 : 4} message="No partners yet." />
+            <TableEmpty colSpan={canManage ? 6 : 5} message="No partners yet." />
           ) : (
             data.partners.map((p) => (
               <tr key={p.id}>
@@ -269,6 +289,7 @@ export default function PartnersPage() {
                 <Td>{formatCurrency(p.totalContributed)}</Td>
                 <Td>{formatCurrency(p.totalWithdrawn)}</Td>
                 <Td className="font-semibold">{formatCurrency(p.currentEquity)}</Td>
+                <Td>{formatCurrency(p.totalProfit || 0)}</Td>
                 {canManage && (
                   <Td>
                     <div className="flex justify-end gap-1.5">

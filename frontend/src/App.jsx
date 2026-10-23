@@ -30,6 +30,8 @@ import SupplierInvoicesPage from './pages/suppliers/SupplierInvoicesPage.jsx';
 import AccountsPage from './pages/accounts/AccountsPage.jsx';
 import ExpensesPage from './pages/expenses/ExpensesPage.jsx';
 import PartnersPage from './pages/partners/PartnersPage.jsx';
+import ProfitSharingPage from './pages/partners/ProfitSharingPage.jsx';
+import ProfitDistributionPage from './pages/partners/ProfitDistributionPage.jsx';
 import FixedAssetsPage from './pages/fixedAssets/FixedAssetsPage.jsx';
 import ZakatPage from './pages/zakat/ZakatPage.jsx';
 import ReportsPage from './pages/reports/ReportsPage.jsx';
@@ -112,6 +114,8 @@ export default function App() {
               <Route path="/accounts" element={<RequirePermission module="accounts"><AccountsPage /></RequirePermission>} />
               <Route path="/expenses" element={<RequirePermission module="expenses"><ExpensesPage /></RequirePermission>} />
               <Route path="/partners" element={<RequirePermission module="partners"><PartnersPage /></RequirePermission>} />
+              <Route path="/partners/profit-sharing" element={<RequirePermission module="partners"><ProfitSharingPage /></RequirePermission>} />
+              <Route path="/partners/profit-sharing/:id" element={<RequirePermission module="partners"><ProfitDistributionPage /></RequirePermission>} />
               <Route path="/fixed-assets" element={<RequirePermission module="fixedAssets"><FixedAssetsPage /></RequirePermission>} />
               <Route path="/zakat" element={<RequirePermission module="zakat"><ZakatPage /></RequirePermission>} />
               <Route path="/reports" element={<RequirePermission module="reports"><ReportsPage /></RequirePermission>} />

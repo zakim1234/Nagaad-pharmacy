@@ -7,6 +7,8 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { toCents, fromCents } from '../utils/money.js';
 import { runInTransaction } from '../utils/transaction.js';
+import ProfitDistribution from '../models/ProfitDistribution.js';
+import { previewDistribution, createDistribution, cancelDistribution } from '../services/profitDistributionService.js';
 
 function toDTO(p) {
   return {
@@ -17,6 +19,7 @@ function toDTO(p) {
     totalContributed: fromCents(p.totalContributedCents),
     totalWithdrawn: fromCents(p.totalWithdrawnCents),
     currentEquity: fromCents(p.currentEquityCents),
+    totalProfit: fromCents(p.totalProfitCents || 0),
     isActive: p.isActive,
     createdAt: p.createdAt,
   };
@@ -238,6 +241,68 @@ export const withdrawCapital = asyncHandler(async (req, res) => {
   });
 
   res.json({ success: true, data: { partner: toDTO(result.partner), transaction: txnToDTO(result.capitalTxn) } });
+});
+
+function distributionDTO(d) {
+  return {
+    id: d._id,
+    distributionNumber: d.distributionNumber,
+    year: d.year,
+    netProfit: fromCents(d.netProfitCents),
+    mode: d.mode,
+    accountName: d.accountName,
+    date: d.date,
+    note: d.note,
+    status: d.status,
+    cancelledAt: d.cancelledAt,
+    cancelledByName: d.cancelledByName,
+    cancelReason: d.cancelReason,
+    createdByName: d.createdByName,
+    createdAt: d.createdAt,
+    shares: d.shares.map((s) => ({ partner: s.partner, partnerName: s.partnerName, percent: s.percent, amount: fromCents(s.amountCents) })),
+  };
+}
+
+// GET /api/partners/profit-sharing/preview?year= -- that year's net profit
+// and each partner's default percentage (their share of the capital).
+export const profitSharingPreview = asyncHandler(async (req, res) => {
+  const r = await previewDistribution({ year: req.query.year });
+  res.json({
+    success: true,
+    data: {
+      year: r.year,
+      netProfit: fromCents(r.netProfitCents),
+      existing: r.existing ? distributionDTO(r.existing) : null,
+      partners: r.partners.map((p) => ({ id: p.partner._id, name: p.partner.name, equity: fromCents(p.partner.currentEquityCents), percent: p.percent, amount: fromCents(p.amountCents) })),
+    },
+  });
+});
+
+// GET /api/partners/profit-sharing -- every distribution, newest first.
+export const listProfitDistributions = asyncHandler(async (req, res) => {
+  const docs = await ProfitDistribution.find().sort({ year: -1, createdAt: -1 });
+  res.json({ success: true, data: docs.map(distributionDTO) });
+});
+
+// GET /api/partners/profit-sharing/:id
+export const getProfitDistribution = asyncHandler(async (req, res) => {
+  const doc = await ProfitDistribution.findById(req.params.id);
+  if (!doc) throw new ApiError(404, 'Profit distribution not found.');
+  res.json({ success: true, data: distributionDTO(doc) });
+});
+
+// POST /api/partners/profit-sharing -- share one year's profit.
+export const shareProfit = asyncHandler(async (req, res) => {
+  const doc = await createDistribution({ ...req.body, user: req.user });
+  await logAudit({ user: req.user, action: 'partner.profitShare', entityType: 'ProfitDistribution', entityId: doc._id, details: { year: doc.year, mode: doc.mode, netProfit: fromCents(doc.netProfitCents) } });
+  res.status(201).json({ success: true, data: distributionDTO(doc) });
+});
+
+// POST /api/partners/profit-sharing/:id/cancel
+export const cancelProfitShare = asyncHandler(async (req, res) => {
+  const doc = await cancelDistribution({ id: req.params.id, reason: req.body.reason, user: req.user });
+  await logAudit({ user: req.user, action: 'partner.profitShare.cancel', entityType: 'ProfitDistribution', entityId: doc._id, details: { year: doc.year, reason: doc.cancelReason } });
+  res.json({ success: true, data: distributionDTO(doc) });
 });
 
 // GET /api/partners/:id/transactions

@@ -7,9 +7,9 @@ const schema = new mongoose.Schema(
   {
     partner: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner', required: true },
     partnerName: { type: String, default: '' },
-    type: { type: String, enum: ['CONTRIBUTION', 'WITHDRAWAL'], required: true },
+    type: { type: String, enum: ['CONTRIBUTION', 'WITHDRAWAL', 'PROFIT_SHARE', 'PROFIT_SHARE_CANCELLED'], required: true },
     amountCents: { type: Number, required: true, min: 1 },
-    account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+    account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', default: null }, // none for a profit share added to capital
     accountName: { type: String, default: '' },
     accountTransaction: { type: mongoose.Schema.Types.ObjectId, ref: 'AccountTransaction', default: null },
     date: { type: Date, required: true },
