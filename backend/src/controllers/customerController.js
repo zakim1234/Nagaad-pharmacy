@@ -13,6 +13,7 @@ import { toCents, fromCents } from '../utils/money.js';
 import { runInTransaction } from '../utils/transaction.js';
 import { applyWalletToDebt } from '../services/walletService.js';
 import { logAudit } from '../services/auditService.js';
+import { getCustomerItems } from '../services/customerItemsService.js';
 
 function toDTO(c) {
   return {
@@ -689,6 +690,43 @@ export const withdrawFromWallet = asyncHandler(async (req, res) => {
     details: { amount, reference },
   });
   res.status(201).json({ success: true, data: { customer: toDTO(result.customer), transaction: walletTxnToDTO(result.walletTxn) } });
+});
+
+// GET /api/customers/:id/items?type=all|day|month|year&key= -- what this
+// customer bought, item by item, with the most and least bought item.
+export const getCustomerItemsReport = asyncHandler(async (req, res) => {
+  const r = await getCustomerItems({ customerId: req.params.id, type: req.query.type || 'all', key: req.query.key });
+  const row = (i) =>
+    i && {
+      itemId: i.item,
+      name: i.itemName,
+      quantity: i.quantity,
+      invoices: i.invoices,
+      unitPrice: i.quantity ? fromCents(Math.round(i.salesCents / i.quantity)) : 0,
+      spent: fromCents(i.salesCents),
+      cost: fromCents(i.costCents),
+      profit: fromCents(i.salesCents - i.costCents),
+      lastBought: i.lastBought,
+    };
+  res.json({
+    success: true,
+    data: {
+      customer: { id: r.customer._id, name: r.customer.name, phone: r.customer.phone },
+      type: r.type,
+      key: r.key,
+      invoiceCount: r.invoiceCount,
+      items: r.items.map(row),
+      mostBought: row(r.mostBought),
+      leastBought: row(r.leastBought),
+      totals: {
+        items: r.items.length,
+        quantity: r.totals.quantity,
+        spent: fromCents(r.totals.salesCents),
+        cost: fromCents(r.totals.costCents),
+        profit: fromCents(r.totals.salesCents - r.totals.costCents),
+      },
+    },
+  });
 });
 
 // GET /api/customers/:id/wallet/history?q=

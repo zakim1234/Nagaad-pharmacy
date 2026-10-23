@@ -170,6 +170,11 @@ export default function CustomerDetailPage() {
           <ArrowLeft className="h-4 w-4" /> Back to Customers
         </Link>
         <div className="flex flex-wrap gap-2">
+          <Link to={`/customers/${id}/items`}>
+            <Button variant="secondary">
+              <FileText className="h-4 w-4" /> Items Bought
+            </Button>
+          </Link>
           <Link to={`/customers/${id}/statement`}>
             <Button variant="secondary">
               <FileText className="h-4 w-4" /> Customer Statement
