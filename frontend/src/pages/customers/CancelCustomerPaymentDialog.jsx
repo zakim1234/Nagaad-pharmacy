@@ -5,7 +5,7 @@ import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency } from '../../utils/format.js';
 import Modal from '../../components/ui/Modal.jsx';
 import Button from '../../components/ui/Button.jsx';
-import { FormField, Textarea } from '../../components/ui/Field.jsx';
+import { FormField, Input, Textarea } from '../../components/ui/Field.jsx';
 
 function Choice({ active, onClick, title, text, disabled }) {
   return (
@@ -36,12 +36,14 @@ export default function CancelCustomerPaymentDialog({ customerId, payment, onClo
   const fromWallet = payment && (!payment.paymentAccountName || payment.paymentAccountName === 'Customer Wallet');
   const [refundTo, setRefundTo] = useState('WALLET');
   const [reason, setReason] = useState('');
+  const [reference, setReference] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (payment) {
       setRefundTo('WALLET');
       setReason('');
+      setReference('');
     }
   }, [payment]);
 
@@ -50,7 +52,7 @@ export default function CancelCustomerPaymentDialog({ customerId, payment, onClo
   const confirm = async () => {
     setSaving(true);
     try {
-      await client.post(`/customers/${customerId}/payments/${payment.id}/cancel`, { refundTo, reason });
+      await client.post(`/customers/${customerId}/payments/${payment.id}/cancel`, { refundTo, reason, reference: refundTo === 'ACCOUNT' ? reference : '' });
       toast.success(
         `${payment.receiptNumber} cancelled — ${formatCurrency(payment.amount)} ${refundTo === 'WALLET' ? 'kept in the customer\'s wallet' : `given back from ${payment.paymentAccountName}`}.`
       );
@@ -87,6 +89,11 @@ export default function CancelCustomerPaymentDialog({ customerId, payment, onClo
             text={fromWallet ? 'This payment was taken from the wallet, so it goes back to the wallet.' : 'The money leaves that account — you hand it back to the customer.'}
           />
         </div>
+        {refundTo === 'ACCOUNT' && (
+          <FormField label="Number the money was sent to">
+            <Input value={reference} maxLength={100} onChange={(e) => setReference(e.target.value)} placeholder="e.g. 615123456" />
+          </FormField>
+        )}
         <FormField label="Reason (optional)">
           <Textarea rows={2} value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} placeholder="e.g. entered by mistake" />
         </FormField>

@@ -33,6 +33,7 @@ const paymentSchema = new mongoose.Schema(
     cancelReason: { type: String, default: '' },
     cancelledByName: { type: String, default: '' },
     refundedTo: { type: String, enum: ['', 'WALLET', 'ACCOUNT'], default: '' },
+    refundReference: { type: String, default: '', trim: true, maxlength: 100 }, // number/account the money was sent back to
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }

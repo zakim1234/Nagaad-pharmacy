@@ -39,7 +39,7 @@ import { getSelectedBranch } from '../api/client.js';
 const OVERVIEW_PATHS = ['/super-dashboard', '/all-branches', '/reports', '/items-sold', '/partners', '/commissions', '/zakat', '/users', '/branches'];
 const inOverviewPath = (path) => OVERVIEW_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 // Only on the Super Admin's own screen, never inside a branch.
-const SUPER_ONLY_PATHS = ['/all-branches', '/super-dashboard', '/zakat', '/commissions', '/partners/profit-sharing'];
+const SUPER_ONLY_PATHS = ['/all-branches', '/super-dashboard', '/zakat', '/commissions', '/partners/profit-sharing', '/branches'];
 const isSuperOnlyPath = (path) => SUPER_ONLY_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 const inOverview = (user) => !!user?.isSuperAdmin && !getSelectedBranch();
 

@@ -50,7 +50,7 @@ export default function PaymentReceiptPage() {
         <DocHeader compact title={payment.status === 'CANCELLED' ? 'Payment Receipt · Cancelled' : 'Payment Receipt'} meta={<span className="font-semibold">{payment.receiptNumber}</span>} />
         {payment.status === 'CANCELLED' && (
           <p className="mt-3 rounded-md bg-rose-50 px-3 py-2 text-center text-xs font-semibold text-rose-700">
-            CANCELLED {formatDate(payment.cancelledAt)} — {payment.refundedTo === 'ACCOUNT' ? 'money given back to the customer' : "money kept in the customer's wallet"}
+            CANCELLED {formatDate(payment.cancelledAt)} — {payment.refundedTo === 'ACCOUNT' ? `money given back to the customer${payment.refundReference ? ` (sent to ${payment.refundReference})` : ''}` : "money kept in the customer's wallet"}
             {payment.cancelReason ? ` · ${payment.cancelReason}` : ''}
           </p>
         )}

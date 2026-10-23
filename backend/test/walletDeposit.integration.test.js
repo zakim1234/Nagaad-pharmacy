@@ -331,8 +331,9 @@ test('CANCEL CUSTOMER PAYMENT -- debt comes back; money kept in the wallet or gi
     const pay2 = await request(`/customers/${customer.id}/payments`, { amount: 30, paymentAccountId: account.id });
     assert.equal(pay2.status, 201, JSON.stringify(pay2));
     const pay2Doc = await Payment.findOne({ customer: customer.id, status: 'POSTED', type: 'debt_payment' });
-    const back = await request(`/customers/${customer.id}/payments/${pay2Doc.id}/cancel`, { refundTo: 'ACCOUNT' });
+    const back = await request(`/customers/${customer.id}/payments/${pay2Doc.id}/cancel`, { refundTo: 'ACCOUNT', reference: '615777888' });
     assert.equal(back.status, 200, JSON.stringify(back));
+    assert.equal((await Payment.findById(pay2Doc.id)).refundReference, '615777888', 'the number it was sent to is kept');
     assert.equal(await balance(), startBalance + 6000, '30 came in and went back out');
     c = await Customer.findById(customer.id);
     assert.equal(c.balanceCents, 10000);

@@ -59,6 +59,7 @@ export const getPaymentReceipt = asyncHandler(async (req, res) => {
       cancelledAt: payment.cancelledAt,
       cancelReason: payment.cancelReason,
       refundedTo: payment.refundedTo,
+      refundReference: payment.refundReference || '',
       createdAt: payment.createdAt,
     },
   });

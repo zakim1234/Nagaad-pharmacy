@@ -255,6 +255,7 @@ export const getCustomerHistory = asyncHandler(async (req, res) => {
         status: p.status || 'POSTED',
         cancelledAt: p.cancelledAt,
         refundedTo: p.refundedTo,
+        refundReference: p.refundReference || '',
         createdAt: p.createdAt,
       })),
       timeline: ledger.map((l) => ({
@@ -890,6 +891,7 @@ export const setWalletAutoPay = asyncHandler(async (req, res) => {
 // the wallet.
 export const cancelCustomerPayment = asyncHandler(async (req, res) => {
   const reason = String(req.body.reason || '').trim().slice(0, 500);
+  const reference = String(req.body.reference || '').trim().slice(0, 100); // where the money was sent back to
   const result = await runInTransaction(async (session) => {
     const customer = await Customer.findById(req.params.id).session(session);
     if (!customer) throw new ApiError(404, 'Customer not found.');
@@ -943,7 +945,7 @@ export const cancelCustomerPayment = asyncHandler(async (req, res) => {
           amountCents,
           referenceType: 'Payment',
           referenceId: payment._id,
-          description: `Payment ${payment.receiptNumber} cancelled -- money returned to ${customer.name}${reason ? ` (${reason})` : ''}`,
+          description: `Payment ${payment.receiptNumber} cancelled -- money returned to ${customer.name}${reference ? ` (sent to ${reference})` : ''}${reason ? ` (${reason})` : ''}`,
           createdBy: req.user,
         },
         session
@@ -958,7 +960,7 @@ export const cancelCustomerPayment = asyncHandler(async (req, res) => {
           type: 'PAYMENT_CANCELLED',
           amountCents,
           payment: payment._id,
-          description: `Payment ${payment.receiptNumber} cancelled -- ${refundTo === 'WALLET' ? 'money kept in the wallet' : 'money given back from ' + (payment.paymentAccountName || 'the account')}${reason ? `: ${reason}` : ''}`,
+          description: `Payment ${payment.receiptNumber} cancelled -- ${refundTo === 'WALLET' ? 'money kept in the wallet' : 'money given back from ' + (payment.paymentAccountName || 'the account') + (reference ? ` to ${reference}` : '')}${reason ? `: ${reason}` : ''}`,
           balanceBeforeCents,
           balanceAfterCents: customer.balanceCents,
           createdBy: req.user?._id,
@@ -972,6 +974,7 @@ export const cancelCustomerPayment = asyncHandler(async (req, res) => {
     payment.cancelReason = reason;
     payment.cancelledByName = req.user?.name || '';
     payment.refundedTo = refundTo;
+    payment.refundReference = refundTo === 'ACCOUNT' ? reference : '';
     await payment.save({ session });
     return { customer, payment, refundTo };
   });
@@ -981,7 +984,7 @@ export const cancelCustomerPayment = asyncHandler(async (req, res) => {
     action: 'customer.payment.cancel',
     entityType: 'Customer',
     entityId: result.customer._id,
-    details: { receiptNumber: result.payment.receiptNumber, amount: fromCents(result.payment.amountCents), refundTo: result.refundTo, reason },
+    details: { receiptNumber: result.payment.receiptNumber, amount: fromCents(result.payment.amountCents), refundTo: result.refundTo, reference, reason },
   });
   res.json({ success: true, data: { customer: toDTO(result.customer), receiptNumber: result.payment.receiptNumber, amount: fromCents(result.payment.amountCents), refundTo: result.refundTo } });
 });
