@@ -16,8 +16,8 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import BulkPaymentModal from './BulkPaymentModal.jsx';
 import PurchaseEditModal from './PurchaseEditModal.jsx';
 
-const ACTION = 'flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50';
-const ACTION_DANGER = 'flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50';
+const ACTION = 'flex items-center gap-1 rounded-lg border border-neutral-200 px-2 py-1 text-xs font-semibold text-neutral-600 hover:bg-neutral-50';
+const ACTION_DANGER = 'flex items-center gap-1 rounded-lg border border-brand-200 px-2 py-1 text-xs font-semibold text-brand-600 hover:bg-brand-50';
 
 const initials = (name = '') =>
   name
@@ -147,15 +147,15 @@ export default function PurchasesPage() {
   };
 
   const invoiceRow = (p) => (
-    <tr key={p.id} className="hover:bg-slate-50">
+    <tr key={p.id} className="hover:bg-neutral-50">
       <Td>
         <Link to={`/purchases/${p.id}`} className="whitespace-nowrap font-medium text-brand-600 hover:underline">
           {p.purchaseNumber}
         </Link>
-        {p.supplierInvoiceNumber && <div className="text-xs text-slate-400">Supplier #{p.supplierInvoiceNumber}</div>}
+        {p.supplierInvoiceNumber && <div className="text-xs text-neutral-400">Supplier #{p.supplierInvoiceNumber}</div>}
       </Td>
       <Td className="whitespace-nowrap">
-        <span className={p.status === 'voided' ? 'text-slate-400 line-through' : 'font-medium text-slate-900'}>{formatCurrency(p.totalCost)}</span>
+        <span className={p.status === 'voided' ? 'text-neutral-400 line-through' : 'font-medium text-neutral-900'}>{formatCurrency(p.totalCost)}</span>
         {p.status === 'voided' && (
           <span className="ml-2">
             <Badge color="red">Voided</Badge>
@@ -188,19 +188,19 @@ export default function PurchasesPage() {
   const groupHeader = (sid, name, { toggle = false, open = false } = {}) => {
     const s = bySupplier.get(sid);
     return (
-      <tr key={`h-${sid}`} className={`border-t-2 border-slate-200 ${open ? 'bg-neutral-100' : 'bg-neutral-50 hover:bg-neutral-100'}`}>
+      <tr key={`h-${sid}`} className={`border-t-2 border-neutral-200 ${open ? 'bg-neutral-100' : 'bg-neutral-50 hover:bg-neutral-100'}`}>
         <td colSpan={cols} className="px-4 py-2.5">
           <div className="flex w-full items-center gap-2.5">
             <button onClick={() => (toggle ? toggleGroup(sid) : pickSupplier(sid))} className="group flex min-w-0 flex-1 items-center gap-2.5 text-left">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-[11px] font-bold text-white">{initials(name)}</span>
-              <span className="truncate font-semibold text-slate-900 group-hover:text-brand-600">{name}</span>
+              <span className="truncate font-semibold text-neutral-900 group-hover:text-brand-600">{name}</span>
               {s && (
-                <span className="shrink-0 text-xs text-slate-500">
+                <span className="shrink-0 text-xs text-neutral-500">
                   {s.invoiceCount} invoice{s.invoiceCount === 1 ? '' : 's'}
                 </span>
               )}
               {s && (
-                <span className={`ml-auto shrink-0 text-xs font-semibold ${s.owed > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+                <span className={`ml-auto shrink-0 text-xs font-semibold ${s.owed > 0 ? 'text-brand-600' : 'text-neutral-400'}`}>
                   {s.owed > 0 ? `Owed ${formatCurrency(s.owed)}` : 'Paid up'}
                 </span>
               )}
@@ -266,7 +266,7 @@ export default function PurchasesPage() {
           {supplierId && (
             <button
               onClick={() => pickSupplier('')}
-              className="mb-3 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+              className="mb-3 inline-flex items-center gap-1.5 rounded-lg border border-neutral-200/80 bg-white px-3 py-1.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
             >
               <ArrowLeft className="h-4 w-4" /> Back to all suppliers
             </button>
@@ -306,7 +306,7 @@ export default function PurchasesPage() {
 
           <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="relative sm:col-span-2">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
               <Input
                 className="pl-9"
                 placeholder={selected ? `Search ${selected.name} invoices...` : 'Search by invoice number or supplier...'}
@@ -350,7 +350,7 @@ export default function PurchasesPage() {
             </TBody>
           </Table>
           {!collapsedView && (
-            <div className="rounded-b-xl border border-t-0 border-slate-200 bg-white">
+            <div className="rounded-b-xl border border-t-0 border-neutral-200/80 bg-white">
               <Pagination {...pagination} onChange={setPage} />
             </div>
           )}

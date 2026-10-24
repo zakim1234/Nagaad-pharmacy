@@ -74,19 +74,19 @@ function ZakatCalculator({ onConfirmed }) {
       type="button"
       onClick={() => setDeductionMode(value)}
       className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors ${
-        deductionMode === value ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-slate-200 hover:bg-slate-50'
+        deductionMode === value ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-neutral-200 hover:bg-neutral-50'
       }`}
     >
       <span
         className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
-          deductionMode === value ? 'border-brand-600' : 'border-slate-300'
+          deductionMode === value ? 'border-brand-600' : 'border-neutral-300'
         }`}
       >
         {deductionMode === value && <span className="h-2 w-2 rounded-full bg-brand-600" />}
       </span>
       <span>
-        <span className="block text-sm font-semibold text-slate-900">{title}</span>
-        <span className="block text-xs text-slate-500">{text}</span>
+        <span className="block text-sm font-semibold text-neutral-900">{title}</span>
+        <span className="block text-xs text-neutral-500">{text}</span>
       </span>
     </button>
   );
@@ -147,57 +147,57 @@ function ZakatCalculator({ onConfirmed }) {
       ) : preview ? (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
           {/* How it was worked out */}
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 px-5 py-3.5">
-              <h3 className="text-sm font-semibold text-slate-900">How it is calculated</h3>
-              <p className="text-xs text-slate-400">What the business owns, minus what it owes, times the rate.</p>
+          <div className="overflow-hidden rounded-2xl border border-neutral-200/80 bg-white">
+            <div className="border-b border-neutral-100 px-5 py-3.5">
+              <h3 className="text-sm font-semibold text-neutral-900">How it is calculated</h3>
+              <p className="text-xs text-neutral-400">What the business owns, minus what it owes, times the rate.</p>
             </div>
             <div className="space-y-1 p-3">
-              <p className="px-2 pt-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Zakatable assets</p>
+              <p className="px-2 pt-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-400">Zakatable assets</p>
               <CalcLine icon={Wallet} label="Cash & bank balances" hint="All accounts" value={preview.assets.cash} />
               <CalcLine icon={Package} label="Inventory value" hint="Stock at cost" value={preview.assets.inventory} />
               <CalcLine icon={Users} label="Accounts receivable" hint="Customer debt" value={preview.assets.receivable} />
               {includeFixedAssets && <CalcLine icon={Building2} label="Fixed assets" hint="Included by choice" value={preview.assets.fixedAssets} />}
-              <div className="mx-2 flex items-center justify-between border-t border-slate-200 pt-2 pb-1 text-sm font-bold text-slate-900">
+              <div className="mx-2 flex items-center justify-between border-t border-neutral-200 pt-2 pb-1 text-sm font-bold text-neutral-900">
                 <span>Total zakatable assets</span>
                 <span className="tabular-nums">{formatCurrency(preview.assets.total)}</span>
               </div>
 
-              <p className="px-2 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Less what is owed</p>
+              <p className="px-2 pt-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-400">Less what is owed</p>
               <CalcLine icon={Truck} label="Accounts payable" hint="Supplier debt" value={preview.liabilities.payable} minus />
 
               <div className="mt-3 flex items-center justify-between rounded-xl bg-neutral-100 px-4 py-3">
-                <span className="text-sm font-semibold text-slate-700">Net zakatable wealth</span>
-                <span className="text-lg font-bold tabular-nums text-slate-900">{formatCurrency(preview.netZakatableWealth)}</span>
+                <span className="text-sm font-semibold text-neutral-700">Net zakatable wealth</span>
+                <span className="text-lg font-bold tabular-nums text-neutral-900">{formatCurrency(preview.netZakatableWealth)}</span>
               </div>
               <div className="flex items-center justify-between rounded-xl bg-brand-600 px-4 py-3 text-white">
                 <span className="text-sm font-semibold">× {preview.ratePct}% = Zakat due</span>
-                <span className="text-xl font-bold tabular-nums">{formatCurrency(preview.zakatDue)}</span>
+                <span className="text-xl font-bold figure">{formatCurrency(preview.zakatDue)}</span>
               </div>
             </div>
-            <p className="border-t border-slate-100 px-5 py-2.5 text-[11px] text-slate-400">
+            <p className="border-t border-neutral-100 px-5 py-2.5 text-[11px] text-neutral-400">
               Approximate Hijri year for this date: {preview.hijriYear} AH. Fixed Assets aren't included by default — most fatwas treat trade goods only.
             </p>
           </div>
 
           <div className="space-y-4">
             {preview.breakdown.length > 0 && (
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-100 px-5 py-3.5">
-                  <h3 className="text-sm font-semibold text-slate-900">Share by partner</h3>
+              <div className="overflow-hidden rounded-2xl border border-neutral-200/80 bg-white">
+                <div className="border-b border-neutral-100 px-5 py-3.5">
+                  <h3 className="text-sm font-semibold text-neutral-900">Share by partner</h3>
                 </div>
-                <ul className="divide-y divide-slate-100">
+                <ul className="divide-y divide-neutral-100">
                   {preview.breakdown.map((b) => (
                     <li key={b.partnerId} className="px-5 py-3">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-slate-800">{b.partnerName}</span>
-                        <span className="font-bold tabular-nums text-slate-900">{formatCurrency(b.share)}</span>
+                        <span className="font-medium text-neutral-800">{b.partnerName}</span>
+                        <span className="font-bold tabular-nums text-neutral-900">{formatCurrency(b.share)}</span>
                       </div>
                       <div className="mt-1.5 flex items-center gap-2">
-                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-100">
                           <div className="h-full rounded-full bg-neutral-900" style={{ width: `${Math.min(100, b.equityPct)}%` }} />
                         </div>
-                        <span className="w-12 text-right text-xs text-slate-500">{b.equityPct}%</span>
+                        <span className="w-12 text-right text-xs text-neutral-500">{b.equityPct}%</span>
                       </div>
                     </li>
                   ))}
@@ -205,13 +205,13 @@ function ZakatCalculator({ onConfirmed }) {
               </div>
             )}
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 px-5 py-3.5">
-                <h3 className="text-sm font-semibold text-slate-900">Confirm Zakat</h3>
-                <p className="text-xs text-slate-400">How will it be paid?</p>
+            <div className="overflow-hidden rounded-2xl border border-neutral-200/80 bg-white">
+              <div className="border-b border-neutral-100 px-5 py-3.5">
+                <h3 className="text-sm font-semibold text-neutral-900">Confirm Zakat</h3>
+                <p className="text-xs text-neutral-400">How will it be paid?</p>
               </div>
               {overview ? (
-                <p className="p-5 text-sm text-slate-500">This is all branches together. Choose a branch above to confirm its Zakat.</p>
+                <p className="p-5 text-sm text-neutral-500">This is all branches together. Choose a branch above to confirm its Zakat.</p>
               ) : (
               <div className="space-y-3 p-5">
                 {modeCard('AUTO', 'Deduct automatically', 'Taken from an account as an Expense (category "Zakat").')}
@@ -227,7 +227,7 @@ function ZakatCalculator({ onConfirmed }) {
                 <Button size="lg" className="w-full justify-center" loading={confirming} disabled={!(preview.zakatDue > 0)} onClick={confirm}>
                   <CheckCircle2 className="h-4 w-4" /> Confirm {formatCurrency(preview.zakatDue)} Zakat
                 </Button>
-                {!(preview.zakatDue > 0) && <p className="text-center text-xs text-slate-400">Zakat due is zero — nothing to confirm for this date/rate.</p>}
+                {!(preview.zakatDue > 0) && <p className="text-center text-xs text-neutral-400">Zakat due is zero — nothing to confirm for this date/rate.</p>}
               </div>
               )}
             </div>
@@ -240,15 +240,15 @@ function ZakatCalculator({ onConfirmed }) {
 
 function CalcLine({ icon: Icon, label, hint, value, minus = false }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-slate-50">
+    <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-neutral-50">
       <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${minus ? 'bg-brand-50 text-brand-600' : 'bg-neutral-100 text-neutral-700'}`}>
         <Icon className="h-4 w-4" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium text-slate-800">{label}</span>
-        <span className="block text-xs text-slate-400">{hint}</span>
+        <span className="block text-sm font-medium text-neutral-800">{label}</span>
+        <span className="block text-xs text-neutral-400">{hint}</span>
       </span>
-      <span className={`text-sm font-semibold tabular-nums ${minus ? 'text-brand-600' : value < 0 ? 'text-brand-600' : 'text-slate-900'}`}>
+      <span className={`text-sm font-semibold tabular-nums ${minus ? 'text-brand-600' : value < 0 ? 'text-brand-600' : 'text-neutral-900'}`}>
         {minus ? `− ${formatCurrency(value)}` : formatCurrency(value)}
       </span>
     </div>
@@ -308,8 +308,8 @@ function ZakatEditModal({ record, onClose, onSaved }) {
   return (
     <Modal open={!!record} onClose={onClose} title="Edit Zakat Record" size="sm">
       <div className="space-y-4">
-        <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500">
-          Year (Hijri/Calendar): <span className="font-medium text-slate-800">{record.hijriYear} AH / {new Date(date || record.calculationDate).getFullYear()}</span>
+        <div className="rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-500">
+          Year (Hijri/Calendar): <span className="font-medium text-neutral-800">{record.hijriYear} AH / {new Date(date || record.calculationDate).getFullYear()}</span>
           <br />
           Follows the Date below automatically.
         </div>
@@ -322,7 +322,7 @@ function ZakatEditModal({ record, onClose, onSaved }) {
         <FormField label="Total Zakat" required>
           <Input type="number" min="0" step="0.01" value={totalZakat} onChange={(e) => setTotalZakat(e.target.value)} />
         </FormField>
-        <p className="-mt-2 text-xs text-slate-400">
+        <p className="-mt-2 text-xs text-neutral-400">
           This corrects the record only -- if this was Auto, the amount already deducted from the account is unaffected.
         </p>
         <FormField label="Mode">
@@ -524,11 +524,11 @@ function ZakatForBranch() {
         }
       />
 
-      <div className="mb-5 flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 no-print sm:inline-flex">
+      <div className="mb-5 flex gap-1 rounded-lg border border-neutral-200 bg-neutral-50 p-1 no-print sm:inline-flex">
         <button
           onClick={() => setTab('calculator')}
           className={`flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-            tab === 'calculator' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            tab === 'calculator' ? 'bg-white text-brand-700 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'
           }`}
         >
           <CalculatorIcon className="h-4 w-4" /> Calculator
@@ -539,7 +539,7 @@ function ZakatForBranch() {
             setHistoryKey((k) => k + 1);
           }}
           className={`flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-            tab === 'history' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            tab === 'history' ? 'bg-white text-brand-700 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'
           }`}
         >
           <HistoryIcon className="h-4 w-4" /> History

@@ -36,12 +36,12 @@ export default function DebtorsStatementPage() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
-        <Link to="/customers" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to="/customers" className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Customers
         </Link>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative w-64">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
             <Input className="pl-9" placeholder="Search name or phone..." value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           <SharePdfButton fileName={`Debtors_${new Date().toISOString().slice(0, 10)}`} message={`${BUSINESS.name} — customers who owe: ${formatCurrency(shownTotal)}`} orientation="landscape" />
@@ -51,7 +51,7 @@ export default function DebtorsStatementPage() {
         </div>
       </div>
 
-      <div id="print-area" className="mx-auto max-w-6xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+      <div id="print-area" className="mx-auto max-w-6xl rounded-2xl border border-neutral-200/80 bg-white p-6 text-neutral-900 sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
         <DocHeader title="Debtors Statement" meta={<span className="font-semibold">As of {formatDate(data.asOf)}</span>} />
         <p className="mt-3 text-xs text-neutral-500">
           Customers who owe money{needle ? ` matching "${q.trim()}"` : ''}, most owed first.

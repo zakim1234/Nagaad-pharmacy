@@ -166,7 +166,7 @@ export default function CustomerDetailPage() {
     <div className="space-y-5">
       {/* Top bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 no-print">
-        <Link to="/customers" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to="/customers" className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Customers
         </Link>
         <div className="flex flex-wrap gap-2">
@@ -187,14 +187,14 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* Profile + stats */}
-      <section className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm no-print">
-        <div className="flex flex-wrap items-center gap-4 border-b border-slate-100 bg-gradient-to-r from-brand-50/70 via-white to-white px-6 py-5">
+      <section className="overflow-hidden rounded-2xl border border-neutral-200/70 bg-white no-print">
+        <div className="flex flex-wrap items-center gap-4 border-b border-neutral-100 bg-gradient-to-r from-brand-50/70 via-white to-white px-6 py-5">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-red-700 text-lg font-bold text-white shadow-md">
             {initials(customer.name)}
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-xl font-bold capitalize text-slate-900">{customer.name}</h1>
-            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
+            <h1 className="truncate text-xl font-bold capitalize text-neutral-900">{customer.name}</h1>
+            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-neutral-500">
               <span className="flex items-center gap-1.5">
                 <Phone className="h-3.5 w-3.5" /> {customer.phone || 'No phone on file'}
               </span>
@@ -209,7 +209,7 @@ export default function CustomerDetailPage() {
             <Badge color="green">No debt</Badge>
           )}
         </div>
-        <div className="grid grid-cols-2 divide-slate-100 lg:grid-cols-4 lg:divide-x">
+        <div className="grid grid-cols-2 divide-neutral-100 lg:grid-cols-4 lg:divide-x">
           <StatTile icon={ShoppingBag} tone="slate" label="Total Purchased" value={formatCurrency(customer.totalPurchased)} />
           <StatTile
             icon={CheckCircle2}
@@ -223,7 +223,7 @@ export default function CustomerDetailPage() {
             tone={customer.balance > 0 ? 'rose' : 'emerald'}
             label="Outstanding Balance"
             value={formatCurrency(customer.balance)}
-            valueClass={customer.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}
+            valueClass={customer.balance > 0 ? 'text-brand-600' : 'text-emerald-600'}
           />
           <StatTile icon={PiggyBank} tone="indigo" label="Wallet Balance" value={formatCurrency(customer.walletBalance)} valueClass="text-brand-600" />
         </div>
@@ -231,17 +231,17 @@ export default function CustomerDetailPage() {
 
       {/* Where the debt came from */}
       {debt && debt.invoices.length > 0 && (
-        <section className="rounded-2xl border border-rose-100 bg-rose-50/40 p-5 no-print">
+        <section className="rounded-2xl border border-brand-100 bg-brand-50/40 p-5 no-print">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-rose-800">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-brand-800">
               <AlertCircle className="h-4 w-4" /> Where this debt came from
             </h3>
-            <span className="text-sm font-bold text-rose-700">Total: {formatCurrency(debt.totalOutstanding)}</span>
+            <span className="text-sm font-bold text-brand-700">Total: {formatCurrency(debt.totalOutstanding)}</span>
           </div>
-          <div className="overflow-x-auto rounded-xl border border-rose-100 bg-white">
+          <div className="overflow-x-auto rounded-xl border border-brand-100 bg-white">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                <tr className="text-left text-xs uppercase tracking-wide text-neutral-400">
                   <th className="px-4 py-2.5 font-medium">Invoice</th>
                   <th className="px-4 py-2.5 font-medium">Date</th>
                   <th className="px-4 py-2.5 text-right font-medium">Total</th>
@@ -249,7 +249,7 @@ export default function CustomerDetailPage() {
                   <th className="px-4 py-2.5 text-right font-medium">Remaining</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-neutral-100">
                 {debt.invoices.map((inv) => (
                   <tr key={inv.id}>
                     <td className="px-4 py-2.5">
@@ -257,10 +257,10 @@ export default function CustomerDetailPage() {
                         {inv.receiptNumber}
                       </Link>
                     </td>
-                    <td className="px-4 py-2.5 text-slate-500">{formatDate(inv.createdAt)}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">{formatCurrency(inv.total)}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">{formatCurrency(inv.paidAtSale)}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-rose-600">{formatCurrency(inv.outstanding)}</td>
+                    <td className="px-4 py-2.5 text-neutral-500">{formatDate(inv.createdAt)}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-neutral-700">{formatCurrency(inv.total)}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-neutral-700">{formatCurrency(inv.paidAtSale)}</td>
+                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-brand-600">{formatCurrency(inv.outstanding)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -270,18 +270,18 @@ export default function CustomerDetailPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-slate-100/70 p-1 no-print sm:inline-flex">
+      <div className="flex gap-1 overflow-x-auto rounded-xl border border-neutral-200 bg-neutral-100/70 p-1 no-print sm:inline-flex">
         {tabs.map(({ key, label, icon: Icon, count }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
             className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-              tab === key ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              tab === key ? 'bg-white text-brand-700 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'
             }`}
           >
             <Icon className="h-4 w-4" /> {label}
             {count != null && (
-              <span className={`rounded-full px-1.5 text-[11px] ${tab === key ? 'bg-brand-100 text-brand-700' : 'bg-slate-200 text-slate-600'}`}>{count}</span>
+              <span className={`rounded-full px-1.5 text-[11px] ${tab === key ? 'bg-brand-100 text-brand-700' : 'bg-neutral-200 text-neutral-600'}`}>{count}</span>
             )}
           </button>
         ))}
@@ -294,7 +294,7 @@ export default function CustomerDetailPage() {
 
       {tab === 'invoices' && (
         <>
-          <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm no-print">
+          <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-neutral-200/70 bg-white p-4 no-print">
             <div className="flex flex-wrap items-end gap-3">
               <FormField label="From">
                 <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
@@ -317,7 +317,7 @@ export default function CustomerDetailPage() {
           </div>
 
           <div id="print-area">
-            <section className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
+            <section className="overflow-hidden rounded-2xl border border-neutral-200/70 bg-white">
               <PrintHeader customer={customer} from={from} to={to} status={status} />
 
               {invoices.length === 0 ? (
@@ -325,8 +325,8 @@ export default function CustomerDetailPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-50/80">
-                      <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                    <thead className="bg-neutral-50/80">
+                      <tr className="text-left text-xs uppercase tracking-wide text-neutral-400">
                         <th className="w-10 px-3 py-3 no-print" />
                         <th className="px-3 py-3 font-medium">Invoice</th>
                         <th className="px-3 py-3 font-medium">Date</th>
@@ -343,11 +343,11 @@ export default function CustomerDetailPage() {
                         const isOpen = expanded.has(s.id);
                         return (
                           <Fragment key={s.id}>
-                            <tr className={`border-t border-slate-100 transition-colors hover:bg-slate-50/70 ${isOpen ? 'bg-slate-50/70' : ''}`} style={{ pageBreakInside: 'avoid' }}>
+                            <tr className={`border-t border-neutral-100 transition-colors hover:bg-neutral-50/70 ${isOpen ? 'bg-neutral-50/70' : ''}`} style={{ pageBreakInside: 'avoid' }}>
                               <td className="px-3 py-3 no-print">
                                 <button
                                   onClick={() => toggle(s.id)}
-                                  className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                                  className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
                                   title={isOpen ? 'Hide items' : 'Show items'}
                                 >
                                   <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
@@ -355,7 +355,7 @@ export default function CustomerDetailPage() {
                               </td>
                               <td className="px-3 py-3">
                                 <div className="flex flex-wrap items-center gap-1.5">
-                                  <span className="font-semibold text-slate-800">{s.receiptNumber}</span>
+                                  <span className="font-semibold text-neutral-800">{s.receiptNumber}</span>
                                   {s.returnCount > 0 && (
                                     <button onClick={() => setTab('returns')} className="no-print">
                                       <Badge color="blue">
@@ -365,13 +365,13 @@ export default function CustomerDetailPage() {
                                   )}
                                 </div>
                               </td>
-                              <td className="whitespace-nowrap px-3 py-3 text-slate-500">{formatDateTime(s.createdAt)}</td>
-                              <td className="max-w-[220px] px-3 py-3 text-slate-600">
+                              <td className="whitespace-nowrap px-3 py-3 text-neutral-500">{formatDateTime(s.createdAt)}</td>
+                              <td className="max-w-[220px] px-3 py-3 text-neutral-600">
                                 <p className="truncate">{s.items.map((it) => it.name).join(', ')}</p>
-                                <p className="text-xs text-slate-400">{s.items.length} item{s.items.length > 1 ? 's' : ''}</p>
+                                <p className="text-xs text-neutral-400">{s.items.length} item{s.items.length > 1 ? 's' : ''}</p>
                               </td>
-                              <td className="px-3 py-3 text-right font-semibold tabular-nums text-slate-800">{formatCurrency(s.total)}</td>
-                              <td className="px-3 py-3 text-right tabular-nums text-slate-700">
+                              <td className="px-3 py-3 text-right font-semibold tabular-nums text-neutral-800">{formatCurrency(s.total)}</td>
+                              <td className="px-3 py-3 text-right tabular-nums text-neutral-700">
                                 {formatCurrency(invoicePaid(s))}
                                 {s.walletAmount > 0 && <p className="text-[11px] text-brand-500">{formatCurrency(s.walletAmount)} wallet</p>}
                               </td>
@@ -415,8 +415,8 @@ export default function CustomerDetailPage() {
               )}
 
               {invoices.length > 0 && (
-                <div className="border-t border-slate-100 p-4 print:mt-8 print:border-t-2 print:border-dashed">
-                  <p className="mb-2 hidden text-center text-sm font-bold uppercase tracking-wide text-slate-700 print:block">Statement Summary</p>
+                <div className="border-t border-neutral-100 p-4 print:mt-8 print:border-t-2 print:border-dashed">
+                  <p className="mb-2 hidden text-center text-sm font-bold uppercase tracking-wide text-neutral-700 print:block">Statement Summary</p>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <SummaryTile label="Invoices" value={invoices.length} />
                     <SummaryTile label="Total Amount" value={formatCurrency(invoices.reduce((sum, s) => sum + s.total, 0))} />
@@ -431,15 +431,15 @@ export default function CustomerDetailPage() {
       )}
 
       {tab === 'returns' && (
-        <section className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-2xl border border-neutral-200/70 bg-white">
           <SectionHeader icon={Undo2} title="Returned Items" subtitle="Every return made on this customer's invoices" />
           {returns.length === 0 ? (
             <EmptyState icon={Undo2} text="No items have been returned." />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50/80">
-                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                <thead className="bg-neutral-50/80">
+                  <tr className="text-left text-xs uppercase tracking-wide text-neutral-400">
                     <th className="px-4 py-3 font-medium">Date</th>
                     <th className="px-4 py-3 font-medium">Invoice</th>
                     <th className="px-4 py-3 font-medium">Items Returned</th>
@@ -451,26 +451,26 @@ export default function CustomerDetailPage() {
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-neutral-100">
                   {returns.map((r) => (
-                    <tr key={`${r.sale.id}-${r.index}`} className="hover:bg-slate-50/70">
-                      <td className="whitespace-nowrap px-4 py-3 text-slate-500">{formatDateTime(r.createdAt)}</td>
+                    <tr key={`${r.sale.id}-${r.index}`} className="hover:bg-neutral-50/70">
+                      <td className="whitespace-nowrap px-4 py-3 text-neutral-500">{formatDateTime(r.createdAt)}</td>
                       <td className="px-4 py-3">
-                        <span className="font-semibold text-slate-800">{r.sale.receiptNumber}</span>
+                        <span className="font-semibold text-neutral-800">{r.sale.receiptNumber}</span>
                         {r.sale.status === 'CANCELLED' && <Badge color="red" className="ml-1.5">Cancelled</Badge>}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-neutral-600">
                         {r.items.map((it, i) => (
                           <p key={i}>
-                            {it.name} <span className="text-slate-400">× {it.quantity}</span>
+                            {it.name} <span className="text-neutral-400">× {it.quantity}</span>
                           </p>
                         ))}
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold tabular-nums text-slate-800">{formatCurrency(r.amount)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-600">{formatCurrency(r.debtReduced)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-600">{formatCurrency(r.refund)}</td>
+                      <td className="px-4 py-3 text-right font-semibold tabular-nums text-neutral-800">{formatCurrency(r.amount)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-neutral-600">{formatCurrency(r.debtReduced)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-neutral-600">{formatCurrency(r.refund)}</td>
                       <td className="px-4 py-3 text-right tabular-nums text-brand-600">{formatCurrency(r.walletRefund)}</td>
-                      <td className="px-4 py-3 text-slate-500">{r.reason || '—'}</td>
+                      <td className="px-4 py-3 text-neutral-500">{r.reason || '—'}</td>
                       <td className="px-4 py-3 text-right">
                         <Link to={`/receipt/${r.sale.id}/return/${r.index}`} className="text-xs font-semibold text-brand-600 hover:underline">
                           Receipt
@@ -486,15 +486,15 @@ export default function CustomerDetailPage() {
       )}
 
       {tab === 'cancelled' && (
-        <section className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-2xl border border-neutral-200/70 bg-white">
           <SectionHeader icon={Ban} title="Cancelled Invoices" subtitle="Kept for the record — they no longer affect stock or balances" />
           {cancelledSales.length === 0 ? (
             <EmptyState icon={Ban} text="No cancelled invoices." />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50/80">
-                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                <thead className="bg-neutral-50/80">
+                  <tr className="text-left text-xs uppercase tracking-wide text-neutral-400">
                     <th className="px-4 py-3 font-medium">Invoice</th>
                     <th className="px-4 py-3 font-medium">Created</th>
                     <th className="px-4 py-3 font-medium">Cancelled</th>
@@ -504,22 +504,22 @@ export default function CustomerDetailPage() {
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-neutral-100">
                   {cancelledSales.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-50/70">
+                    <tr key={s.id} className="hover:bg-neutral-50/70">
                       <td className="px-4 py-3">
-                        <span className="font-semibold text-slate-500 line-through decoration-slate-300">{s.receiptNumber}</span>
+                        <span className="font-semibold text-neutral-500 line-through decoration-neutral-300">{s.receiptNumber}</span>
                         {s.returnCount > 0 && <Badge color="blue" className="ml-1.5">{s.returnCount} return{s.returnCount > 1 ? 's' : ''}</Badge>}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-slate-500">{formatDateTime(s.createdAt)}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-slate-500">{s.cancelledAt ? formatDateTime(s.cancelledAt) : '—'}</td>
-                      <td className="max-w-[240px] px-4 py-3 text-slate-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-neutral-500">{formatDateTime(s.createdAt)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-neutral-500">{s.cancelledAt ? formatDateTime(s.cancelledAt) : '—'}</td>
+                      <td className="max-w-[240px] px-4 py-3 text-neutral-600">
                         <p className="truncate">{s.items.map((it) => `${it.name} × ${it.quantity}`).join(', ')}</p>
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-600">
+                      <td className="px-4 py-3 text-right tabular-nums text-neutral-600">
                         {formatCurrency(s.items.reduce((sum, it) => sum + it.subtotal, 0))}
                       </td>
-                      <td className="px-4 py-3 text-slate-500">{s.cancelledReason || '—'}</td>
+                      <td className="px-4 py-3 text-neutral-500">{s.cancelledReason || '—'}</td>
                       <td className="px-4 py-3 text-right">
                         <Link to={`/receipt/${s.id}`} state={{ backLabel: 'Back to customer' }} className="text-xs font-semibold text-brand-600 hover:underline">
                           View
@@ -535,30 +535,30 @@ export default function CustomerDetailPage() {
       )}
 
       {tab === 'activity' && (
-        <section className="rounded-2xl border border-slate-200/70 bg-white shadow-sm">
+        <section className="rounded-2xl border border-neutral-200/70 bg-white">
           <SectionHeader icon={History} title="Balance Activity" subtitle="Everything that changed what this customer owes" />
           {!timeline || timeline.length === 0 ? (
             <EmptyState icon={History} text="No balance-affecting transactions yet." />
           ) : (
-            <ol className="relative mx-5 mb-5 border-l border-slate-200">
+            <ol className="relative mx-5 mb-5 border-l border-neutral-200">
               {[...timeline].reverse().map((t) => {
                 const meta = LEDGER_LABELS[t.type] || { label: t.type, color: 'slate' };
                 const increases = t.amount > 0;
                 return (
                   <li key={t.id} className="ml-5 py-3">
-                    <span className={`absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full ring-4 ring-white ${increases ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                    <span className={`absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full ring-4 ring-white ${increases ? 'bg-brand-500' : 'bg-emerald-500'}`} />
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <Badge color={meta.color}>{meta.label}</Badge>
-                        <p className="mt-1 text-sm text-slate-600">{t.description}</p>
-                        <p className="text-xs text-slate-400">{formatDateTime(t.createdAt)}</p>
+                        <p className="mt-1 text-sm text-neutral-600">{t.description}</p>
+                        <p className="text-xs text-neutral-400">{formatDateTime(t.createdAt)}</p>
                       </div>
                       <div className="text-right">
-                        <p className={`text-sm font-semibold tabular-nums ${increases ? 'text-rose-600' : 'text-emerald-600'}`}>
+                        <p className={`text-sm font-semibold tabular-nums ${increases ? 'text-brand-600' : 'text-emerald-600'}`}>
                           {increases ? '+' : ''}
                           {formatCurrency(t.amount)}
                         </p>
-                        <p className="text-xs text-slate-400">Balance: {formatCurrency(t.balanceAfter)}</p>
+                        <p className="text-xs text-neutral-400">Balance: {formatCurrency(t.balanceAfter)}</p>
                         {t.type === 'PAYMENT' && t.payment && (() => {
                           const p = paymentsById.get(String(t.payment));
                           if (!p) return null;
@@ -567,7 +567,7 @@ export default function CustomerDetailPage() {
                             <button
                               type="button"
                               onClick={() => setCancelPayment(p)}
-                              className="mt-1.5 inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                              className="mt-1.5 inline-flex items-center gap-1 rounded-lg border border-brand-200 px-2 py-1 text-xs font-semibold text-brand-600 hover:bg-brand-50"
                             >
                               <Undo2 className="h-3.5 w-3.5" /> Cancel payment
                             </button>
@@ -610,29 +610,29 @@ export default function CustomerDetailPage() {
 }
 
 const TILE_TONES = {
-  slate: 'bg-slate-100 text-slate-600',
+  slate: 'bg-neutral-100 text-neutral-600',
   emerald: 'bg-emerald-50 text-emerald-600',
-  rose: 'bg-rose-50 text-rose-600',
+  rose: 'bg-brand-50 text-brand-600',
   indigo: 'bg-brand-50 text-brand-600',
 };
 
-function StatTile({ icon: Icon, tone, label, value, hint, valueClass = 'text-slate-900' }) {
+function StatTile({ icon: Icon, tone, label, value, hint, valueClass = 'text-neutral-900' }) {
   return (
     <div className="flex items-center gap-3 px-6 py-4">
       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${TILE_TONES[tone]}`}>
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-medium text-slate-500">{label}</p>
+        <p className="text-xs font-medium text-neutral-500">{label}</p>
         <p className={`text-lg font-bold leading-tight tabular-nums ${valueClass}`}>{value}</p>
-        {hint && <p className="truncate text-[11px] text-slate-400">{hint}</p>}
+        {hint && <p className="truncate text-[11px] text-neutral-400">{hint}</p>}
       </div>
     </div>
   );
 }
 
 function SummaryTile({ label, value, tone }) {
-  const cls = tone === 'red' ? 'bg-rose-50 text-rose-700' : tone === 'green' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-800';
+  const cls = tone === 'red' ? 'bg-brand-50 text-brand-700' : tone === 'green' ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-50 text-neutral-800';
   return (
     <div className={`rounded-xl px-4 py-2.5 ${cls}`}>
       <p className="text-[11px] font-medium uppercase tracking-wide opacity-70">{label}</p>
@@ -647,7 +647,7 @@ function IconAction({ icon: Icon, label, title, onClick, danger = false }) {
       onClick={onClick}
       title={title}
       className={`flex items-center gap-1 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
-        danger ? 'border-rose-200 text-rose-600 hover:bg-rose-50' : 'border-slate-200 text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
+        danger ? 'border-brand-200 text-brand-600 hover:bg-brand-50' : 'border-neutral-200 text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
       }`}
     >
       <Icon className="h-3.5 w-3.5" /> {label}
@@ -657,13 +657,13 @@ function IconAction({ icon: Icon, label, title, onClick, danger = false }) {
 
 function SectionHeader({ icon: Icon, title, subtitle }) {
   return (
-    <div className="flex items-center gap-2.5 border-b border-slate-100 px-5 py-4">
+    <div className="flex items-center gap-2.5 border-b border-neutral-100 px-5 py-4">
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
         <Icon className="h-4 w-4" />
       </div>
       <div>
-        <h3 className="text-[15px] font-semibold text-slate-800">{title}</h3>
-        {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
+        <h3 className="text-[15px] font-semibold text-neutral-800">{title}</h3>
+        {subtitle && <p className="text-xs text-neutral-400">{subtitle}</p>}
       </div>
     </div>
   );
@@ -672,20 +672,20 @@ function SectionHeader({ icon: Icon, title, subtitle }) {
 function EmptyState({ icon: Icon, text }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-300 ring-1 ring-slate-100">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-50 text-neutral-300 ring-1 ring-neutral-100">
         <Icon className="h-6 w-6" />
       </div>
-      <p className="text-sm text-slate-400">{text}</p>
+      <p className="text-sm text-neutral-400">{text}</p>
     </div>
   );
 }
 
 function InvoiceItems({ sale }) {
   return (
-    <div className="rounded-xl border border-slate-100 bg-white">
+    <div className="rounded-xl border border-neutral-100 bg-white">
       <table className="w-full text-xs">
         <thead>
-          <tr className="border-b border-slate-100 text-left uppercase text-slate-400">
+          <tr className="border-b border-neutral-100 text-left uppercase text-neutral-400">
             <th className="w-8 px-3 py-2 font-medium">#</th>
             <th className="px-3 py-2 font-medium">Description</th>
             <th className="px-3 py-2 text-center font-medium">Qty</th>
@@ -695,21 +695,21 @@ function InvoiceItems({ sale }) {
         </thead>
         <tbody>
           {sale.items.map((it, i) => (
-            <tr key={i} className="border-b border-slate-50 last:border-0">
-              <td className="px-3 py-2 text-slate-400">{i + 1}</td>
-              <td className="px-3 py-2 text-slate-700">
+            <tr key={i} className="border-b border-neutral-50 last:border-0">
+              <td className="px-3 py-2 text-neutral-400">{i + 1}</td>
+              <td className="px-3 py-2 text-neutral-700">
                 {it.name}
                 {it.returnedQuantity > 0 && <span className="ml-1.5 text-[10px] font-medium text-brand-600">({it.returnedQuantity} returned)</span>}
               </td>
-              <td className="px-3 py-2 text-center text-slate-600">{it.quantity}</td>
-              <td className="px-3 py-2 text-right text-slate-500">{formatCurrency(it.unitPrice)}</td>
-              <td className="px-3 py-2 text-right font-medium text-slate-800">{formatCurrency(it.subtotal)}</td>
+              <td className="px-3 py-2 text-center text-neutral-600">{it.quantity}</td>
+              <td className="px-3 py-2 text-right text-neutral-500">{formatCurrency(it.unitPrice)}</td>
+              <td className="px-3 py-2 text-right font-medium text-neutral-800">{formatCurrency(it.subtotal)}</td>
             </tr>
           ))}
         </tbody>
       </table>
       {(sale.discount > 0 || sale.walletAmount > 0) && (
-        <div className="flex flex-wrap justify-end gap-4 border-t border-slate-100 px-3 py-2 text-xs text-slate-500">
+        <div className="flex flex-wrap justify-end gap-4 border-t border-neutral-100 px-3 py-2 text-xs text-neutral-500">
           {sale.discount > 0 && <span>Discount: {formatCurrency(sale.discount)}</span>}
           {sale.walletAmount > 0 && <span>From wallet: {formatCurrency(sale.walletAmount)}</span>}
           {sale.paidAmount > 0 && <span>Cash/account: {formatCurrency(sale.paidAmount)}</span>}
@@ -744,9 +744,9 @@ function ReverseMessage({ sale, refundTo, onRefundTo }) {
       tabIndex={0}
       onClick={() => onRefundTo(value)}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onRefundTo(value)}
-      className={`mt-1.5 flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${refundTo === value ? 'border-brand-500 bg-brand-50/60 font-semibold text-slate-900' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+      className={`mt-1.5 flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${refundTo === value ? 'border-brand-500 bg-brand-50/60 font-semibold text-neutral-900' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
     >
-      <span className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${refundTo === value ? 'border-brand-600' : 'border-slate-300'}`}>
+      <span className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${refundTo === value ? 'border-brand-600' : 'border-neutral-300'}`}>
         {refundTo === value && <span className="h-2 w-2 rounded-full bg-brand-600" />}
       </span>
       {title}
@@ -757,11 +757,11 @@ function ReverseMessage({ sale, refundTo, onRefundTo }) {
       Cancel invoice {sale.receiptNumber}? Stock is restored and whatever is still owed on it is removed. It is marked Cancelled (never deleted).
       {paidOnIt > 0 && (
         <span className="mt-3 block rounded-lg bg-neutral-50 px-3 py-2">
-          <span className="block font-semibold text-slate-800">{formatCurrency(paidOnIt)} was already paid on this invoice.</span>
-          {paidLater > 0 && <span className="block text-xs text-slate-500">{formatCurrency(paidLater)} paid later goes to the customer's wallet.</span>}
+          <span className="block font-semibold text-neutral-800">{formatCurrency(paidOnIt)} was already paid on this invoice.</span>
+          {paidLater > 0 && <span className="block text-xs text-neutral-500">{formatCurrency(paidLater)} paid later goes to the customer's wallet.</span>}
           {paidAtSale > 0 && (
             <>
-              <span className="mt-1 block text-xs text-slate-500">{formatCurrency(paidAtSale)} paid at the sale:</span>
+              <span className="mt-1 block text-xs text-neutral-500">{formatCurrency(paidAtSale)} paid at the sale:</span>
               {option('WALLET', "Put it in the customer's wallet")}
               {option('ACCOUNT', 'Give the cash back from the account')}
             </>

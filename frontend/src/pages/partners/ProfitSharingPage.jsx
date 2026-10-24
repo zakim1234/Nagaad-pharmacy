@@ -23,14 +23,14 @@ function ModeCard({ active, onClick, title, text }) {
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors ${active ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-slate-200 hover:bg-slate-50'}`}
+      className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors ${active ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-neutral-200 hover:bg-neutral-50'}`}
     >
-      <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${active ? 'border-brand-600' : 'border-slate-300'}`}>
+      <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${active ? 'border-brand-600' : 'border-neutral-300'}`}>
         {active && <span className="h-2 w-2 rounded-full bg-brand-600" />}
       </span>
       <span>
-        <span className="block text-sm font-semibold text-slate-900">{title}</span>
-        <span className="block text-xs text-slate-500">{text}</span>
+        <span className="block text-sm font-semibold text-neutral-900">{title}</span>
+        <span className="block text-xs text-neutral-500">{text}</span>
       </span>
     </button>
   );
@@ -136,7 +136,7 @@ export default function ProfitSharingPage() {
 
   return (
     <div>
-      <Link to="/partners" className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+      <Link to="/partners" className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
         <ArrowLeft className="h-4 w-4" /> Back to Partners
       </Link>
       <PageHeader
@@ -159,9 +159,9 @@ export default function ProfitSharingPage() {
           </Select>
         </FormField>
         {preview && (
-          <div className={`rounded-xl px-5 py-3 ${profit > 0 ? 'bg-neutral-950 text-white' : 'border border-slate-200 bg-white text-slate-700'}`}>
-            <p className={`text-[11px] uppercase tracking-wider ${profit > 0 ? 'text-white/70' : 'text-slate-500'}`}>{year} net profit</p>
-            <p className="text-2xl font-bold tabular-nums">{formatCurrency(profit)}</p>
+          <div className={`rounded-xl px-5 py-3 ${profit > 0 ? 'bg-neutral-950 text-white' : 'border border-neutral-200 bg-white text-neutral-700'}`}>
+            <p className={`text-[11px] uppercase tracking-wider ${profit > 0 ? 'text-white/70' : 'text-neutral-500'}`}>{year} net profit</p>
+            <p className="text-2xl font-bold figure">{formatCurrency(profit)}</p>
           </div>
         )}
       </div>
@@ -169,7 +169,7 @@ export default function ProfitSharingPage() {
       {!preview ? (
         <PageSpinner />
       ) : preview.existing ? (
-        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+        <div className="mb-6 rounded-xl border border-neutral-200/80 bg-white p-4 text-sm text-neutral-700">
           The {year} profit was already shared ({preview.existing.distributionNumber}, {formatDate(preview.existing.date)}).{' '}
           <Link className="font-semibold text-brand-700 hover:underline" to={`/partners/profit-sharing/${preview.existing.id}`}>
             View it
@@ -177,15 +177,15 @@ export default function ProfitSharingPage() {
           {isAdmin ? ' — cancel it below to share again.' : '.'}
         </div>
       ) : profit <= 0 ? (
-        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500">{year} has no profit to share.</div>
+        <div className="mb-6 rounded-xl border border-neutral-200/80 bg-white p-4 text-sm text-neutral-500">{year} has no profit to share.</div>
       ) : rows.length === 0 ? (
-        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500">Add partners first.</div>
+        <div className="mb-6 rounded-xl border border-neutral-200/80 bg-white p-4 text-sm text-neutral-500">Add partners first.</div>
       ) : (
         <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-5">
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white lg:col-span-3">
+          <div className="overflow-x-auto rounded-xl border border-neutral-200/80 bg-white lg:col-span-3">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
                   <th className="px-4 py-2.5">Partner</th>
                   <th className="px-4 py-2.5 text-right">Capital</th>
                   <th className="px-4 py-2.5 text-right">Share %</th>
@@ -194,9 +194,9 @@ export default function ProfitSharingPage() {
               </thead>
               <tbody>
                 {rows.map((r, i) => (
-                  <tr key={r.id} className="border-b border-slate-100 last:border-0">
-                    <td className="px-4 py-2.5 font-semibold text-slate-800">{r.name}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-slate-500">{formatCurrency(r.equity)}</td>
+                  <tr key={r.id} className="border-b border-neutral-100 last:border-0">
+                    <td className="px-4 py-2.5 font-semibold text-neutral-800">{r.name}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-neutral-500">{formatCurrency(r.equity)}</td>
                     <td className="px-4 py-2.5 text-right">
                       <Input
                         type="number"
@@ -209,12 +209,12 @@ export default function ProfitSharingPage() {
                         onChange={(e) => setPercents((p) => ({ ...p, [r.id]: e.target.value }))}
                       />
                     </td>
-                    <td className="px-4 py-2.5 text-right font-bold tabular-nums text-slate-900">{formatCurrency(amounts[i])}</td>
+                    <td className="px-4 py-2.5 text-right font-bold tabular-nums text-neutral-900">{formatCurrency(amounts[i])}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-slate-900 font-bold">
+                <tr className="border-t-2 border-neutral-900 font-bold">
                   <td className="px-4 py-2.5" colSpan={2}>
                     Total
                   </td>
@@ -223,11 +223,11 @@ export default function ProfitSharingPage() {
                 </tr>
               </tfoot>
             </table>
-            <p className="px-4 pb-3 text-xs text-slate-500">Percentages start from each partner's share of the capital; change them if your agreement says otherwise.</p>
+            <p className="px-4 pb-3 text-xs text-neutral-500">Percentages start from each partner's share of the capital; change them if your agreement says otherwise.</p>
           </div>
 
           <div className="space-y-3 lg:col-span-2">
-            <p className="text-sm font-semibold text-slate-700">What happens to the profit?</p>
+            <p className="text-sm font-semibold text-neutral-700">What happens to the profit?</p>
             <ModeCard active={mode === 'PAYOUT'} onClick={() => setMode('PAYOUT')} title="Pay it to the partners" text="Each share is paid out of the account you choose." />
             <ModeCard active={mode === 'CAPITAL'} onClick={() => setMode('CAPITAL')} title="Add it to their capital" text="The money stays in the business; each partner's capital grows by their share." />
             {mode === 'PAYOUT' && (
@@ -243,17 +243,17 @@ export default function ProfitSharingPage() {
                 <PieChart className="h-4 w-4" /> Share {formatCurrency(profit)}
               </Button>
             ) : (
-              <p className="text-xs text-slate-500">Only an admin can share the profit.</p>
+              <p className="text-xs text-neutral-500">Only an admin can share the profit.</p>
             )}
           </div>
         </div>
       )}
 
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-slate-500">Past profit sharing</h2>
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-neutral-500">Past profit sharing</h2>
+      <div className="overflow-x-auto rounded-xl border border-neutral-200/80 bg-white">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
               <th className="px-4 py-2.5">Number</th>
               {overview && <th className="px-4 py-2.5">Branch</th>}
               <th className="px-4 py-2.5">Year</th>
@@ -267,31 +267,31 @@ export default function ProfitSharingPage() {
           <tbody>
             {history === null ? (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={8} className="px-4 py-6 text-center text-neutral-400">
                   Loading…
                 </td>
               </tr>
             ) : history.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={8} className="px-4 py-6 text-center text-neutral-400">
                   No profit shared yet.
                 </td>
               </tr>
             ) : (
               history.map((d) => (
-                <tr key={d.id} className="border-b border-slate-100 last:border-0">
-                  <td className="px-4 py-2.5 font-semibold text-slate-800">{d.distributionNumber}</td>
-                  {overview && <td className="px-4 py-2.5 text-slate-500">{branchName(d.branch)}</td>}
+                <tr key={d.id} className="border-b border-neutral-100 last:border-0">
+                  <td className="px-4 py-2.5 font-semibold text-neutral-800">{d.distributionNumber}</td>
+                  {overview && <td className="px-4 py-2.5 text-neutral-500">{branchName(d.branch)}</td>}
                   <td className="px-4 py-2.5">{d.year}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums">{formatCurrency(d.netProfit)}</td>
-                  <td className="px-4 py-2.5 text-slate-600">{d.mode === 'PAYOUT' ? `Paid from ${d.accountName}` : 'Added to capital'}</td>
-                  <td className="px-4 py-2.5 text-slate-600">{formatDate(d.date)}</td>
+                  <td className="px-4 py-2.5 text-neutral-600">{d.mode === 'PAYOUT' ? `Paid from ${d.accountName}` : 'Added to capital'}</td>
+                  <td className="px-4 py-2.5 text-neutral-600">{formatDate(d.date)}</td>
                   <td className="px-4 py-2.5">{d.status === 'ACTIVE' ? <Badge color="green">Shared</Badge> : <Badge color="slate">Cancelled</Badge>}</td>
                   <td className="px-4 py-2.5">
                     <div className="flex justify-end gap-1.5">
                       <Link
                         to={`/partners/profit-sharing/${d.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
                       >
                         <FileText className="h-3.5 w-3.5" /> View
                       </Link>
@@ -312,7 +312,7 @@ export default function ProfitSharingPage() {
       <Modal open={!!cancelTarget} onClose={() => setCancelTarget(null)} title={`Cancel ${cancelTarget?.year} profit sharing`} size="sm">
         {cancelTarget && (
           <div className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-neutral-600">
               {cancelTarget.mode === 'PAYOUT'
                 ? `The ${formatCurrency(cancelTarget.netProfit)} paid out comes back into ${cancelTarget.accountName}.`
                 : `The ${formatCurrency(cancelTarget.netProfit)} added to the partners' capital is taken back off.`}

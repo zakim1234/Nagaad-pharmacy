@@ -124,9 +124,9 @@ export default function ExpensesPage() {
             data.expenses.map((e) => (
               <tr key={e.id}>
                 <Td>{formatDate(e.date)}</Td>
-                <Td className="font-mono text-xs text-slate-500">{e.expenseNumber}</Td>
+                <Td className="font-mono text-xs text-neutral-500">{e.expenseNumber}</Td>
                 <Td>{e.category}</Td>
-                <Td className="font-medium text-slate-900">{formatCurrency(e.amount)}</Td>
+                <Td className="font-medium text-neutral-900">{formatCurrency(e.amount)}</Td>
                 <Td>{e.note || '—'}</Td>
                 <Td>{e.paymentAccountName}</Td>
                 <Td>{e.createdByName || '—'}</Td>
@@ -150,12 +150,12 @@ export default function ExpensesPage() {
       <ExpenseFormModal open={formOpen} onClose={() => setFormOpen(false)} onSaved={load} categories={categories} onCategoriesChanged={load} />
 
       <Modal open={!!voidTarget} onClose={() => setVoidTarget(null)} title="Void Expense" size="sm">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-neutral-600">
           Void {voidTarget?.expenseNumber} ({voidTarget && formatCurrency(voidTarget.amount)})? The amount goes back into{' '}
           <strong>{voidTarget?.paymentAccountName}</strong> and the expense no longer counts in reports.
         </p>
         <input
-          className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className="mt-3 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
           placeholder="Reason (optional)"
           value={voidReason}
           onChange={(e) => setVoidReason(e.target.value)}

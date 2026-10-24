@@ -27,11 +27,11 @@ export default function ReturnReceiptPage() {
       .catch((err) => setError(err.friendlyMessage || 'Receipt not found.'));
   }, [id]);
 
-  if (error) return <div className="rounded-lg bg-rose-50 p-4 text-sm text-rose-700">{error}</div>;
+  if (error) return <div className="rounded-lg bg-brand-50 p-4 text-sm text-brand-700">{error}</div>;
   if (!sale) return <PageSpinner />;
 
   const ret = sale.returns[Number(index)];
-  if (!ret) return <div className="rounded-lg bg-rose-50 p-4 text-sm text-rose-700">This return could not be found on this invoice.</div>;
+  if (!ret) return <div className="rounded-lg bg-brand-50 p-4 text-sm text-brand-700">This return could not be found on this invoice.</div>;
 
   const returnReceiptNumber = `${sale.receiptNumber}-R${Number(index) + 1}`;
   const invoiceBalanceAfter = ret.invoiceBalanceAfter ?? sale.outstanding;
@@ -40,7 +40,7 @@ export default function ReturnReceiptPage() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between no-print">
-        <Link to={`/receipt/${id}`} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to={`/receipt/${id}`} className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Invoice
         </Link>
         <div className="flex gap-2">
@@ -57,7 +57,7 @@ export default function ReturnReceiptPage() {
 
       <div
         id="print-area"
-        className="mx-auto max-w-[148mm] rounded-2xl border border-slate-200 bg-white p-6 text-[13px] text-neutral-900 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
+        className="mx-auto max-w-[148mm] rounded-2xl border border-neutral-200/80 bg-white p-6 text-[13px] text-neutral-900 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
       >
         <DocHeader compact title="Return Receipt" meta={<span className="font-semibold">{returnReceiptNumber}</span>} />
 

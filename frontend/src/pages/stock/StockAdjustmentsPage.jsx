@@ -69,10 +69,10 @@ export default function StockAdjustmentsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-xl font-bold text-slate-900">
+          <h1 className="flex items-center gap-2 text-xl font-bold text-neutral-900">
             <SlidersHorizontal className="h-5 w-5 text-brand-600" /> Stock Adjustment
           </h1>
-          <p className="mt-1 text-sm text-slate-500">Correct stock for damaged, expired or lost goods, or after a physical count.</p>
+          <p className="mt-1 text-sm text-neutral-500">Correct stock for damaged, expired or lost goods, or after a physical count.</p>
         </div>
         {canAdjust && (
           <div className="flex flex-wrap gap-2">
@@ -100,10 +100,10 @@ export default function StockAdjustmentsPage() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-neutral-200/70 bg-white p-4">
         <FormField label="Search">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
             <Input className="pl-9" placeholder="Item or ADJ number" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
           </div>
         </FormField>
@@ -130,19 +130,19 @@ export default function StockAdjustmentsPage() {
         </FormField>
       </div>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
+      <section className="overflow-hidden rounded-2xl border border-neutral-200/70 bg-white">
         {rows.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-14 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-300 ring-1 ring-slate-100">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-50 text-neutral-300 ring-1 ring-neutral-100">
               <ClipboardCheck className="h-6 w-6" />
             </div>
-            <p className="text-sm text-slate-400">No stock adjustments yet.</p>
+            <p className="text-sm text-neutral-400">No stock adjustments yet.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50/80">
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+              <thead className="bg-neutral-50/80">
+                <tr className="text-left text-xs uppercase tracking-wide text-neutral-400">
                   <th className="px-4 py-3 font-medium">Adjustment</th>
                   <th className="px-4 py-3 font-medium">Item</th>
                   <th className="px-4 py-3 text-right font-medium">Change</th>
@@ -153,14 +153,14 @@ export default function StockAdjustmentsPage() {
                   <th className="px-4 py-3 font-medium">By</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-neutral-100">
                 {rows.map((a) => {
                   const down = a.direction === 'DECREASE';
                   return (
-                    <tr key={a.id} className="align-top hover:bg-slate-50/70">
+                    <tr key={a.id} className="align-top hover:bg-neutral-50/70">
                       <td className="px-4 py-3">
-                        <p className="font-semibold text-slate-800">{a.adjustmentNumber}</p>
-                        <p className="text-xs text-slate-400">{formatDateTime(a.createdAt)}</p>
+                        <p className="font-semibold text-neutral-800">{a.adjustmentNumber}</p>
+                        <p className="text-xs text-neutral-400">{formatDateTime(a.createdAt)}</p>
                         {a.countNumber && (
                           <button type="button" onClick={() => { setQ(a.countNumber); setPage(1); }} className="mt-0.5 text-[11px] font-medium text-brand-600 hover:underline">
                             Stock count {a.countNumber}
@@ -168,28 +168,28 @@ export default function StockAdjustmentsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <p className="font-medium text-slate-800">{a.itemName}</p>
-                        <p className="text-xs text-slate-400">{a.itemCode}</p>
+                        <p className="font-medium text-neutral-800">{a.itemName}</p>
+                        <p className="text-xs text-neutral-400">{a.itemCode}</p>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className={`inline-flex items-center gap-1 font-semibold tabular-nums ${down ? 'text-rose-600' : 'text-emerald-600'}`}>
+                        <span className={`inline-flex items-center gap-1 font-semibold tabular-nums ${down ? 'text-brand-600' : 'text-emerald-600'}`}>
                           {down ? <ArrowDownCircle className="h-4 w-4" /> : <ArrowUpCircle className="h-4 w-4" />}
                           {down ? '−' : '+'}
                           {a.quantity} {a.unit}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 tabular-nums text-slate-500">
-                        {a.quantityBefore} → <span className="font-semibold text-slate-800">{a.quantityAfter}</span>
+                      <td className="whitespace-nowrap px-4 py-3 tabular-nums text-neutral-500">
+                        {a.quantityBefore} → <span className="font-semibold text-neutral-800">{a.quantityAfter}</span>
                       </td>
                       <td className="px-4 py-3">
                         <Badge color={REASONS[a.reason]?.color || 'slate'}>{REASONS[a.reason]?.label || a.reason}</Badge>
-                        {a.note && <p className="mt-1 max-w-[220px] text-xs text-slate-500">{a.note}</p>}
+                        {a.note && <p className="mt-1 max-w-[220px] text-xs text-neutral-500">{a.note}</p>}
                       </td>
-                      <td className={`px-4 py-3 text-right font-semibold tabular-nums ${down ? 'text-rose-600' : 'text-emerald-600'}`}>
+                      <td className={`px-4 py-3 text-right font-semibold tabular-nums ${down ? 'text-brand-600' : 'text-emerald-600'}`}>
                         {down ? '−' : '+'}
                         {formatCurrency(a.value)}
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-500">
+                      <td className="px-4 py-3 text-xs text-neutral-500">
                         {a.lots.map((l) => (
                           <p key={String(l.lot)}>
                             {l.stockSerial || 'Batch'}
@@ -197,7 +197,7 @@ export default function StockAdjustmentsPage() {
                           </p>
                         ))}
                       </td>
-                      <td className="px-4 py-3 text-slate-500">{a.createdByName || '—'}</td>
+                      <td className="px-4 py-3 text-neutral-500">{a.createdByName || '—'}</td>
                     </tr>
                   );
                 })}
@@ -353,7 +353,7 @@ function NewAdjustmentModal({ open, onClose, onSaved }) {
         {/* Item */}
         <FormField label="Item" required>
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
             <Input
               className="pl-9 pr-9"
               placeholder="Search item by name or code"
@@ -369,22 +369,22 @@ function NewAdjustmentModal({ open, onClose, onSaved }) {
               <button
                 type="button"
                 onClick={() => { setQuery(''); setInfo(null); setMatches([]); setLotId(''); }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:text-neutral-600"
                 aria-label="Clear item"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
             {matches.length > 0 && !info && (
-              <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
+              <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-neutral-200/80 bg-white py-1 shadow-lg">
                 {matches.map((m) => (
                   <li key={m.id}>
                     <button type="button" onClick={() => pick(m)} className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-brand-50">
                       <span>
-                        <span className="font-medium text-slate-800">{m.name}</span>
-                        <span className="ml-2 text-xs text-slate-400">{m.itemCode}</span>
+                        <span className="font-medium text-neutral-800">{m.name}</span>
+                        <span className="ml-2 text-xs text-neutral-400">{m.itemCode}</span>
                       </span>
-                      <span className="text-xs text-slate-500">{m.quantity} {m.unit}</span>
+                      <span className="text-xs text-neutral-500">{m.quantity} {m.unit}</span>
                     </button>
                   </li>
                 ))}
@@ -395,18 +395,18 @@ function NewAdjustmentModal({ open, onClose, onSaved }) {
 
         {item && (
           <>
-            <div className="grid grid-cols-3 gap-2 rounded-xl bg-slate-50 p-3 text-center">
+            <div className="grid grid-cols-3 gap-2 rounded-xl bg-neutral-50 p-3 text-center">
               <div>
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">In stock</p>
-                <p className="text-base font-bold text-slate-800">{item.quantity} {item.unit}</p>
+                <p className="text-[11px] uppercase tracking-wide text-neutral-400">In stock</p>
+                <p className="text-base font-bold text-neutral-800">{item.quantity} {item.unit}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">Held by pending invoices</p>
-                <p className="text-base font-bold text-slate-800">{item.reservedQuantity}</p>
+                <p className="text-[11px] uppercase tracking-wide text-neutral-400">Held by pending invoices</p>
+                <p className="text-base font-bold text-neutral-800">{item.reservedQuantity}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">Average cost</p>
-                <p className="text-base font-bold text-slate-800">{formatCurrency(item.unitCost)}</p>
+                <p className="text-[11px] uppercase tracking-wide text-neutral-400">Average cost</p>
+                <p className="text-base font-bold text-neutral-800">{formatCurrency(item.unitCost)}</p>
               </div>
             </div>
 
@@ -422,13 +422,13 @@ function NewAdjustmentModal({ open, onClose, onSaved }) {
                     setLotId('');
                   }}
                   className={`rounded-xl border p-3 text-left transition ${
-                    mode === key ? 'border-brand-300 bg-brand-50 ring-1 ring-brand-200' : 'border-slate-200 hover:border-slate-300'
+                    mode === key ? 'border-brand-300 bg-brand-50 ring-1 ring-brand-200' : 'border-neutral-200 hover:border-neutral-300'
                   }`}
                 >
-                  <p className={`flex items-center gap-1.5 text-sm font-semibold ${mode === key ? 'text-brand-700' : 'text-slate-700'}`}>
+                  <p className={`flex items-center gap-1.5 text-sm font-semibold ${mode === key ? 'text-brand-700' : 'text-neutral-700'}`}>
                     <Icon className="h-4 w-4" /> {label}
                   </p>
-                  <p className="mt-0.5 text-xs text-slate-400">{hint}</p>
+                  <p className="mt-0.5 text-xs text-neutral-400">{hint}</p>
                 </button>
               ))}
             </div>
@@ -484,7 +484,7 @@ function NewAdjustmentModal({ open, onClose, onSaved }) {
             </FormField>
 
             {qty > 0 && !problem && (
-              <div className={`rounded-xl p-3 text-sm ${direction === 'DECREASE' ? 'bg-rose-50 text-rose-800' : 'bg-emerald-50 text-emerald-800'}`}>
+              <div className={`rounded-xl p-3 text-sm ${direction === 'DECREASE' ? 'bg-brand-50 text-brand-800' : 'bg-emerald-50 text-emerald-800'}`}>
                 Stock will go from <strong>{item.quantity}</strong> to <strong>{after} {item.unit}</strong> —{' '}
                 {direction === 'DECREASE' ? `${formatCurrency(value)} written off` : `${formatCurrency(value)} added back`} at average cost.
               </div>
@@ -506,14 +506,14 @@ const TONES = {
 
 function SummaryCard({ icon: Icon, tone, label, value, hint }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">
+    <div className="flex items-center gap-4 rounded-2xl border border-neutral-200/70 bg-white p-5">
       <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${TONES[tone]} text-white shadow-md`}>
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">
-        <p className="text-sm font-medium text-slate-500">{label}</p>
-        <p className="text-2xl font-bold leading-tight tabular-nums text-slate-900">{value}</p>
-        <p className="truncate text-xs text-slate-400">{hint}</p>
+        <p className="text-sm font-medium text-neutral-500">{label}</p>
+        <p className="text-2xl font-bold leading-tight text-neutral-900 figure">{value}</p>
+        <p className="truncate text-xs text-neutral-400">{hint}</p>
       </div>
     </div>
   );

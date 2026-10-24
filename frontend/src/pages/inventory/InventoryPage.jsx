@@ -90,7 +90,7 @@ export default function InventoryPage() {
 
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
         <div className="relative lg:col-span-2">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <Input className="pl-9" placeholder="Search by item, serial number, or item ID..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <Select value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -156,35 +156,35 @@ export default function InventoryPage() {
               const stock = stockStatusBadge(item.stockStatus);
               const expiry = expiryStatusBadge(item.expiryStatus);
               return (
-                <tr key={item.id} className="hover:bg-slate-50">
-                  <Td className="whitespace-nowrap font-mono text-xs text-slate-500">{item.itemCode}</Td>
+                <tr key={item.id} className="hover:bg-neutral-50">
+                  <Td className="whitespace-nowrap font-mono text-xs text-neutral-500">{item.itemCode}</Td>
                   <Td>
-                    <button onClick={() => setDetailsItem(item)} className="text-left font-medium text-slate-900 hover:text-brand-600">
+                    <button onClick={() => setDetailsItem(item)} className="text-left font-medium text-neutral-900 hover:text-brand-600">
                       {item.name}
                     </button>
                   </Td>
-                  <Td className="whitespace-nowrap text-xs text-slate-500">{item.serialNumber || '—'}</Td>
+                  <Td className="whitespace-nowrap text-xs text-neutral-500">{item.serialNumber || '—'}</Td>
                   <Td>{item.category?.name || 'Uncategorized'}</Td>
                   <Td>{item.supplier?.name || '—'}</Td>
                   <Td className="tabular-nums">
                     {item.quantity} {item.unit}
                   </Td>
                   <Td className="tabular-nums">
-                    <span className="text-slate-500">{formatCurrency(item.costPrice)}</span>
+                    <span className="text-neutral-500">{formatCurrency(item.costPrice)}</span>
                     {' / '}
                     <span className="font-medium">{formatCurrency(item.sellingPrice)}</span>
                   </Td>
-                  <Td className="tabular-nums font-medium text-slate-700">{formatCurrency(item.quantity * item.costPrice)}</Td>
+                  <Td className="tabular-nums font-medium text-neutral-700">{formatCurrency(item.quantity * item.costPrice)}</Td>
                   <Td>
                     <Badge color={stock.color}>{stock.label}</Badge>
                   </Td>
                   <Td>
-                    {item.expiryDate ? <Badge color={expiry.color}>{expiry.label}</Badge> : <span className="text-slate-300">—</span>}
+                    {item.expiryDate ? <Badge color={expiry.color}>{expiry.label}</Badge> : <span className="text-neutral-300">—</span>}
                   </Td>
-                  <Td className="whitespace-nowrap text-xs text-slate-500">{formatDate(item.createdAt)}</Td>
+                  <Td className="whitespace-nowrap text-xs text-neutral-500">{formatDate(item.createdAt)}</Td>
                   <Td>
                     <div className="flex justify-end gap-1">
-                      <button onClick={() => setDetailsItem(item)} className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600" title="View details">
+                      <button onClick={() => setDetailsItem(item)} className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600" title="View details">
                         <Eye className="h-4 w-4" />
                       </button>
                       <button
@@ -192,12 +192,12 @@ export default function InventoryPage() {
                           setEditItem(item);
                           setFormOpen(true);
                         }}
-                        className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600"
+                        className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-brand-600"
                         title="Edit"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
-                      <button onClick={() => setDeleteItem(item)} className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600" title="Delete">
+                      <button onClick={() => setDeleteItem(item)} className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-brand-600" title="Delete">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -208,7 +208,7 @@ export default function InventoryPage() {
           )}
         </TBody>
       </Table>
-      <div className="rounded-b-xl border border-t-0 border-slate-200 bg-white">
+      <div className="rounded-b-xl border border-t-0 border-neutral-200/80 bg-white">
         <Pagination {...pagination} onChange={setPage} />
       </div>
 

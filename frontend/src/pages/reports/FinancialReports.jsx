@@ -15,7 +15,7 @@ export function ExpenseReport({ data }) {
   return (
     <div className="space-y-6">
       <ReportSection title="Expense Summary">
-        <ReportStatRow items={[{ label: 'Total Expenses', value: formatCurrency(data.totalExpenses), tone: 'text-rose-600' }, { label: 'Entries', value: data.expenses.length }]} />
+        <ReportStatRow items={[{ label: 'Total Expenses', value: formatCurrency(data.totalExpenses), tone: 'text-brand-600' }, { label: 'Entries', value: data.expenses.length }]} />
       </ReportSection>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -36,7 +36,7 @@ export function ExpenseReport({ data }) {
                 <>
                   {data.byCategory.map((c) => (
                     <tr key={c.category}>
-                      <Td className="font-medium text-slate-900">{c.category}</Td>
+                      <Td className="font-medium text-neutral-900">{c.category}</Td>
                       <Td>{c.count}</Td>
                       <Td>{formatCurrency(c.amount)}</Td>
                       <Td>{c.percent}%</Td>
@@ -90,7 +90,7 @@ export function ExpenseReport({ data }) {
               data.expenses.map((e) => (
                 <tr key={e.id}>
                   <Td>{formatDate(e.date)}</Td>
-                  <Td className="font-mono text-xs text-slate-500">{e.expenseNumber}</Td>
+                  <Td className="font-mono text-xs text-neutral-500">{e.expenseNumber}</Td>
                   <Td>{e.category}</Td>
                   <Td>{formatCurrency(e.amount)}</Td>
                   <Td>{e.note || '—'}</Td>
@@ -132,7 +132,7 @@ export function PaymentMethodReport({ data }) {
                 <>
                   {data.methods.map((m) => (
                     <tr key={m.account}>
-                      <Td className="font-medium text-slate-900">{m.account}</Td>
+                      <Td className="font-medium text-neutral-900">{m.account}</Td>
                       <Td>{formatCurrency(m.salePayments)}</Td>
                       <Td>{formatCurrency(m.debtPayments)}</Td>
                       <Td>{formatCurrency(m.deposits)}</Td>
@@ -152,7 +152,7 @@ export function PaymentMethodReport({ data }) {
               )}
             </TBody>
           </Table>
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 text-xs text-neutral-400">
             Counted when the payment posts to the account (same-day draft invoices post at Close Day). Gross of refunds.
           </p>
         </ReportSection>
@@ -179,7 +179,7 @@ export function ExpiredProductsControls({ mode, onModeChange, days, onDaysChange
         <option value="near">Near Expiry</option>
       </Select>
       {mode === 'near' && (
-        <label className="flex items-center gap-2 text-sm text-slate-600">
+        <label className="flex items-center gap-2 text-sm text-neutral-600">
           Expiring within
           <Select value={days} onChange={(e) => onDaysChange(Number(e.target.value))} className="w-32">
             <option value={7}>7 days</option>
@@ -200,7 +200,7 @@ export function ExpiredProductsReport({ data }) {
       <ReportSection title={isNear ? `Near Expiry (next ${data.days} days)` : 'Expired Products'}>
         <ReportStatRow
           items={[
-            { label: isNear ? 'Total Value Near Expiry' : 'Total Expired Value', value: formatCurrency(data.totalValue), tone: 'text-rose-600' },
+            { label: isNear ? 'Total Value Near Expiry' : 'Total Expired Value', value: formatCurrency(data.totalValue), tone: 'text-brand-600' },
             { label: 'Units', value: data.totalQuantity },
             { label: 'Batches', value: data.items.length },
           ]}
@@ -223,8 +223,8 @@ export function ExpiredProductsReport({ data }) {
             ) : (
               data.items.map((r, i) => (
                 <tr key={`${r.itemId}-${i}`}>
-                  <Td className="font-medium text-slate-900">
-                    {r.itemName} <span className="text-xs text-slate-400">{r.itemCode}</span>
+                  <Td className="font-medium text-neutral-900">
+                    {r.itemName} <span className="text-xs text-neutral-400">{r.itemCode}</span>
                   </Td>
                   <Td>{r.batch || '—'}</Td>
                   <Td>{formatDate(r.expiryDate)}</Td>
@@ -247,7 +247,7 @@ export function LowStockReport({ data }) {
         <ReportStatRow
           items={[
             { label: 'Low Stock Items', value: data.lowCount, tone: 'text-amber-600' },
-            { label: 'Out of Stock Items', value: data.outCount, tone: 'text-rose-600' },
+            { label: 'Out of Stock Items', value: data.outCount, tone: 'text-brand-600' },
           ]}
         />
       </ReportSection>
@@ -269,8 +269,8 @@ export function LowStockReport({ data }) {
             ) : (
               data.items.map((r) => (
                 <tr key={r.itemId}>
-                  <Td className="font-medium text-slate-900">
-                    {r.itemName} <span className="text-xs text-slate-400">{r.itemCode}</span>
+                  <Td className="font-medium text-neutral-900">
+                    {r.itemName} <span className="text-xs text-neutral-400">{r.itemCode}</span>
                   </Td>
                   <Td>{r.category}</Td>
                   <Td>
@@ -298,7 +298,7 @@ export function SalesReturnReport({ data }) {
         <ReportStatRow
           items={[
             { label: 'Returns', value: data.totalReturns },
-            { label: 'Total Returns Value', value: formatCurrency(data.totalReturnValue), tone: 'text-rose-600' },
+            { label: 'Total Returns Value', value: formatCurrency(data.totalReturnValue), tone: 'text-brand-600' },
             { label: 'Refunded From Accounts', value: formatCurrency(data.totalRefunded) },
           ]}
         />
@@ -323,7 +323,7 @@ export function SalesReturnReport({ data }) {
               data.returns.map((r, i) => (
                 <tr key={`${r.saleId}-${i}`}>
                   <Td>{formatDate(r.date)}</Td>
-                  <Td className="font-medium text-slate-900">
+                  <Td className="font-medium text-neutral-900">
                     <Link to={`/receipt/${r.saleId}`} className="text-brand-600 hover:underline no-print">
                       {r.receiptNumber}
                     </Link>
@@ -351,10 +351,10 @@ export function PurchaseReturnReport({ data }) {
         <ReportStatRow
           items={[
             { label: 'Returned Invoices', value: data.totalReturns },
-            { label: 'Total Returns Value', value: formatCurrency(data.totalReturnValue), tone: 'text-rose-600' },
+            { label: 'Total Returns Value', value: formatCurrency(data.totalReturnValue), tone: 'text-brand-600' },
           ]}
         />
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-neutral-400">
           Goods sent back to a supplier are recorded by voiding the purchase invoice, so this lists voided purchases by the date they were voided.
         </p>
       </ReportSection>
@@ -378,7 +378,7 @@ export function PurchaseReturnReport({ data }) {
               data.returns.map((r) => (
                 <tr key={r.purchaseId}>
                   <Td>{formatDate(r.date)}</Td>
-                  <Td className="font-medium text-slate-900">
+                  <Td className="font-medium text-neutral-900">
                     <Link to={`/purchases/${r.purchaseId}`} className="text-brand-600 hover:underline no-print">
                       {r.purchaseNumber}
                     </Link>

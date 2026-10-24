@@ -25,7 +25,7 @@ export default function InventoryPrintPage() {
 
   useEffect(() => load(), [load]);
 
-  if (error) return <div className="rounded-lg bg-rose-50 p-4 text-sm text-rose-700">{error}</div>;
+  if (error) return <div className="rounded-lg bg-brand-50 p-4 text-sm text-brand-700">{error}</div>;
   if (!item) return <PageSpinner />;
 
   const history = item.purchaseHistory || [];
@@ -40,7 +40,7 @@ export default function InventoryPrintPage() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between no-print">
-        <Link to="/inventory" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to="/inventory" className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Inventory
         </Link>
         <div className="flex gap-2">
@@ -53,7 +53,7 @@ export default function InventoryPrintPage() {
 
       <div
         id="print-area"
-        className={`mx-auto rounded-2xl border border-slate-200 bg-white p-6 text-[13px] shadow-sm print:rounded-none print:border-0 print:p-0 print:shadow-none ${
+        className={`mx-auto rounded-2xl border border-neutral-200 bg-white p-6 text-[13px] shadow-sm print:rounded-none print:border-0 print:p-0 print:shadow-none ${
           hasLongHistory ? 'max-w-[210mm] print:max-w-none' : 'max-w-[148mm] print:max-w-none'
         }`}
       >
@@ -64,46 +64,46 @@ export default function InventoryPrintPage() {
           <tbody>
             <tr className="border-b border-neutral-200">
               <td className="w-1/3 px-2 py-1.5 text-neutral-500">Item Name</td>
-              <td className="py-1.5 font-medium text-slate-800">{item.name}</td>
+              <td className="py-1.5 font-medium text-neutral-800">{item.name}</td>
             </tr>
             <tr className="border-b border-neutral-200">
               <td className="px-2 py-1.5 text-neutral-500">Serial Number</td>
-              <td className="py-1.5 font-medium text-slate-800">{item.serialNumber || '—'}</td>
+              <td className="py-1.5 font-medium text-neutral-800">{item.serialNumber || '—'}</td>
             </tr>
             <tr className="border-b border-neutral-200">
               <td className="px-2 py-1.5 text-neutral-500">Category</td>
-              <td className="py-1.5 text-slate-700">{item.category?.name || 'Uncategorized'}</td>
+              <td className="py-1.5 text-neutral-700">{item.category?.name || 'Uncategorized'}</td>
             </tr>
             <tr className="border-b border-neutral-200">
               <td className="px-2 py-1.5 text-neutral-500">Supplier</td>
-              <td className="py-1.5 text-slate-700">{item.supplier?.name || '—'}</td>
+              <td className="py-1.5 text-neutral-700">{item.supplier?.name || '—'}</td>
             </tr>
             <tr className="border-b border-neutral-200">
               <td className="px-2 py-1.5 text-neutral-500">Quantity In Stock</td>
-              <td className="py-1.5 text-slate-700">
+              <td className="py-1.5 text-neutral-700">
                 {item.quantity} {item.unit}
               </td>
             </tr>
             <tr className="border-b border-neutral-200">
               <td className="px-2 py-1.5 text-neutral-500">Average Cost</td>
-              <td className="py-1.5 text-slate-700">{formatCurrency(item.costPrice)}</td>
+              <td className="py-1.5 text-neutral-700">{formatCurrency(item.costPrice)}</td>
             </tr>
             <tr className="border-b border-neutral-200">
               <td className="px-2 py-1.5 text-neutral-500">Selling Price</td>
-              <td className="py-1.5 text-slate-700">{formatCurrency(item.sellingPrice)}</td>
+              <td className="py-1.5 text-neutral-700">{formatCurrency(item.sellingPrice)}</td>
             </tr>
             <tr className="border-b border-neutral-200">
               <td className="px-2 py-1.5 text-neutral-500">Stock Value (Qty × Avg Cost)</td>
-              <td className="py-1.5 font-semibold text-slate-800">{formatCurrency(totalCostValue)}</td>
+              <td className="py-1.5 font-semibold text-neutral-800">{formatCurrency(totalCostValue)}</td>
             </tr>
             <tr className="border-b border-neutral-200">
               <td className="px-2 py-1.5 text-neutral-500">Created / Entry Date</td>
-              <td className="py-1.5 text-slate-700">{formatDateTime(item.createdAt)}</td>
+              <td className="py-1.5 text-neutral-700">{formatDateTime(item.createdAt)}</td>
             </tr>
             {item.expiryDate && (
               <tr className="border-b border-neutral-200">
                 <td className="px-2 py-1.5 text-neutral-500">Expiry Date</td>
-                <td className="py-1.5 text-slate-700">{formatDate(item.expiryDate)}</td>
+                <td className="py-1.5 text-neutral-700">{formatDate(item.expiryDate)}</td>
               </tr>
             )}
           </tbody>
@@ -112,7 +112,7 @@ export default function InventoryPrintPage() {
         <BatchHistory item={item} />
         {history.length > 0 && (
           <>
-            <div className="my-3 border-t border-dashed border-slate-300" />
+            <div className="my-3 border-t border-dashed border-neutral-300" />
             <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-500">Purchase History</p>
             <table className="w-full border-collapse text-xs">
               <thead>
@@ -127,13 +127,13 @@ export default function InventoryPrintPage() {
               </thead>
               <tbody>
                 {history.map((h, i) => (
-                  <tr key={i} className="border-b border-slate-50">
-                    <td className="py-1.5 text-slate-700">{h.purchaseNumber}</td>
-                    <td className="py-1.5 text-slate-600">{h.supplierName}</td>
-                    <td className="py-1.5 text-center text-slate-600">{h.quantity}</td>
-                    <td className="py-1.5 text-right text-slate-600">{formatCurrency(h.unitCost)}</td>
-                    <td className="py-1.5 text-right font-medium text-slate-800">{formatCurrency(h.total)}</td>
-                    <td className="py-1.5 text-right text-slate-500">{formatDate(h.date)}</td>
+                  <tr key={i} className="border-b border-neutral-50">
+                    <td className="py-1.5 text-neutral-700">{h.purchaseNumber}</td>
+                    <td className="py-1.5 text-neutral-600">{h.supplierName}</td>
+                    <td className="py-1.5 text-center text-neutral-600">{h.quantity}</td>
+                    <td className="py-1.5 text-right text-neutral-600">{formatCurrency(h.unitCost)}</td>
+                    <td className="py-1.5 text-right font-medium text-neutral-800">{formatCurrency(h.total)}</td>
+                    <td className="py-1.5 text-right text-neutral-500">{formatDate(h.date)}</td>
                   </tr>
                 ))}
               </tbody>

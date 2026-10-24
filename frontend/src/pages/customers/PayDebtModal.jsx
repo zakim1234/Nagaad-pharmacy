@@ -94,28 +94,28 @@ export default function PayDebtModal({ open, onClose, customerId, onPaid }) {
   return (
     <Modal open={open} onClose={onClose} title="Pay Debt" size="lg">
       {loading ? (
-        <p className="py-8 text-center text-sm text-slate-400">Loading outstanding invoices...</p>
+        <p className="py-8 text-center text-sm text-neutral-400">Loading outstanding invoices...</p>
       ) : invoices.length === 0 ? (
-        <p className="py-8 text-center text-sm text-slate-400">This customer has no outstanding debt.</p>
+        <p className="py-8 text-center text-sm text-neutral-400">This customer has no outstanding debt.</p>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="rounded-lg bg-rose-50 px-4 py-3">
-            <p className="text-xs uppercase text-rose-500">Total Outstanding Debt</p>
-            <p className="text-xl font-bold text-rose-700">{formatCurrency(totalOutstanding)}</p>
+          <div className="rounded-lg bg-brand-50 px-4 py-3">
+            <p className="text-xs uppercase text-brand-500">Total Outstanding Debt</p>
+            <p className="text-xl font-bold text-brand-700">{formatCurrency(totalOutstanding)}</p>
           </div>
 
-          <div className="flex gap-1 rounded-lg bg-slate-100 p-1 text-sm">
+          <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 text-sm">
             <button
               type="button"
               onClick={() => setMode('amount')}
-              className={`flex-1 rounded-md px-3 py-1.5 font-semibold ${mode === 'amount' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500'}`}
+              className={`flex-1 rounded-md px-3 py-1.5 font-semibold ${mode === 'amount' ? 'bg-white text-brand-700 shadow-sm' : 'text-neutral-500'}`}
             >
               Pay an Amount
             </button>
             <button
               type="button"
               onClick={() => setMode('specific')}
-              className={`flex-1 rounded-md px-3 py-1.5 font-semibold ${mode === 'specific' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500'}`}
+              className={`flex-1 rounded-md px-3 py-1.5 font-semibold ${mode === 'specific' ? 'bg-white text-brand-700 shadow-sm' : 'text-neutral-500'}`}
             >
               Pay Specific Invoices
             </button>
@@ -131,19 +131,19 @@ export default function PayDebtModal({ open, onClose, customerId, onPaid }) {
                   </Button>
                 </div>
               </FormField>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-neutral-400">
                 Applied automatically to the oldest outstanding invoices first.
               </p>
             </div>
           ) : (
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Outstanding Invoices</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">Outstanding Invoices</p>
               <div className="max-h-64 space-y-2 overflow-y-auto">
                 {invoices.map((inv) => (
-                  <div key={inv.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 px-3 py-2">
+                  <div key={inv.id} className="flex items-center justify-between gap-3 rounded-lg border border-neutral-100 px-3 py-2">
                     <div>
-                      <p className="text-sm font-medium text-slate-800">{inv.receiptNumber}</p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-sm font-medium text-neutral-800">{inv.receiptNumber}</p>
+                      <p className="text-xs text-neutral-400">
                         {formatDate(inv.createdAt)} · Total {formatCurrency(inv.total)} · Owed {formatCurrency(inv.outstanding)}
                       </p>
                     </div>
@@ -160,7 +160,7 @@ export default function PayDebtModal({ open, onClose, customerId, onPaid }) {
                   </div>
                 ))}
               </div>
-              <div className="mt-2 flex justify-between text-sm font-semibold text-slate-700">
+              <div className="mt-2 flex justify-between text-sm font-semibold text-neutral-700">
                 <span>Total to Pay</span>
                 <span>{formatCurrency(specificTotal)}</span>
               </div>
@@ -174,7 +174,7 @@ export default function PayDebtModal({ open, onClose, customerId, onPaid }) {
             <AccountSelect value={paymentAccountId} onChange={setPaymentAccountId} disabled={paying} placeholder="Select account..." />
           </FormField>
 
-          <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+          <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
             <Button type="button" variant="secondary" onClick={onClose} disabled={paying}>
               Cancel
             </Button>

@@ -101,9 +101,9 @@ function UserFormModal({ open, onClose, user, onSaved, branches = [] }) {
           </p>
         ) : (
           <FormField label="Permissions">
-            <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 p-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 rounded-lg border border-neutral-200 p-3 sm:grid-cols-3">
               {PERMISSION_MODULES.map((m) => (
-                <label key={m.key} className="flex items-center gap-2 text-sm text-slate-700">
+                <label key={m.key} className="flex items-center gap-2 text-sm text-neutral-700">
                   <input type="checkbox" checked={form.permissions.includes(m.key)} onChange={() => togglePermission(m.key)} />
                   {m.label}
                 </label>
@@ -112,7 +112,7 @@ function UserFormModal({ open, onClose, user, onSaved, branches = [] }) {
           </FormField>
         )}
 
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+        <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
           <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>Cancel</Button>
           <Button type="submit" loading={saving}>{isEdit ? 'Save Changes' : 'Create User'}</Button>
         </div>
@@ -207,35 +207,35 @@ export default function UsersPage() {
             <TableEmpty colSpan={showBranch ? 9 : 8} message="No users found." />
           ) : (
             users.map((u) => (
-              <tr key={u.id} className="hover:bg-slate-50">
-                <Td className="font-medium text-slate-900">{u.name}</Td>
-                <Td className="text-slate-500">{u.username}</Td>
+              <tr key={u.id} className="hover:bg-neutral-50">
+                <Td className="font-medium text-neutral-900">{u.name}</Td>
+                <Td className="text-neutral-500">{u.username}</Td>
                 <Td><Badge color={u.role === 'admin' ? 'blue' : 'slate'}>{u.role}</Badge></Td>
-                {showBranch && <Td>{u.isSuperAdmin ? <Badge color="red">Super Admin · all branches</Badge> : <span className="text-sm text-slate-700">{u.branchName || '—'}</span>}</Td>}
+                {showBranch && <Td>{u.isSuperAdmin ? <Badge color="red">Super Admin · all branches</Badge> : <span className="text-sm text-neutral-700">{u.branchName || '—'}</span>}</Td>}
                 <Td>
                   {u.role === 'admin' ? (
-                    <span className="text-xs text-slate-400">All modules</span>
+                    <span className="text-xs text-neutral-400">All modules</span>
                   ) : u.permissions.length === 0 ? (
-                    <span className="text-xs text-slate-300">None</span>
+                    <span className="text-xs text-neutral-300">None</span>
                   ) : (
-                    <span className="text-xs text-slate-500">{u.permissions.length} module{u.permissions.length > 1 ? 's' : ''}</span>
+                    <span className="text-xs text-neutral-500">{u.permissions.length} module{u.permissions.length > 1 ? 's' : ''}</span>
                   )}
                 </Td>
                 <Td>
                   {u.role === 'admin' ? (
-                    <span className="text-xs text-slate-400">Always</span>
+                    <span className="text-xs text-neutral-400">Always</span>
                   ) : (
                     <button
                       type="button"
                       onClick={() => toggleCancel(u)}
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${u.permissions.includes('cancelInvoices') ? 'bg-brand-600 text-white hover:bg-brand-700' : 'border border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${u.permissions.includes('cancelInvoices') ? 'bg-brand-600 text-white hover:bg-brand-700' : 'border border-neutral-200 text-neutral-500 hover:bg-neutral-50'}`}
                     >
                       {u.permissions.includes('cancelInvoices') ? 'On — click to turn off' : 'Off — click to allow'}
                     </button>
                   )}
                 </Td>
                 <Td><Badge color={u.active ? 'green' : 'red'}>{u.active ? 'Active' : 'Deactivated'}</Badge></Td>
-                <Td className="text-xs text-slate-400">{formatDate(u.createdAt)}</Td>
+                <Td className="text-xs text-neutral-400">{formatDate(u.createdAt)}</Td>
                 <Td>
                   <div className="flex justify-end gap-1">
                     <button onClick={() => { setEditUser(u); setFormOpen(true); }} className="rounded-md px-2 py-1 text-xs font-semibold text-brand-600 hover:bg-brand-50">
@@ -244,7 +244,7 @@ export default function UsersPage() {
                     {u.id !== me?.id && (
                       <button
                         onClick={() => setToggleTarget(u)}
-                        className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold ${u.active ? 'text-rose-600 hover:bg-rose-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                        className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold ${u.active ? 'text-brand-600 hover:bg-brand-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
                       >
                         {u.active ? <><ShieldOff className="h-3.5 w-3.5" /> Deactivate</> : <><ShieldCheck className="h-3.5 w-3.5" /> Activate</>}
                       </button>

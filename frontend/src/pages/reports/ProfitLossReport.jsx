@@ -46,7 +46,7 @@ function rangeLabel({ from, to }) {
 function Amount({ value }) {
   if (value === undefined || value === null) return null;
   const negative = value < 0;
-  return <span className={negative ? 'text-rose-600' : ''}>{negative ? `-${formatMoney(-value)}` : formatMoney(value)}</span>;
+  return <span className={negative ? 'text-brand-600' : ''}>{negative ? `-${formatMoney(-value)}` : formatMoney(value)}</span>;
 }
 
 function ReportRow({ row, columns }) {
@@ -59,7 +59,7 @@ function ReportRow({ row, columns }) {
   if (row.type === 'section') {
     return (
       <tr>
-        <td colSpan={columns.length + 1} className="pt-4 pb-1 text-sm font-bold text-slate-900">
+        <td colSpan={columns.length + 1} className="pt-4 pb-1 text-sm font-bold text-neutral-900">
           {row.label}
         </td>
       </tr>
@@ -67,7 +67,7 @@ function ReportRow({ row, columns }) {
   }
   if (row.type === 'line') {
     return (
-      <tr className="text-sm text-slate-700">
+      <tr className="text-sm text-neutral-700">
         <td className="px-3 py-1.5" style={{ paddingLeft: `${0.75 + (row.depth || 1) * 1.25}rem` }}>
           {row.label}
         </td>
@@ -77,7 +77,7 @@ function ReportRow({ row, columns }) {
   }
   if (row.type === 'total') {
     return (
-      <tr className="border-t border-slate-400 text-sm font-bold text-slate-900">
+      <tr className="border-t border-neutral-400 text-sm font-bold text-neutral-900">
         <td className="px-3 py-1.5">{row.label}</td>
         {cells}
       </tr>
@@ -85,10 +85,10 @@ function ReportRow({ row, columns }) {
   }
   // grand: Gross Profit / Net Income
   return (
-    <tr className="border-t border-slate-400 bg-slate-50 text-sm font-bold text-slate-900 print:bg-white">
-      <td className="border-b-4 border-double border-slate-400 px-3 py-2">{row.label}</td>
+    <tr className="border-t border-neutral-400 bg-neutral-50 text-sm font-bold text-neutral-900 print:bg-white">
+      <td className="border-b-4 border-double border-neutral-400 px-3 py-2">{row.label}</td>
       {columns.map((c) => (
-        <td key={c.key} className="whitespace-nowrap border-b-4 border-double border-slate-400 px-3 py-2 text-right tabular-nums">
+        <td key={c.key} className="whitespace-nowrap border-b-4 border-double border-neutral-400 px-3 py-2 text-right tabular-nums">
           <Amount value={row.values[c.key]} />
         </td>
       ))}
@@ -156,9 +156,9 @@ export default function ProfitLossReport() {
 
   return (
     <div>
-      <div className="mb-5 space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm no-print">
+      <div className="mb-5 space-y-3 rounded-xl border border-neutral-200/80 bg-white p-4 no-print">
         <div className="flex flex-wrap items-end gap-3">
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-neutral-700">
             Dates
             <Select value={preset} onChange={(e) => changePreset(e.target.value)} className="mt-1 w-48">
               {PRESETS.map((p) => (
@@ -168,11 +168,11 @@ export default function ProfitLossReport() {
               ))}
             </Select>
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-neutral-700">
             From
             <Input type="date" value={from} onChange={changeDate('from')} className="mt-1 w-40" />
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-neutral-700">
             To
             <Input type="date" value={to} onChange={changeDate('to')} className="mt-1 w-40" />
           </label>
@@ -180,8 +180,8 @@ export default function ProfitLossReport() {
 
         <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
           <fieldset>
-            <legend className="text-sm font-medium text-slate-700">Report Basis</legend>
-            <div className="mt-2 flex gap-4 text-sm text-slate-700">
+            <legend className="text-sm font-medium text-neutral-700">Report Basis</legend>
+            <div className="mt-2 flex gap-4 text-sm text-neutral-700">
               {[
                 ['accrual', 'Accrual'],
                 ['cash', 'Cash'],
@@ -193,14 +193,14 @@ export default function ProfitLossReport() {
               ))}
             </div>
           </fieldset>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-neutral-700">
             Show Columns
             <Select value={columns} onChange={(e) => setColumns(e.target.value)} className="mt-1 w-40">
               <option value="total">Total only</option>
               <option value="month">Month</option>
             </Select>
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-neutral-700">
             Sort By
             <Select value={sort} onChange={(e) => setSort(e.target.value)} className="mt-1 w-44">
               <option value="default">Default</option>
@@ -226,9 +226,9 @@ export default function ProfitLossReport() {
       {loading && !report ? (
         <PageSpinner />
       ) : !report ? (
-        <p className="py-10 text-center text-sm text-slate-400">The report could not be loaded. Adjust the filters or press Refresh.</p>
+        <p className="py-10 text-center text-sm text-neutral-400">The report could not be loaded. Adjust the filters or press Refresh.</p>
       ) : (
-        <div id="print-area" className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none ${loading ? 'opacity-60' : ''}`}>
+        <div id="print-area" className={`rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none ${loading ? 'opacity-60' : ''}`}>
           <PrintReportHeader
             showOnScreen
             title={report.title}
@@ -239,7 +239,7 @@ export default function ProfitLossReport() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[420px] border-collapse">
               <thead>
-                <tr className="border-b border-slate-300 text-xs uppercase tracking-wide text-slate-500">
+                <tr className="border-b border-neutral-300 text-xs uppercase tracking-wide text-neutral-500">
                   <th className="px-3 py-2 text-left" />
                   {report.columns.map((c) => (
                     <th key={c.key} className="whitespace-nowrap px-3 py-2 text-right font-semibold">
@@ -256,7 +256,7 @@ export default function ProfitLossReport() {
             </table>
           </div>
 
-          <p className="mt-5 text-xs text-slate-400">
+          <p className="mt-5 text-xs text-neutral-400">
             {report.basis === 'cash'
               ? 'Cash basis: Sales Income is money actually received from customers in this period (sale and debt payments, wallet credit applied) minus refunds paid out; unpaid credit sales are not counted until paid.'
               : 'Accrual basis: Sales Income is every confirmed (Close Day) invoice in this period, net of returns, whether or not it has been paid.'}{' '}

@@ -52,7 +52,7 @@ export default function CustomerItemsPage() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
-        <Link to={`/customers/${id}`} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to={`/customers/${id}`} className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to customer
         </Link>
         {data && (
@@ -70,13 +70,13 @@ export default function CustomerItemsPage() {
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-3 no-print">
-        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
+        <div className="inline-flex rounded-lg border border-neutral-200/80 bg-white p-1">
           {TABS.map((t) => (
             <button
               key={t.type}
               type="button"
               onClick={() => choose(t.type)}
-              className={`rounded-md px-4 py-1.5 text-sm font-semibold transition ${type === t.type ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              className={`rounded-md px-4 py-1.5 text-sm font-semibold transition ${type === t.type ? 'bg-brand-600 text-white' : 'text-neutral-600 hover:bg-neutral-50'}`}
             >
               {t.label}
             </button>
@@ -96,7 +96,7 @@ export default function CustomerItemsPage() {
       {!data ? (
         <PageSpinner />
       ) : (
-        <div id="print-area" className="mx-auto max-w-5xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+        <div id="print-area" className="mx-auto max-w-5xl rounded-2xl border border-neutral-200/80 bg-white p-6 text-neutral-900 sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
           <DocHeader
             title="Items Bought"
             meta={

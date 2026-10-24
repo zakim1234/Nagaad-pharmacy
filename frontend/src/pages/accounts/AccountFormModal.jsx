@@ -76,7 +76,7 @@ export default function AccountFormModal({ open, onClose, onSaved, account }) {
             <Input type="number" min="0" step="0.01" value={openingBalance} onChange={(e) => setOpeningBalance(e.target.value)} />
           </FormField>
         )}
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+        <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
           <Button variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </Button>

@@ -1,8 +1,8 @@
 const styles = {
-  slate: 'bg-slate-100 text-slate-700',
-  green: 'bg-emerald-100 text-emerald-700',
-  amber: 'bg-amber-100 text-amber-700',
-  red: 'bg-rose-100 text-rose-700',
+  slate: 'bg-neutral-100 text-neutral-700',
+  green: 'bg-emerald-50 text-emerald-700',
+  amber: 'bg-amber-50 text-amber-700',
+  red: 'bg-brand-50 text-brand-700',
   blue: 'bg-neutral-900 text-white',
 };
 

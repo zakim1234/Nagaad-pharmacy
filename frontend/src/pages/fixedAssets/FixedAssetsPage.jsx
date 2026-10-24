@@ -158,7 +158,7 @@ export default function FixedAssetsPage() {
           ) : (
             data.assets.map((a) => (
               <tr key={a.id}>
-                <Td className="font-medium text-slate-900">{a.name}</Td>
+                <Td className="font-medium text-neutral-900">{a.name}</Td>
                 <Td>{formatCurrency(a.value)}</Td>
                 <Td>{formatDate(a.dateAdded)}</Td>
                 <Td>{a.notes || '—'}</Td>
@@ -184,7 +184,7 @@ export default function FixedAssetsPage() {
       <AssetFormModal open={!!editAsset} asset={editAsset} onClose={() => setEditAsset(null)} onSaved={load} />
 
       <Modal open={!!removeTarget} onClose={() => setRemoveTarget(null)} title="Remove Fixed Asset" size="sm">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-neutral-600">
           Remove <strong>{removeTarget?.name}</strong> ({removeTarget && formatCurrency(removeTarget.value)})? It stays on record but no longer counts
           toward Fixed Assets totals.
         </p>

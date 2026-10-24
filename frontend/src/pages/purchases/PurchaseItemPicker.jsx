@@ -66,7 +66,7 @@ export default function PurchaseItemPicker({ onAdd }) {
     <div ref={boxRef} className="relative">
       <Label>Add Product to Purchase</Label>
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
         <Input
           className="pl-9"
           placeholder="Search inventory by name, Item ID or serial number..."
@@ -80,18 +80,18 @@ export default function PurchaseItemPicker({ onAdd }) {
       </div>
 
       {showDropdown && query.trim() && (
-        <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+        <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-neutral-200/80 bg-white shadow-lg">
           {results.length > 0 ? (
             <ul className="max-h-64 overflow-y-auto">
               {results.map((p) => (
                 <li key={p.id}>
                   <button onClick={() => handleAdd(p)} className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left hover:bg-brand-50">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-100 text-neutral-400">
                       <Package className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-800">{p.name}</p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-sm font-medium text-neutral-800">{p.name}</p>
+                      <p className="text-xs text-neutral-400">
                         {p.itemCode} · current stock: {p.quantity}
                       </p>
                     </div>
@@ -100,7 +100,7 @@ export default function PurchaseItemPicker({ onAdd }) {
               ))}
             </ul>
           ) : (
-            <div className="px-4 py-3 text-sm text-slate-500">No matching items.</div>
+            <div className="px-4 py-3 text-sm text-neutral-500">No matching items.</div>
           )}
           <button
             onClick={() => {
@@ -108,7 +108,7 @@ export default function PurchaseItemPicker({ onAdd }) {
               setShowCreateForm(true);
               setShowDropdown(false);
             }}
-            className="flex w-full items-center justify-center gap-1.5 border-t border-slate-100 px-3 py-2.5 text-sm font-semibold text-brand-700 hover:bg-brand-50"
+            className="flex w-full items-center justify-center gap-1.5 border-t border-neutral-100 px-3 py-2.5 text-sm font-semibold text-brand-700 hover:bg-brand-50"
           >
             <PackagePlus className="h-4 w-4" /> Create New Item "{query}"
           </button>
@@ -116,12 +116,12 @@ export default function PurchaseItemPicker({ onAdd }) {
       )}
 
       {showCreateForm && (
-        <div className="absolute z-30 mt-1 w-full rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
-          <p className="mb-3 text-sm font-semibold text-slate-800">Create New Inventory Item</p>
+        <div className="absolute z-30 mt-1 w-full rounded-xl border border-neutral-200/80 bg-white p-4 shadow-lg">
+          <p className="mb-3 text-sm font-semibold text-neutral-800">Create New Inventory Item</p>
           <form onSubmit={handleCreate} className="space-y-3">
             <Input autoFocus placeholder="Item name" value={newItem.name} onChange={(e) => setNewItem((f) => ({ ...f, name: e.target.value }))} />
             <Input placeholder="Unit (pcs, kg...)" value={newItem.unit} onChange={(e) => setNewItem((f) => ({ ...f, unit: e.target.value }))} />
-            <p className="text-xs text-slate-400">Category can be set later from the Inventory page. New item will be Uncategorized for now.</p>
+            <p className="text-xs text-neutral-400">Category can be set later from the Inventory page. New item will be Uncategorized for now.</p>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="secondary" size="sm" onClick={() => setShowCreateForm(false)}>
                 Cancel

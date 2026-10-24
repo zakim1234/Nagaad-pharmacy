@@ -186,10 +186,10 @@ export default function ReportsPage() {
       </section>
 
       {/* Report picker, grouped */}
-      <div className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm lg:grid-cols-[2fr_1.1fr_1.5fr] no-print">
+      <div className="grid grid-cols-1 gap-4 rounded-2xl border border-neutral-200/70 bg-white p-4 lg:grid-cols-[2fr_1.1fr_1.5fr] no-print">
         {GROUPS.map((g) => (
           <div key={g.label}>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{g.label}</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-neutral-400">{g.label}</p>
             <div className="flex flex-wrap gap-1.5">
               {g.keys.map((key) => {
                 const t = TABS.find((x) => x.key === key);
@@ -202,7 +202,7 @@ export default function ReportsPage() {
                     className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                       active
                         ? 'border-brand-600 bg-brand-600 text-white shadow-sm'
-                        : 'border-slate-200 text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
+                        : 'border-neutral-200 text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
                     }`}
                   >
                     <Icon className="h-4 w-4" /> {t.label}
@@ -244,7 +244,7 @@ export default function ReportsPage() {
             className={
               ownsLayout
                 ? ''
-                : 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none'
+                : 'rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none'
             }
           >
             {!ownsLayout && <PrintReportHeader showOnScreen title={activeTab.title} rangeLabel={rangeLabel} />}
@@ -305,15 +305,15 @@ function RankedBars({ rows, valueKey, nameKey = 'name', money = false, color = '
         <li key={`${r[nameKey]}-${i}`}>
           <div className="flex items-baseline justify-between gap-3 text-sm">
             <span className="flex min-w-0 items-center gap-2">
-              <span className="w-5 shrink-0 text-xs font-semibold text-slate-400">{i + 1}</span>
-              <span className="truncate font-medium text-slate-700">{r[nameKey]}</span>
+              <span className="w-5 shrink-0 text-xs font-semibold text-neutral-400">{i + 1}</span>
+              <span className="truncate font-medium text-neutral-700">{r[nameKey]}</span>
             </span>
-            <span className="shrink-0 font-semibold tabular-nums text-slate-800">
+            <span className="shrink-0 font-semibold tabular-nums text-neutral-800">
               {money ? formatCurrency(r[valueKey]) : r[valueKey]}
               {suffix}
             </span>
           </div>
-          <div className="ml-7 mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+          <div className="ml-7 mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
             <div className={`h-full rounded-full bg-gradient-to-r ${color}`} style={{ width: `${(Math.abs(r[valueKey]) / max) * 100}%` }} />
           </div>
         </li>
@@ -344,7 +344,7 @@ function SalesReport({ data, rangeParams }) {
             { label: 'Total Sales', value: formatCurrency(data.totalSales), tone: 'text-neutral-900' },
             { label: 'Cash Collected', value: formatCurrency(data.cashCollected), tone: 'text-emerald-600' },
             { label: 'Credit Sales', value: formatCurrency(data.creditSales), tone: 'text-amber-600' },
-            { label: 'Outstanding Receivables', value: formatCurrency(data.outstandingReceivables), tone: 'text-rose-600' },
+            { label: 'Outstanding Receivables', value: formatCurrency(data.outstandingReceivables), tone: 'text-brand-600' },
             { label: 'Number of Sales', value: data.numberOfSales },
             { label: 'Items Sold', value: data.itemsSold },
             { label: 'Average Sale Value', value: formatCurrency(data.averageSaleValue) },
@@ -444,8 +444,8 @@ function SalesReport({ data, rangeParams }) {
               sales.map((s) => {
                 const status = paymentStatusBadge(s.outstanding);
                 return (
-                  <tr key={s.id} className="hover:bg-slate-50/70">
-                    <Td className="font-medium text-slate-900">
+                  <tr key={s.id} className="hover:bg-neutral-50/70">
+                    <Td className="font-medium text-neutral-900">
                       <Link to={`/receipt/${s.id}`} className="text-brand-600 hover:underline no-print">
                         {s.receiptNumber}
                       </Link>
@@ -457,7 +457,7 @@ function SalesReport({ data, rangeParams }) {
                     <Td>{s.items.length}</Td>
                     <Td className="font-semibold tabular-nums">{formatCurrency(s.total)}</Td>
                     <Td className="tabular-nums">{formatCurrency(s.paidAmount)}</Td>
-                    <Td className={`tabular-nums ${s.outstanding > 0 ? 'font-semibold text-rose-600' : ''}`}>{formatCurrency(s.outstanding)}</Td>
+                    <Td className={`tabular-nums ${s.outstanding > 0 ? 'font-semibold text-brand-600' : ''}`}>{formatCurrency(s.outstanding)}</Td>
                     <Td>
                       <Badge color={status.color}>{status.label}</Badge>
                     </Td>
@@ -527,7 +527,7 @@ function ProfitReport({ data, onDrilldown }) {
           {data.topProfitItems.length === 0 ? (
             <EmptyReportState message="No sales found for this date range." />
           ) : (
-            <RankedBars rows={data.topProfitItems} valueKey="profit" money color="from-emerald-400 to-teal-500" />
+            <RankedBars rows={data.topProfitItems} valueKey="profit" money color="from-brand-500 to-brand-700" />
           )}
         </ReportSection>
 
@@ -565,11 +565,11 @@ function ProfitReport({ data, onDrilldown }) {
             ) : (
               data.profitByItem.map((i) => (
                 <tr key={i.itemId} onClick={() => onDrilldown(i.itemId, i.name)} className="cursor-pointer hover:bg-brand-50/60">
-                  <Td className="font-medium text-slate-900">{i.name}</Td>
+                  <Td className="font-medium text-neutral-900">{i.name}</Td>
                   <Td className="tabular-nums">{formatCurrency(i.revenue)}</Td>
                   <Td className="tabular-nums">{formatCurrency(i.cost)}</Td>
                   <Td>
-                    <span className={`font-semibold tabular-nums ${i.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{formatCurrency(i.profit)}</span>
+                    <span className={`font-semibold tabular-nums ${i.profit >= 0 ? 'text-emerald-600' : 'text-brand-600'}`}>{formatCurrency(i.profit)}</span>
                   </Td>
                   <Td>
                     <MarginPill pct={i.marginPct} />
@@ -595,11 +595,11 @@ function ProfitReport({ data, onDrilldown }) {
             <TBody>
               {data.lossItems.map((i) => (
                 <tr key={i.itemId}>
-                  <Td className="font-medium text-slate-900">{i.name}</Td>
+                  <Td className="font-medium text-neutral-900">{i.name}</Td>
                   <Td className="tabular-nums">{formatCurrency(i.revenue)}</Td>
                   <Td className="tabular-nums">{formatCurrency(i.cost)}</Td>
                   <Td>
-                    <span className="font-semibold tabular-nums text-rose-600">{formatCurrency(i.profit)}</span>
+                    <span className="font-semibold tabular-nums text-brand-600">{formatCurrency(i.profit)}</span>
                   </Td>
                 </tr>
               ))}
@@ -613,7 +613,7 @@ function ProfitReport({ data, onDrilldown }) {
 
 function MarginPill({ pct }) {
   const n = Number(pct) || 0;
-  const cls = n < 0 ? 'bg-rose-50 text-rose-700' : n < 15 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700';
+  const cls = n < 0 ? 'bg-brand-50 text-brand-700' : n < 15 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700';
   return <span className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${cls}`}>{pct}%</span>;
 }
 
@@ -635,8 +635,8 @@ function InventoryReport({ data }) {
             { label: 'Total Products', value: data.totalItems },
             { label: 'Total Units', value: data.totalQuantity },
             { label: 'Low Stock', value: data.lowStock.length, tone: 'text-amber-600' },
-            { label: 'Out of Stock', value: data.outOfStock.length, tone: 'text-rose-600' },
-            { label: 'Expiring / Expired', value: `${data.nearExpiry.length} / ${data.expired.length}`, tone: 'text-rose-600' },
+            { label: 'Out of Stock', value: data.outOfStock.length, tone: 'text-brand-600' },
+            { label: 'Expiring / Expired', value: `${data.nearExpiry.length} / ${data.expired.length}`, tone: 'text-brand-600' },
           ]}
         />
       </ReportSection>
@@ -718,16 +718,16 @@ function UserPerformancePicker({ userId, onUserChange }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm no-print sm:inline-flex">
+    <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-200/80 bg-white px-4 py-2.5 no-print sm:inline-flex">
       <UserRound className="h-4 w-4 text-brand-600" />
-      <label className="text-sm font-medium text-slate-600" htmlFor="perf-user-select">
+      <label className="text-sm font-medium text-neutral-600" htmlFor="perf-user-select">
         User
       </label>
       <select
         id="perf-user-select"
         value={userId}
         onChange={(e) => onUserChange(e.target.value)}
-        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
+        className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
       >
         <option value="">— Choose a user —</option>
         {(users || []).map((u) => (
@@ -804,7 +804,7 @@ function SimpleItemTable({ rows, extraLabel, extraKey, isDate }) {
         ) : (
           rows.map((r) => (
             <tr key={r._id}>
-              <Td className="font-medium text-slate-800">{r.name}</Td>
+              <Td className="font-medium text-neutral-800">{r.name}</Td>
               <Td>{r.itemCode || '—'}</Td>
               <Td className="tabular-nums">{r.quantity}</Td>
               {extraLabel && <Td>{isDate ? formatDate(r[extraKey]) : r[extraKey]}</Td>}

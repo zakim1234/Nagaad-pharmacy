@@ -13,7 +13,7 @@ export default function ConfirmDialog({
 }) {
   return (
     <Modal open={open} onClose={onClose} title={title} size="sm">
-      <p className="text-sm text-slate-600">{message}</p>
+      <p className="text-sm text-neutral-600">{message}</p>
       <div className="mt-5 flex justify-end gap-2">
         <Button variant="secondary" onClick={onClose} disabled={loading}>
           Cancel

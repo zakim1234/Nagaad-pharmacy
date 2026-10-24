@@ -22,13 +22,13 @@ export default function PaymentReceiptPage() {
       .catch((err) => setError(err.friendlyMessage || 'Payment receipt not found.'));
   }, [id]);
 
-  if (error) return <div className="rounded-lg bg-rose-50 p-4 text-sm text-rose-700">{error}</div>;
+  if (error) return <div className="rounded-lg bg-brand-50 p-4 text-sm text-brand-700">{error}</div>;
   if (!payment) return <PageSpinner />;
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between no-print">
-        <Link to="/customers" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to="/customers" className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Customers
         </Link>
         <div className="flex gap-2">
@@ -45,11 +45,11 @@ export default function PaymentReceiptPage() {
 
       <div
         id="print-area"
-        className="mx-auto max-w-[148mm] rounded-2xl border border-slate-200 bg-white p-6 text-[13px] text-neutral-900 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
+        className="mx-auto max-w-[148mm] rounded-2xl border border-neutral-200/80 bg-white p-6 text-[13px] text-neutral-900 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
       >
         <DocHeader compact title={payment.status === 'CANCELLED' ? 'Payment Receipt · Cancelled' : 'Payment Receipt'} meta={<span className="font-semibold">{payment.receiptNumber}</span>} />
         {payment.status === 'CANCELLED' && (
-          <p className="mt-3 rounded-md bg-rose-50 px-3 py-2 text-center text-xs font-semibold text-rose-700">
+          <p className="mt-3 rounded-md bg-brand-50 px-3 py-2 text-center text-xs font-semibold text-brand-700">
             CANCELLED {formatDate(payment.cancelledAt)} — {payment.refundedTo === 'ACCOUNT' ? `money given back to the customer${payment.refundReference ? ` (sent to ${payment.refundReference})` : ''}` : "money kept in the customer's wallet"}
             {payment.cancelReason ? ` · ${payment.cancelReason}` : ''}
           </p>
@@ -62,7 +62,7 @@ export default function PaymentReceiptPage() {
 
         <div className="mt-4 border-2 border-neutral-900 px-4 py-3 text-center" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
           <p className="text-[10px] uppercase tracking-wider text-neutral-500">Amount received</p>
-          <p className="text-3xl font-extrabold tabular-nums text-brand-600">{formatCurrency(payment.amount)}</p>
+          <p className="text-3xl font-extrabold text-brand-600 figure">{formatCurrency(payment.amount)}</p>
           <p className="mt-0.5 text-[11px] text-neutral-500">into {payment.paymentAccountName || 'account not recorded (historical payment)'}</p>
         </div>
 

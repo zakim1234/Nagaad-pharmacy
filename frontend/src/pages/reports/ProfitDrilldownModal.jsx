@@ -42,7 +42,7 @@ export default function ProfitDrilldownModal({ itemId, itemName, rangeParams, on
             ) : (
               rows.map((r) => (
                 <tr key={r.saleId}>
-                  <Td className="font-medium text-slate-900">{r.receiptNumber}</Td>
+                  <Td className="font-medium text-neutral-900">{r.receiptNumber}</Td>
                   <Td>{r.customerName}</Td>
                   <Td>{formatDateTime(r.createdAt)}</Td>
                   <Td>{r.quantity}</Td>

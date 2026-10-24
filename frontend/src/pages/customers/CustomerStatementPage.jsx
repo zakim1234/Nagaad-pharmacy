@@ -61,7 +61,7 @@ export default function CustomerStatementPage() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
-        <Link to={`/customers/${id}`} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to={`/customers/${id}`} className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Customer
         </Link>
         <div className="flex gap-2">
@@ -91,7 +91,7 @@ export default function CustomerStatementPage() {
         </Button>
       </div>
 
-      <div id="print-area" className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+      <div id="print-area" className="mx-auto max-w-4xl rounded-2xl border border-neutral-200/80 bg-white p-6 text-neutral-900 sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
         <DocHeader
           title="Customer Statement"
           meta={
@@ -135,7 +135,7 @@ export default function CustomerStatementPage() {
             <tbody>
               {ledger.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-slate-400">
+                  <td colSpan={6} className="py-6 text-center text-neutral-400">
                     No transactions in this period.
                   </td>
                 </tr>
@@ -152,7 +152,7 @@ export default function CustomerStatementPage() {
                     <td className="px-2 py-2 text-right font-semibold tabular-nums text-brand-700">{e.credit > 0 ? formatCurrency(e.credit) : '—'}</td>
                     <td className="px-2 py-2 text-right font-semibold tabular-nums">{formatCurrency(e.runningBalance)}</td>
                   </tr>
-                  {invoice && <tr id={`invoice-${invoice.id}`} className={`${expanded ? '' : 'hidden'} no-print`}><td colSpan={6} className="bg-slate-50 p-3">
+                  {invoice && <tr id={`invoice-${invoice.id}`} className={`${expanded ? '' : 'hidden'} no-print`}><td colSpan={6} className="bg-neutral-50 p-3">
                     <p className="mb-2 font-semibold">Invoice Items</p>
                     {invoice.items.map((item, index) => <div key={`${invoice.id}-${index}`} className="mb-1 flex flex-wrap justify-between gap-2"><span>{item.name} × {item.quantity}</span><span>Unit Price: {formatCurrency(item.unitPrice)} · Total: {formatCurrency(item.subtotal)}</span></div>)}
                     <div className="mt-2 flex flex-wrap gap-4 font-semibold"><span>Invoice Total: {formatCurrency(invoice.total)}</span><span>Paid: {formatCurrency(invoice.paidAmount)}</span><span>Balance: {formatCurrency(invoice.balance)}</span></div>
@@ -166,35 +166,35 @@ export default function CustomerStatementPage() {
 
         {invoices.length > 0 && (
           <div className="mt-6 hidden print:block" style={{ pageBreakBefore: 'always' }}>
-            <p className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-700">Invoice Detail</p>
+            <p className="mb-2 text-sm font-bold uppercase tracking-wide text-neutral-700">Invoice Detail</p>
             <div className="space-y-3">
               {invoices.map((inv) => (
-                <div key={inv.id} className="rounded-lg border border-slate-200 p-3" style={{ pageBreakInside: 'avoid' }}>
+                <div key={inv.id} className="rounded-lg border border-neutral-200 p-3" style={{ pageBreakInside: 'avoid' }}>
                   <div className="mb-1.5 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-800">{inv.receiptNumber}</span>
-                    <span className="text-slate-400">{formatDate(inv.createdAt)}</span>
+                    <span className="font-semibold text-neutral-800">{inv.receiptNumber}</span>
+                    <span className="text-neutral-400">{formatDate(inv.createdAt)}</span>
                   </div>
                   <table className="w-full text-xs">
                     <tbody>
                       {inv.items.map((it, idx) => (
-                        <tr key={idx} className="border-b border-slate-50">
-                          <td className="py-1 text-slate-600">
+                        <tr key={idx} className="border-b border-neutral-50">
+                          <td className="py-1 text-neutral-600">
                             {it.name} x {it.quantity}
                           </td>
-                          <td className="py-1 text-right text-slate-500">{formatCurrency(it.unitPrice)}</td>
-                          <td className="py-1 text-right font-medium text-slate-800">{formatCurrency(it.subtotal)}</td>
+                          <td className="py-1 text-right text-neutral-500">{formatCurrency(it.unitPrice)}</td>
+                          <td className="py-1 text-right font-medium text-neutral-800">{formatCurrency(it.subtotal)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                   <div className="mt-1.5 flex justify-end gap-4 text-xs">
                     <span>
-                      Total: <strong className="text-slate-800">{formatCurrency(inv.total)}</strong>
+                      Total: <strong className="text-neutral-800">{formatCurrency(inv.total)}</strong>
                     </span>
                     <span>
-                      Paid: <strong className="text-slate-800">{formatCurrency(inv.paidAmount)}</strong>
+                      Paid: <strong className="text-neutral-800">{formatCurrency(inv.paidAmount)}</strong>
                     </span>
-                    <span className={inv.balance > 0 ? 'font-semibold text-rose-600' : 'text-emerald-600'}>
+                    <span className={inv.balance > 0 ? 'font-semibold text-brand-600' : 'text-emerald-600'}>
                       {inv.balance > 0 ? `Balance: ${formatCurrency(inv.balance)}` : 'Fully Paid'}
                     </span>
                   </div>
@@ -204,7 +204,7 @@ export default function CustomerStatementPage() {
           </div>
         )}
 
-        <div className="mt-6 border-t border-dashed border-slate-300 pt-4" style={{ pageBreakInside: 'avoid' }}>
+        <div className="mt-6 border-t border-dashed border-neutral-300 pt-4" style={{ pageBreakInside: 'avoid' }}>
           <DocTotals
             items={[
               ['Total purchased', formatCurrency(summary.totalAmountPurchased)],

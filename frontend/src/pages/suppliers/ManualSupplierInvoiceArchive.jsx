@@ -91,7 +91,7 @@ export default function ManualSupplierInvoiceArchive() {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative max-w-md flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <Input
             className="pl-9"
             value={query}
@@ -107,7 +107,7 @@ export default function ManualSupplierInvoiceArchive() {
       {loading && archives === null ? (
         <PageSpinner />
       ) : archives.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-white py-14 text-center text-sm text-slate-400">
+        <div className="rounded-xl border border-dashed border-neutral-200/80 bg-white py-14 text-center text-sm text-neutral-400">
           {query ? 'Wax natiijo ah lama helin.' : 'No supplier invoice archives yet. Click "+ Manual Entry Invoice" to add one.'}
         </div>
       ) : (
@@ -115,7 +115,7 @@ export default function ManualSupplierInvoiceArchive() {
           {archives.map((a) => (
             <div
               key={a.id}
-              className="group flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
+              className="group flex flex-col rounded-xl border border-neutral-200/80 bg-white transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
             >
               <button
                 onClick={() => setViewing(a)}
@@ -124,16 +124,16 @@ export default function ManualSupplierInvoiceArchive() {
                 <div className="flex w-full items-center gap-2">
                   <FileText className="h-8 w-8 shrink-0 text-brand-400 group-hover:text-brand-600" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-slate-900">Serial: {a.serialNumber}</p>
-                    <p className="truncate text-xs text-slate-400">{a.archiveNumber}</p>
+                    <p className="truncate text-sm font-semibold text-neutral-900">Serial: {a.serialNumber}</p>
+                    <p className="truncate text-xs text-neutral-400">{a.archiveNumber}</p>
                   </div>
                 </div>
-                <div className="mt-1 flex w-full items-center gap-1.5 text-xs text-slate-500">
+                <div className="mt-1 flex w-full items-center gap-1.5 text-xs text-neutral-500">
                   <Building2 className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{a.supplierName || '(no supplier)'}</span>
                 </div>
-                <p className="text-xs text-slate-400">{formatDate(a.createdAt)}</p>
-                <p className="mt-1 text-base font-bold tabular-nums text-slate-900">{formatCurrency(a.grandTotal)}</p>
+                <p className="text-xs text-neutral-400">{formatDate(a.createdAt)}</p>
+                <p className="mt-1 text-base font-bold tabular-nums text-neutral-900">{formatCurrency(a.grandTotal)}</p>
               </button>
               <div className="px-4 pb-2.5">
                 {a.purchaseNumber ? (
@@ -153,11 +153,11 @@ export default function ManualSupplierInvoiceArchive() {
                     <ArrowRightLeft className="h-3.5 w-3.5" /> {sending === a.id ? 'Adding…' : 'Add to Purchase Invoices'}
                   </button>
                 ) : (
-                  <span className="text-[11px] text-slate-400">No supplier — Edit to choose one, then add to Purchase Invoices</span>
+                  <span className="text-[11px] text-neutral-400">No supplier — Edit to choose one, then add to Purchase Invoices</span>
                 )}
               </div>
               {canManage && (
-                <div className="flex gap-1.5 border-t border-slate-100 px-4 py-2.5">
+                <div className="flex gap-1.5 border-t border-neutral-100 px-4 py-2.5">
                   <CardAction icon={Pencil} label="Edit" onClick={() => startEdit(a)} />
                   <CardAction icon={Trash2} label="Delete" danger onClick={() => startDelete(a)} />
                 </div>
@@ -201,7 +201,7 @@ function CardAction({ icon: Icon, label, onClick, danger = false }) {
       type="button"
       onClick={onClick}
       className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
-        danger ? 'border-rose-200 text-rose-600 hover:bg-rose-50' : 'border-slate-200 text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
+        danger ? 'border-brand-200 text-brand-600 hover:bg-brand-50' : 'border-neutral-200 text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
       }`}
     >
       <Icon className="h-3.5 w-3.5" /> {label}
@@ -237,23 +237,23 @@ function ArchiveDetailModal({ archive, onClose, canManage, onEdit, onDelete }) {
           <Field label="Date" value={formatDateTime(archive.createdAt)} />
           <Field label="Grand Total" value={formatCurrency(archive.grandTotal)} />
         </div>
-        <div className="overflow-hidden rounded-lg border border-slate-200">
+        <div className="overflow-hidden rounded-lg border border-neutral-200">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50">
+            <thead className="bg-neutral-50">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium uppercase text-slate-500">Item Name</th>
-                <th className="px-2 py-2 text-center text-xs font-medium uppercase text-slate-500">Qty</th>
-                <th className="px-2 py-2 text-right text-xs font-medium uppercase text-slate-500">Cost</th>
-                <th className="px-3 py-2 text-right text-xs font-medium uppercase text-slate-500">Total</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase text-neutral-500">Item Name</th>
+                <th className="px-2 py-2 text-center text-xs font-medium uppercase text-neutral-500">Qty</th>
+                <th className="px-2 py-2 text-right text-xs font-medium uppercase text-neutral-500">Cost</th>
+                <th className="px-3 py-2 text-right text-xs font-medium uppercase text-neutral-500">Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-neutral-100">
               {archive.rows.map((r, i) => (
                 <tr key={i}>
-                  <td className="px-3 py-1.5 text-slate-700">{r.itemName}</td>
-                  <td className="px-2 py-1.5 text-center tabular-nums text-slate-600">{r.quantity}</td>
-                  <td className="px-2 py-1.5 text-right tabular-nums text-slate-600">{formatCurrency(r.cost)}</td>
-                  <td className="px-3 py-1.5 text-right font-medium tabular-nums text-slate-900">{formatCurrency(r.total)}</td>
+                  <td className="px-3 py-1.5 text-neutral-700">{r.itemName}</td>
+                  <td className="px-2 py-1.5 text-center tabular-nums text-neutral-600">{r.quantity}</td>
+                  <td className="px-2 py-1.5 text-right tabular-nums text-neutral-600">{formatCurrency(r.cost)}</td>
+                  <td className="px-3 py-1.5 text-right font-medium tabular-nums text-neutral-900">{formatCurrency(r.total)}</td>
                 </tr>
               ))}
             </tbody>
@@ -261,8 +261,8 @@ function ArchiveDetailModal({ archive, onClose, canManage, onEdit, onDelete }) {
         </div>
         {archive.notes && (
           <div>
-            <p className="text-xs font-medium uppercase text-slate-400">Notes</p>
-            <p className="text-sm text-slate-600">{archive.notes}</p>
+            <p className="text-xs font-medium uppercase text-neutral-400">Notes</p>
+            <p className="text-sm text-neutral-600">{archive.notes}</p>
           </div>
         )}
       </div>
@@ -273,8 +273,8 @@ function ArchiveDetailModal({ archive, onClose, canManage, onEdit, onDelete }) {
 function Field({ label, value }) {
   return (
     <div>
-      <p className="text-xs uppercase text-slate-400">{label}</p>
-      <p className="font-semibold text-slate-800">{value}</p>
+      <p className="text-xs uppercase text-neutral-400">{label}</p>
+      <p className="font-semibold text-neutral-800">{value}</p>
     </div>
   );
 }
@@ -377,7 +377,7 @@ function ManualEntryModal({ open, archive, onClose, onSaved }) {
       }
     >
       <div className="space-y-4">
-        <p className="text-sm text-slate-500">Enter exactly what the supplier's paper invoice shows. With a supplier chosen, it is also added to Purchase Invoices (serial number and grand total, owed) — no need to enter it twice. Stock is never changed.</p>
+        <p className="text-sm text-neutral-500">Enter exactly what the supplier's paper invoice shows. With a supplier chosen, it is also added to Purchase Invoices (serial number and grand total, owed) — no need to enter it twice. Stock is never changed.</p>
         <div className="grid gap-3 sm:grid-cols-2">
           <FormField label="Supplier (optional)">
             <SupplierPicker active={supplier} onSelect={setSupplier} onClear={() => setSupplier(null)} />
@@ -387,7 +387,7 @@ function ManualEntryModal({ open, archive, onClose, onSaved }) {
           </FormField>
         </div>
 
-        <div className="max-h-[360px] overflow-auto rounded-lg border border-slate-200">
+        <div className="max-h-[360px] overflow-auto rounded-lg border border-neutral-200">
           <table className="w-full text-sm">
             <colgroup>
               <col className="w-[50%]" />
@@ -396,16 +396,16 @@ function ManualEntryModal({ open, archive, onClose, onSaved }) {
               <col className="w-[15%]" />
               <col className="w-[5%]" />
             </colgroup>
-            <thead className="sticky top-0 z-10 bg-slate-50">
+            <thead className="sticky top-0 z-10 bg-neutral-50">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Item Name</th>
-                <th className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wide text-slate-500">Qty</th>
-                <th className="px-2 py-2 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Cost</th>
-                <th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Total</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-neutral-500">Item Name</th>
+                <th className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wide text-neutral-500">Qty</th>
+                <th className="px-2 py-2 text-right text-xs font-medium uppercase tracking-wide text-neutral-500">Cost</th>
+                <th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-neutral-500">Total</th>
                 <th className="px-2 py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <tbody className="divide-y divide-neutral-100 bg-white">
               {rows.map((row, i) => (
                 <tr key={i}>
                   <td className="px-2 py-1.5">
@@ -424,7 +424,7 @@ function ManualEntryModal({ open, archive, onClose, onSaved }) {
                       step="1"
                       value={row.quantity}
                       onChange={(e) => setRow(i, 'quantity', e.target.value)}
-                      className="no-spinner w-full rounded-md border border-slate-200 px-2 py-1.5 text-center text-sm tabular-nums focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200"
+                      className="no-spinner w-full rounded-md border border-neutral-200 px-2 py-1.5 text-center text-sm tabular-nums focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200"
                     />
                   </td>
                   <td className="px-1 py-1.5">
@@ -435,14 +435,14 @@ function ManualEntryModal({ open, archive, onClose, onSaved }) {
                       value={row.cost}
                       onChange={(e) => setRow(i, 'cost', e.target.value)}
                       onKeyDown={(e) => handleLastCellKeyDown(i, e)}
-                      className="no-spinner w-full rounded-md border border-slate-200 px-2 py-1.5 text-right text-sm tabular-nums focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200"
+                      className="no-spinner w-full rounded-md border border-neutral-200 px-2 py-1.5 text-right text-sm tabular-nums focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200"
                     />
                   </td>
-                  <td className="px-3 py-1.5 text-right text-sm font-semibold tabular-nums text-slate-900">
+                  <td className="px-3 py-1.5 text-right text-sm font-semibold tabular-nums text-neutral-900">
                     {formatCurrency((Number(row.quantity) || 0) * (Number(row.cost) || 0))}
                   </td>
                   <td className="px-1 py-1.5 text-center">
-                    <button type="button" tabIndex={-1} onClick={() => removeRow(i)} className="rounded-md p-1.5 text-slate-300 hover:bg-rose-50 hover:text-rose-600">
+                    <button type="button" tabIndex={-1} onClick={() => removeRow(i)} className="rounded-md p-1.5 text-neutral-300 hover:bg-brand-50 hover:text-brand-600">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </td>
@@ -457,8 +457,8 @@ function ManualEntryModal({ open, archive, onClose, onSaved }) {
             <Plus className="h-3.5 w-3.5" /> Add Row
           </button>
           <div className="text-right">
-            <p className="text-xs uppercase text-slate-400">Grand Total</p>
-            <p className="text-lg font-bold text-slate-900">{formatCurrency(grandTotal)}</p>
+            <p className="text-xs uppercase text-neutral-400">Grand Total</p>
+            <p className="text-lg font-bold text-neutral-900">{formatCurrency(grandTotal)}</p>
           </div>
         </div>
 

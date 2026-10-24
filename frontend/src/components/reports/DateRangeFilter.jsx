@@ -16,7 +16,7 @@ export default function DateRangeFilter({ range, onRangeChange, from, to, onFrom
   const presets = allowAll ? [{ value: 'all', label: 'All History' }, ...PRESETS] : PRESETS;
   return (
     <div className="mb-5 flex flex-wrap items-center gap-3 no-print">
-      <div className="flex flex-wrap gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+      <div className="flex flex-wrap gap-1 rounded-xl border border-neutral-200/80 bg-white p-1">
         {presets.map((p) => {
           const active = !custom && range === p.value;
           return (
@@ -25,7 +25,7 @@ export default function DateRangeFilter({ range, onRangeChange, from, to, onFrom
               type="button"
               onClick={() => onRangeChange(p.value)}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                active ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+                active ? 'bg-brand-600 text-white shadow-sm' : 'text-neutral-600 hover:bg-neutral-100'
               }`}
             >
               {p.label}
@@ -35,13 +35,13 @@ export default function DateRangeFilter({ range, onRangeChange, from, to, onFrom
       </div>
       <div
         className={`flex flex-wrap items-center gap-2 rounded-xl border bg-white px-3 py-1.5 shadow-sm ${
-          custom ? 'border-brand-300 ring-1 ring-brand-100' : 'border-slate-200'
+          custom ? 'border-brand-300 ring-1 ring-brand-100' : 'border-neutral-200'
         }`}
       >
-        <CalendarRange className={`h-4 w-4 ${custom ? 'text-brand-600' : 'text-slate-400'}`} />
-        <span className="text-sm text-slate-500">Custom</span>
+        <CalendarRange className={`h-4 w-4 ${custom ? 'text-brand-600' : 'text-neutral-400'}`} />
+        <span className="text-sm text-neutral-500">Custom</span>
         <Input type="date" value={from} onChange={(e) => onFromChange(e.target.value)} className="w-38! py-1!" aria-label="From date" />
-        <span className="text-sm text-slate-400">to</span>
+        <span className="text-sm text-neutral-400">to</span>
         <Input type="date" value={to} onChange={(e) => onToChange(e.target.value)} className="w-38! py-1!" aria-label="To date" />
       </div>
     </div>

@@ -162,8 +162,8 @@ export default function BulkPaymentModal({ open, onClose, onPaid, initialSupplie
 
         {supplierId && (
           <>
-            <div className="overflow-hidden rounded-xl border border-slate-200">
-              <div className="flex items-center justify-between bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <div className="overflow-hidden rounded-xl border border-neutral-200">
+              <div className="flex items-center justify-between bg-neutral-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
                 <span>Outstanding invoices — paid oldest first</span>
                 <button
                   type="button"
@@ -173,22 +173,22 @@ export default function BulkPaymentModal({ open, onClose, onPaid, initialSupplie
                   {selected.size === invoices.length ? 'Untick all' : 'Tick all'}
                 </button>
               </div>
-              <ul className="divide-y divide-slate-100">
-                {preview.length === 0 && invoices.length === 0 && <li className="px-3 py-4 text-center text-sm text-slate-400">This supplier has no unpaid invoices.</li>}
+              <ul className="divide-y divide-neutral-100">
+                {preview.length === 0 && invoices.length === 0 && <li className="px-3 py-4 text-center text-sm text-neutral-400">This supplier has no unpaid invoices.</li>}
                 {invoices.map((inv) => {
                   const p = preview.find((x) => x.id === inv.id);
                   return (
                     <li key={inv.id} className="flex items-center gap-3 px-3 py-2.5 text-sm">
                       <input type="checkbox" className="h-4 w-4 accent-brand-600" checked={selected.has(inv.id)} onChange={() => toggle(inv.id)} aria-label={`Include ${inv.purchaseNumber}`} />
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-slate-800">{inv.purchaseNumber}</p>
-                        <p className="text-xs text-slate-400">
+                        <p className="font-medium text-neutral-800">{inv.purchaseNumber}</p>
+                        <p className="text-xs text-neutral-400">
                           {formatDate(inv.purchaseDate || inv.createdAt)}
                           {inv.supplierInvoiceNumber ? ` · ${inv.supplierInvoiceNumber}` : ''}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="tabular-nums text-slate-700">Owed {formatCurrency(inv.balanceDue)}</p>
+                        <p className="tabular-nums text-neutral-700">Owed {formatCurrency(inv.balanceDue)}</p>
                         {p && p.take > 0 && (
                           <p className="text-xs tabular-nums text-emerald-600">
                             pays {formatCurrency(p.take)} → <Badge color={STATUS_COLOR[p.status]}>{p.status}</Badge>
@@ -199,14 +199,14 @@ export default function BulkPaymentModal({ open, onClose, onPaid, initialSupplie
                   );
                 })}
                 {voided.map((v) => (
-                  <li key={v.id} className="flex items-center gap-3 bg-slate-50/60 px-3 py-2 text-sm text-slate-400">
+                  <li key={v.id} className="flex items-center gap-3 bg-neutral-50/60 px-3 py-2 text-sm text-neutral-400">
                     <Ban className="h-4 w-4" />
                     <span className="flex-1 line-through">{v.purchaseNumber}</span>
                     <span className="text-xs">Voided — cannot be included</span>
                   </li>
                 ))}
               </ul>
-              <div className="flex justify-between border-t border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800">
+              <div className="flex justify-between border-t border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm font-semibold text-neutral-800">
                 <span>Total owed (selected)</span>
                 <span className="tabular-nums">{formatCurrency(totalOwed)}</span>
               </div>
@@ -223,14 +223,14 @@ export default function BulkPaymentModal({ open, onClose, onPaid, initialSupplie
                       pickPct(pct);
                     }}
                     className={`rounded-lg border px-3.5 py-1.5 text-sm font-semibold transition ${
-                      percentage === pct && customPct === '' ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-200 text-slate-600 hover:bg-brand-50'
+                      percentage === pct && customPct === '' ? 'border-brand-600 bg-brand-600 text-white' : 'border-neutral-200 text-neutral-600 hover:bg-brand-50'
                     }`}
                   >
                     {pct}%
                   </button>
                 ))}
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm text-slate-500">Custom</span>
+                  <span className="text-sm text-neutral-500">Custom</span>
                   <Input
                     type="number"
                     min="0"

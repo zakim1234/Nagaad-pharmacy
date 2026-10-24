@@ -41,8 +41,8 @@ export default function BranchesPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Branches</h1>
-          <p className="text-sm text-slate-500">Each branch keeps its own items, stock, customers, suppliers, accounts and day closing.</p>
+          <h1 className="text-xl font-bold text-neutral-900">Branches</h1>
+          <p className="text-sm text-neutral-500">Each branch keeps its own items, stock, customers, suppliers, accounts and day closing.</p>
         </div>
         <Button onClick={() => setEditing({})}>
           <Plus className="h-4 w-4" /> New branch
@@ -51,23 +51,23 @@ export default function BranchesPage() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {branches.map((b) => (
-          <div key={b.id} className={`rounded-2xl border bg-white p-4 shadow-sm ${b.active ? 'border-slate-200' : 'border-dashed border-slate-300 opacity-70'}`}>
+          <div key={b.id} className={`rounded-2xl border bg-white p-4 shadow-sm ${b.active ? 'border-neutral-200' : 'border-dashed border-neutral-300 opacity-70'}`}>
             <div className="flex items-start gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-950 text-white">
                 <Store className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-2 truncate font-bold text-slate-900">
+                <p className="flex items-center gap-2 truncate font-bold text-neutral-900">
                   {b.name}
                   {!b.active && <Badge color="red">Closed</Badge>}
                 </p>
-                <p className="truncate text-xs text-slate-500">{[b.address, b.phone].filter(Boolean).join(' · ') || 'No address'}</p>
-                <p className="text-xs text-slate-400">
+                <p className="truncate text-xs text-neutral-500">{[b.address, b.phone].filter(Boolean).join(' · ') || 'No address'}</p>
+                <p className="text-xs text-neutral-400">
                   {b.users ?? 0} user{b.users === 1 ? '' : 's'} · since {formatDate(b.createdAt)}
                 </p>
               </div>
             </div>
-            <div className="mt-3 flex flex-wrap gap-1.5 border-t border-slate-100 pt-3">
+            <div className="mt-3 flex flex-wrap gap-1.5 border-t border-neutral-100 pt-3">
               {b.active && (
                 <button
                   onClick={() => {
@@ -79,10 +79,10 @@ export default function BranchesPage() {
                   Open branch
                 </button>
               )}
-              <button onClick={() => setEditing(b)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+              <button onClick={() => setEditing(b)} className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-xs font-semibold text-neutral-600 hover:bg-neutral-50">
                 <Pencil className="h-3.5 w-3.5" /> Edit
               </button>
-              <button onClick={() => toggleActive(b)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+              <button onClick={() => toggleActive(b)} className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-xs font-semibold text-neutral-600 hover:bg-neutral-50">
                 <Power className="h-3.5 w-3.5" /> {b.active ? 'Close' : 'Reopen'}
               </button>
             </div>
@@ -150,7 +150,7 @@ function BranchModal({ branch, onClose, onSaved }) {
         <FormField label="Phone">
           <Input value={form.phone} maxLength={100} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         </FormField>
-        {isNew && <p className="text-xs text-slate-500">A new branch starts empty, with the default payment accounts. Add its users under Users.</p>}
+        {isNew && <p className="text-xs text-neutral-500">A new branch starts empty, with the default payment accounts. Add its users under Users.</p>}
       </div>
     </Modal>
   );

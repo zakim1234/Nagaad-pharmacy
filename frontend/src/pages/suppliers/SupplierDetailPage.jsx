@@ -48,7 +48,7 @@ export default function SupplierDetailPage() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between no-print">
-        <Link to="/suppliers" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to="/suppliers" className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Suppliers
         </Link>
         <SharePdfButton fileName={`Supplier-${supplier.name.replace(/\s+/g, '-')}`} phone={supplier.phone} message={`Supplier report — ${supplier.name}`} orientation="landscape" />
@@ -63,13 +63,13 @@ export default function SupplierDetailPage() {
         <Card className="mb-6 report-section">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-xl font-bold text-slate-900">{supplier.name}</h1>
-              <p className="text-sm text-slate-500">{supplier.phone || 'No phone on file'}</p>
-              <p className="text-sm text-slate-500">{supplier.email}</p>
+              <h1 className="text-xl font-bold text-neutral-900">{supplier.name}</h1>
+              <p className="text-sm text-neutral-500">{supplier.phone || 'No phone on file'}</p>
+              <p className="text-sm text-neutral-500">{supplier.email}</p>
             </div>
             <div className="text-right">
-              <p className="text-xs uppercase text-slate-400">{purchaseCount} purchase(s) · {itemCount} product(s)</p>
-              <p className="text-lg font-bold text-slate-800">{formatCurrency(supplier.totalSpent)} total spent</p>
+              <p className="text-xs uppercase text-neutral-400">{purchaseCount} purchase(s) · {itemCount} product(s)</p>
+              <p className="text-lg font-bold text-neutral-800">{formatCurrency(supplier.totalSpent)} total spent</p>
             </div>
           </div>
         </Card>
@@ -85,7 +85,7 @@ export default function SupplierDetailPage() {
 
         {insights.length > 0 && (
           <ReportSection className="mt-6" title={<span className="flex items-center gap-1.5"><Lightbulb className="h-4 w-4 text-amber-500" /> Insights</span>}>
-            <ul className="space-y-1.5 text-sm text-slate-700">
+            <ul className="space-y-1.5 text-sm text-neutral-700">
               {insights.map((text, i) => (
                 <li key={i} className="flex gap-2">
                   <span className="text-brand-500">•</span> {text}
@@ -98,19 +98,19 @@ export default function SupplierDetailPage() {
         <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
           {bestItem && (
             <ReportSection title={<span className="flex items-center gap-1.5"><TrendingUp className="h-4 w-4 text-emerald-500" /> Best Performing Item</span>}>
-              <p className="text-lg font-bold text-slate-900">{bestItem.name}</p>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="text-lg font-bold text-neutral-900">{bestItem.name}</p>
+              <p className="mt-1 text-sm text-neutral-500">
                 Sold {bestItem.soldQty} units · Revenue {formatCurrency(bestItem.revenue)} · Profit{' '}
                 <span className="font-semibold text-emerald-600">{formatCurrency(bestItem.profit)}</span>
               </p>
             </ReportSection>
           )}
           {worstItem && (
-            <ReportSection title={<span className="flex items-center gap-1.5"><TrendingDown className="h-4 w-4 text-rose-500" /> Lowest Performing Item</span>}>
-              <p className="text-lg font-bold text-slate-900">{worstItem.name}</p>
-              <p className="mt-1 text-sm text-slate-500">
+            <ReportSection title={<span className="flex items-center gap-1.5"><TrendingDown className="h-4 w-4 text-brand-500" /> Lowest Performing Item</span>}>
+              <p className="text-lg font-bold text-neutral-900">{worstItem.name}</p>
+              <p className="mt-1 text-sm text-neutral-500">
                 Sold {worstItem.soldQty} units · Revenue {formatCurrency(worstItem.revenue)} · Profit{' '}
-                <span className="font-semibold text-rose-600">{formatCurrency(worstItem.profit)}</span>
+                <span className="font-semibold text-brand-600">{formatCurrency(worstItem.profit)}</span>
               </p>
             </ReportSection>
           )}
@@ -154,14 +154,14 @@ export default function SupplierDetailPage() {
                 <TableEmpty colSpan={8} message="No items purchased from this supplier yet." />
               ) : (
                 items.map((i) => (
-                  <tr key={i.itemId} className="hover:bg-slate-50">
-                    <Td className="font-medium text-slate-900">{i.name}</Td>
+                  <tr key={i.itemId} className="hover:bg-neutral-50">
+                    <Td className="font-medium text-neutral-900">{i.name}</Td>
                     <Td>{i.purchasedQty}</Td>
                     <Td>{i.soldQty}</Td>
                     <Td>{i.remainingQty}</Td>
                     <Td>{formatCurrency(i.revenue)}</Td>
                     <Td>{formatCurrency(i.cogs)}</Td>
-                    <Td className={i.profit >= 0 ? 'font-semibold text-emerald-600' : 'font-semibold text-rose-600'}>
+                    <Td className={i.profit >= 0 ? 'font-semibold text-emerald-600' : 'font-semibold text-brand-600'}>
                       {formatCurrency(i.profit)}
                     </Td>
                     <Td>{i.soldQty > 0 ? `${i.marginPct}%` : '—'}</Td>
@@ -179,15 +179,15 @@ export default function SupplierDetailPage() {
             ) : (
               <div className="space-y-3">
                 {history.purchases.map((p) => (
-                  <div key={p.id} className="rounded-lg border border-slate-100 p-4">
+                  <div key={p.id} className="rounded-lg border border-neutral-100 p-4">
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-semibold text-slate-800">{p.purchaseNumber}</span>
+                      <span className="font-semibold text-neutral-800">{p.purchaseNumber}</span>
                       <div className="flex items-center gap-2">
                         {p.status === 'voided' && <Badge color="red">Voided</Badge>}
-                        <span className="text-xs text-slate-400">{formatDateTime(p.createdAt)}</span>
+                        <span className="text-xs text-neutral-400">{formatDateTime(p.createdAt)}</span>
                       </div>
                     </div>
-                    <ul className="mb-2 space-y-0.5 text-sm text-slate-600">
+                    <ul className="mb-2 space-y-0.5 text-sm text-neutral-600">
                       {p.items.map((it, i) => (
                         <li key={i} className="flex justify-between">
                           <span>
@@ -197,14 +197,14 @@ export default function SupplierDetailPage() {
                         </li>
                       ))}
                     </ul>
-                    <div className="flex flex-wrap gap-4 border-t border-slate-100 pt-2 text-xs text-slate-500">
+                    <div className="flex flex-wrap gap-4 border-t border-neutral-100 pt-2 text-xs text-neutral-500">
                       <span>
-                        Total: <strong className="text-slate-800">{formatCurrency(p.totalCost)}</strong>
+                        Total: <strong className="text-neutral-800">{formatCurrency(p.totalCost)}</strong>
                       </span>
                       <span>
-                        Paid: <strong className="text-slate-800">{formatCurrency(p.paidAmount)}</strong>
+                        Paid: <strong className="text-neutral-800">{formatCurrency(p.paidAmount)}</strong>
                       </span>
-                      {p.balance > 0 && <span className="font-semibold text-rose-600">Owed: {formatCurrency(p.balance)}</span>}
+                      {p.balance > 0 && <span className="font-semibold text-brand-600">Owed: {formatCurrency(p.balance)}</span>}
                     </div>
                   </div>
                 ))}

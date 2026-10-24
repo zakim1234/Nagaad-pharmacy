@@ -42,8 +42,8 @@ export function ToastProvider({ children }) {
               t.type === 'success'
                 ? 'bg-emerald-600 text-white'
                 : t.type === 'error'
-                ? 'bg-rose-600 text-white'
-                : 'bg-slate-800 text-white'
+                ? 'bg-brand-600 text-white'
+                : 'bg-neutral-800 text-white'
             }`}
           >
             {t.message}

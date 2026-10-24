@@ -32,7 +32,7 @@ function SummaryCard({ label, value, tone }) {
   return (
     <div className={`rounded-xl px-4 py-3 text-center ${styles}`}>
       <p className={`text-[10px] uppercase tracking-wider ${tone ? 'text-white/70' : 'text-neutral-500'}`}>{label}</p>
-      <p className="mt-1 text-xl font-bold tabular-nums">{value < 0 ? `-${formatMoney(-value)}` : formatMoney(value)}</p>
+      <p className="mt-1 text-xl font-bold figure">{value < 0 ? `-${formatMoney(-value)}` : formatMoney(value)}</p>
     </div>
   );
 }
@@ -139,8 +139,8 @@ export default function BalanceSheetReport() {
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm no-print">
-        <label className="text-sm font-medium text-slate-700">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3 rounded-xl border border-neutral-200/80 bg-white p-4 no-print">
+        <label className="text-sm font-medium text-neutral-700">
           As of
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-1 w-48" />
         </label>
@@ -161,11 +161,11 @@ export default function BalanceSheetReport() {
       {loading && !report ? (
         <PageSpinner />
       ) : !report ? (
-        <p className="py-10 text-center text-sm text-slate-400">The report could not be loaded. Adjust the date or press Refresh.</p>
+        <p className="py-10 text-center text-sm text-neutral-400">The report could not be loaded. Adjust the date or press Refresh.</p>
       ) : (
         <div
           id="print-area"
-          className={`mx-auto max-w-5xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none ${loading ? 'opacity-60' : ''}`}
+          className={`mx-auto max-w-5xl rounded-2xl border border-neutral-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none ${loading ? 'opacity-60' : ''}`}
           style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
         >
           <div className="flex flex-col items-center text-center">

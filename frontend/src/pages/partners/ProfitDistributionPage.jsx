@@ -30,7 +30,7 @@ export default function ProfitDistributionPage() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
-        <Link to="/partners/profit-sharing" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to="/partners/profit-sharing" className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Profit Sharing
         </Link>
         <div className="flex flex-wrap items-center gap-2">
@@ -41,7 +41,7 @@ export default function ProfitDistributionPage() {
         </div>
       </div>
 
-      <div id="print-area" className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+      <div id="print-area" className="mx-auto max-w-4xl rounded-2xl border border-neutral-200/80 bg-white p-6 text-neutral-900 sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
         <DocHeader title={`Profit Sharing ${d.year}`} meta={<span className="font-semibold">{d.distributionNumber} · {formatDate(d.date)}</span>} />
         {cancelled && (
           <p className="mt-3 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-xs font-semibold text-brand-800">

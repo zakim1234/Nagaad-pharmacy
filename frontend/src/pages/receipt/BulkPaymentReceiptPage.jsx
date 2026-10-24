@@ -48,14 +48,14 @@ export default function BulkPaymentReceiptPage() {
       .catch((err) => setError(err.friendlyMessage || 'Bulk payment not found.'));
   }, [bulkId]);
 
-  if (error) return <div className="rounded-lg bg-rose-50 p-4 text-sm text-rose-700">{error}</div>;
+  if (error) return <div className="rounded-lg bg-brand-50 p-4 text-sm text-brand-700">{error}</div>;
   if (!bulk) return <PageSpinner />;
 
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between no-print">
-        <Link to="/purchases" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to="/purchases" className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Purchase Invoices
         </Link>
         <div className="flex gap-2">
@@ -72,7 +72,7 @@ export default function BulkPaymentReceiptPage() {
       </div>
 
       {bulk.status === 'CANCELLED' && (
-        <div className="mx-auto mb-4 max-w-[148mm] rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="mx-auto mb-4 max-w-[148mm] rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-700">
           <p className="font-bold">CANCELLED — the money went back to {bulk.paymentAccountName}.</p>
           <p className="text-xs">
             {formatDateTime(bulk.cancelledAt)}
@@ -94,7 +94,7 @@ export default function BulkPaymentReceiptPage() {
 
       <div
         id="print-area"
-        className="mx-auto max-w-[148mm] rounded-2xl border border-slate-200 bg-white p-6 text-[13px] text-neutral-900 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
+        className="mx-auto max-w-[148mm] rounded-2xl border border-neutral-200/80 bg-white p-6 text-[13px] text-neutral-900 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
       >
         <DocHeader
           compact

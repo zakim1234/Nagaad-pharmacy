@@ -31,7 +31,7 @@ const TYPES = {
   MOBILE_MONEY: { label: 'Mobile Money', icon: Smartphone, tint: 'bg-brand-50 text-brand-600' },
   BANK: { label: 'Bank', icon: Landmark, tint: 'bg-neutral-900 text-white' },
   MERCHANT: { label: 'Merchant', icon: Store, tint: 'bg-neutral-100 text-neutral-700' },
-  OTHER: { label: 'Other', icon: CircleDollarSign, tint: 'bg-slate-100 text-slate-500' },
+  OTHER: { label: 'Other', icon: CircleDollarSign, tint: 'bg-neutral-100 text-neutral-500' },
 };
 const typeOf = (t) => TYPES[t] || TYPES.OTHER;
 
@@ -150,8 +150,8 @@ export default function AccountsPage() {
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Accounts</h1>
-          <p className="mt-0.5 text-sm text-slate-500">Where money is received and paid across the business</p>
+          <h1 className="text-xl font-bold text-neutral-900">Accounts</h1>
+          <p className="mt-0.5 text-sm text-neutral-500">Where money is received and paid across the business</p>
         </div>
         {canManage && (
           <Button
@@ -166,15 +166,15 @@ export default function AccountsPage() {
       </div>
 
       {/* Summary strip */}
-      <div className="grid grid-cols-2 divide-slate-100 rounded-2xl border border-slate-200/70 bg-white shadow-sm lg:grid-cols-4 lg:divide-x">
-        <Summary label="Total balance" value={formatCurrency(data.totalBalance)} valueClass={data.totalBalance < 0 ? 'text-rose-600' : 'text-slate-900'} icon={Wallet} tint="bg-brand-50 text-brand-600" />
+      <div className="grid grid-cols-2 divide-neutral-100 rounded-2xl border border-neutral-200/70 bg-white lg:grid-cols-4 lg:divide-x">
+        <Summary label="Total balance" value={formatCurrency(data.totalBalance)} valueClass={data.totalBalance < 0 ? 'text-brand-600' : 'text-neutral-900'} icon={Wallet} tint="bg-brand-50 text-brand-600" />
         <Summary label="Accounts" value={`${activeCount} active`} hint={data.accounts.length > activeCount ? `${data.accounts.length - activeCount} inactive` : null} icon={Landmark} tint="bg-neutral-900 text-white" />
         <Summary label="Money in" value={totals ? formatCurrency(totals.in) : '—'} hint={periodLabel} icon={ArrowDownLeft} tint="bg-emerald-50 text-emerald-600" />
-        <Summary label="Money out" value={totals ? formatCurrency(totals.out) : '—'} hint={periodLabel} icon={ArrowUpRight} tint="bg-rose-50 text-rose-600" />
+        <Summary label="Money out" value={totals ? formatCurrency(totals.out) : '—'} hint={periodLabel} icon={ArrowUpRight} tint="bg-brand-50 text-brand-600" />
       </div>
 
       {/* Tabs */}
-      <div className="inline-flex gap-1 rounded-xl border border-slate-200 bg-slate-100/70 p-1">
+      <div className="inline-flex gap-1 rounded-xl border border-neutral-200 bg-neutral-100/70 p-1">
         {[
           { key: 'accounts', label: 'Accounts', icon: ReceiptText },
           { key: 'report', label: 'Report', icon: BarChart3 },
@@ -183,7 +183,7 @@ export default function AccountsPage() {
             key={key}
             onClick={() => setTab(key)}
             className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-              tab === key ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              tab === key ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'
             }`}
           >
             <Icon className="h-4 w-4" /> {label}
@@ -194,8 +194,8 @@ export default function AccountsPage() {
       {tab === 'accounts' ? (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[320px_1fr]">
           {/* Account list */}
-          <section className="h-fit overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
-            <ul className="divide-y divide-slate-100">
+          <section className="h-fit overflow-hidden rounded-2xl border border-neutral-200/70 bg-white">
+            <ul className="divide-y divide-neutral-100">
               {data.accounts.map((a) => {
                 const t = typeOf(a.type);
                 const Icon = t.icon;
@@ -204,7 +204,7 @@ export default function AccountsPage() {
                   <li key={a.id}>
                     <button
                       onClick={() => setSelectedId(a.id)}
-                      className={`relative flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors ${active ? 'bg-brand-50/50' : 'hover:bg-slate-50/70'} ${
+                      className={`relative flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors ${active ? 'bg-brand-50/50' : 'hover:bg-neutral-50/70'} ${
                         !a.isActive ? 'opacity-60' : ''
                       }`}
                     >
@@ -213,16 +213,16 @@ export default function AccountsPage() {
                         <Icon className="h-4 w-4" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-slate-800">{a.name}</p>
-                        <p className="truncate text-xs text-slate-400">
+                        <p className="truncate text-sm font-semibold text-neutral-800">{a.name}</p>
+                        <p className="truncate text-xs text-neutral-400">
                           {t.label}
                           {!a.isActive ? ' · Inactive' : ''}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className={`text-sm font-bold tabular-nums ${a.currentBalance < 0 ? 'text-rose-600' : 'text-slate-900'}`}>{formatCurrency(a.currentBalance)}</p>
+                        <p className={`text-sm font-bold tabular-nums ${a.currentBalance < 0 ? 'text-brand-600' : 'text-neutral-900'}`}>{formatCurrency(a.currentBalance)}</p>
                         {a.pendingToday !== 0 && (
-                          <p className="flex items-center justify-end gap-1 text-[11px] text-slate-400">
+                          <p className="flex items-center justify-end gap-1 text-[11px] text-neutral-400">
                             <Clock className="h-3 w-3" />
                             {a.pendingToday > 0 ? '+' : ''}
                             {formatCurrency(a.pendingToday)} pending
@@ -238,16 +238,16 @@ export default function AccountsPage() {
 
           {/* Selected account */}
           {selectedAccount && (
-            <section className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+            <section className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200/70 bg-white">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <SelectedIcon type={selectedAccount.type} />
                   <div className="min-w-0">
-                  <p className="flex items-center gap-2 text-base font-semibold text-slate-900">
+                  <p className="flex items-center gap-2 text-base font-semibold text-neutral-900">
                     {selectedAccount.name}
                     {!selectedAccount.isActive && <Badge color="slate">Inactive</Badge>}
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-neutral-400">
                     {typeOf(selectedAccount.type).label}
                     {selectedAccount.accountNumber ? ` · No. ${selectedAccount.accountNumber}` : ''}
                   </p>
@@ -255,12 +255,12 @@ export default function AccountsPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Balance</p>
-                    <p className={`text-xl font-bold tabular-nums ${selectedAccount.currentBalance < 0 ? 'text-rose-600' : 'text-slate-900'}`}>
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-400">Balance</p>
+                    <p className={`text-xl font-bold tabular-nums ${selectedAccount.currentBalance < 0 ? 'text-brand-600' : 'text-neutral-900'}`}>
                       {formatCurrency(selectedAccount.currentBalance)}
                     </p>
                     {selectedAccount.pendingToday !== 0 && (
-                      <p className="text-[11px] text-slate-400">After close: {formatCurrency(selectedAccount.expectedAfterClose)}</p>
+                      <p className="text-[11px] text-neutral-400">After close: {formatCurrency(selectedAccount.expectedAfterClose)}</p>
                     )}
                   </div>
                   {canManage && (
@@ -270,13 +270,13 @@ export default function AccountsPage() {
                           setEditAccount(selectedAccount);
                           setFormOpen(true);
                         }}
-                        className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                        className="flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:bg-neutral-50"
                       >
                         <Pencil className="h-3.5 w-3.5" /> Edit
                       </button>
                       <button
                         onClick={() => setDeactivateAccount(selectedAccount)}
-                        className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                        className="flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:bg-neutral-50"
                       >
                         {selectedAccount.isActive ? <Ban className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
                         {selectedAccount.isActive ? 'Deactivate' : 'Reactivate'}
@@ -288,38 +288,38 @@ export default function AccountsPage() {
 
               <div className="max-h-140 flex-1 overflow-y-auto px-5 py-4">
                 {!transactions ? (
-                  <p className="py-8 text-center text-sm text-slate-400">Loading transactions...</p>
+                  <p className="py-8 text-center text-sm text-neutral-400">Loading transactions...</p>
                 ) : groups.length === 0 ? (
-                  <p className="py-10 text-center text-sm text-slate-400">No transactions yet for this account.</p>
+                  <p className="py-10 text-center text-sm text-neutral-400">No transactions yet for this account.</p>
                 ) : (
                   <div className="space-y-4">
                     {groups.map((g) => (
                       <div key={g.key}>
-                        <p className="sticky top-0 z-10 -mx-5 bg-white/95 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 backdrop-blur">
+                        <p className="sticky top-0 z-10 -mx-5 bg-white/95 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-400 backdrop-blur">
                           {g.label}
                         </p>
-                        <ul className="divide-y divide-slate-100">
+                        <ul className="divide-y divide-neutral-100">
                           {g.items.map((t) => {
                             const isIn = t.direction === 'IN';
                             return (
                               <li key={t.id} className="flex items-center gap-3 py-2.5">
-                                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isIn ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isIn ? 'bg-emerald-50 text-emerald-600' : 'bg-brand-50 text-brand-600'}`}>
                                   {isIn ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-800">
+                                  <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-neutral-800">
                                     {TXN_LABELS[t.type] || t.type}
                                     {t.status === 'PENDING' && <Badge color="amber">Pending</Badge>}
                                     {t.status === 'REVERSED' && <Badge color="slate">Reversed</Badge>}
                                   </p>
-                                  <p className="truncate text-xs text-slate-400">{t.description}</p>
+                                  <p className="truncate text-xs text-neutral-400">{t.description}</p>
                                 </div>
                                 <div className="shrink-0 text-right">
-                                  <p className={`text-sm font-semibold tabular-nums ${isIn ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                  <p className={`text-sm font-semibold tabular-nums ${isIn ? 'text-emerald-600' : 'text-brand-600'}`}>
                                     {isIn ? '+' : '−'}
                                     {formatCurrency(t.amount)}
                                   </p>
-                                  <p className="text-xs text-slate-400">{timeOf(t.createdAt)}</p>
+                                  <p className="text-xs text-neutral-400">{timeOf(t.createdAt)}</p>
                                 </div>
                               </li>
                             );
@@ -327,7 +327,7 @@ export default function AccountsPage() {
                         </ul>
                       </div>
                     ))}
-                    {transactions.transactions.length >= 30 && <p className="text-center text-xs text-slate-400">Showing the latest 30 transactions.</p>}
+                    {transactions.transactions.length >= 30 && <p className="text-center text-xs text-neutral-400">Showing the latest 30 transactions.</p>}
                   </div>
                 )}
               </div>
@@ -335,7 +335,7 @@ export default function AccountsPage() {
           )}
         </div>
       ) : (
-        <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">
+        <section className="rounded-2xl border border-neutral-200/70 bg-white p-5">
           <DateRangeFilter
             range={reportRange}
             onRangeChange={(v) => {
@@ -349,13 +349,13 @@ export default function AccountsPage() {
             onToChange={setReportTo}
           />
           {!report ? (
-            <p className="py-6 text-center text-sm text-slate-400">Loading report...</p>
+            <p className="py-6 text-center text-sm text-neutral-400">Loading report...</p>
           ) : (
             <>
-              <div className="overflow-x-auto rounded-xl border border-slate-100">
+              <div className="overflow-x-auto rounded-xl border border-neutral-100">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-slate-50/80">
-                    <tr className="text-left text-xs font-medium uppercase tracking-wide text-slate-400">
+                  <thead className="bg-neutral-50/80">
+                    <tr className="text-left text-xs font-medium uppercase tracking-wide text-neutral-400">
                       <th className="px-4 py-3">Account</th>
                       <th className="px-4 py-3 text-right">Opening</th>
                       <th className="px-4 py-3 text-right">Money In</th>
@@ -363,32 +363,32 @@ export default function AccountsPage() {
                       <th className="px-4 py-3 text-right">Current Balance</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-neutral-100">
                     {report.accounts.map((a) => (
-                      <tr key={a.id} className="hover:bg-slate-50/70">
-                        <td className="px-4 py-3 font-medium text-slate-800">{a.name}</td>
-                        <td className="px-4 py-3 text-right tabular-nums text-slate-500">{formatCurrency(a.openingBalance)}</td>
+                      <tr key={a.id} className="hover:bg-neutral-50/70">
+                        <td className="px-4 py-3 font-medium text-neutral-800">{a.name}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-neutral-500">{formatCurrency(a.openingBalance)}</td>
                         <td className="px-4 py-3 text-right tabular-nums text-emerald-600">{formatCurrency(a.moneyIn)}</td>
-                        <td className="px-4 py-3 text-right tabular-nums text-rose-600">{formatCurrency(a.moneyOut)}</td>
-                        <td className={`px-4 py-3 text-right font-semibold tabular-nums ${a.currentBalance < 0 ? 'text-rose-600' : 'text-slate-900'}`}>{formatCurrency(a.currentBalance)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-brand-600">{formatCurrency(a.moneyOut)}</td>
+                        <td className={`px-4 py-3 text-right font-semibold tabular-nums ${a.currentBalance < 0 ? 'text-brand-600' : 'text-neutral-900'}`}>{formatCurrency(a.currentBalance)}</td>
                       </tr>
                     ))}
                   </tbody>
                   {totals && (
-                    <tfoot className="border-t border-slate-200 bg-slate-50/80 font-semibold">
+                    <tfoot className="border-t border-neutral-200 bg-neutral-50/80 font-semibold">
                       <tr>
-                        <td className="px-4 py-3 text-slate-800">Total</td>
-                        <td className="px-4 py-3 text-right tabular-nums text-slate-600">{formatCurrency(totals.opening)}</td>
-                        <td className="px-4 py-3 text-right tabular-nums text-slate-800">{formatCurrency(totals.in)}</td>
-                        <td className="px-4 py-3 text-right tabular-nums text-slate-800">{formatCurrency(totals.out)}</td>
-                        <td className={`px-4 py-3 text-right tabular-nums ${totals.current < 0 ? 'text-rose-600' : 'text-slate-900'}`}>{formatCurrency(totals.current)}</td>
+                        <td className="px-4 py-3 text-neutral-800">Total</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-neutral-600">{formatCurrency(totals.opening)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-neutral-800">{formatCurrency(totals.in)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-neutral-800">{formatCurrency(totals.out)}</td>
+                        <td className={`px-4 py-3 text-right tabular-nums ${totals.current < 0 ? 'text-brand-600' : 'text-neutral-900'}`}>{formatCurrency(totals.current)}</td>
                       </tr>
                     </tfoot>
                   )}
                 </table>
               </div>
               {report.range && (
-                <p className="mt-2 text-xs text-slate-400">
+                <p className="mt-2 text-xs text-neutral-400">
                   {formatDate(report.range.from)} – {formatDate(report.range.to)}
                 </p>
               )}
@@ -426,16 +426,16 @@ function SelectedIcon({ type }) {
   );
 }
 
-function Summary({ label, value, hint, icon: Icon, tint = 'bg-slate-100 text-slate-500', valueClass = 'text-slate-900' }) {
+function Summary({ label, value, hint, icon: Icon, tint = 'bg-neutral-100 text-neutral-500', valueClass = 'text-neutral-900' }) {
   return (
     <div className="flex items-center gap-3 px-5 py-4">
       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tint}`}>
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-xs font-medium text-slate-500">{label}</p>
+        <p className="truncate text-xs font-medium text-neutral-500">{label}</p>
         <p className={`text-lg font-bold leading-tight tabular-nums ${valueClass}`}>{value}</p>
-        {hint && <p className="text-[11px] text-slate-400">{hint}</p>}
+        {hint && <p className="text-[11px] text-neutral-400">{hint}</p>}
       </div>
     </div>
   );

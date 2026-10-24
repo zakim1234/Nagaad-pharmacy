@@ -54,7 +54,7 @@ function CategoryFormModal({ open, onClose, category, onSaved }) {
         <FormField label="Category Name" required error={error}>
           <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Medicine" />
         </FormField>
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+        <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
           <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </Button>
@@ -125,7 +125,7 @@ export default function CategoriesPage() {
 
       <div className="mb-4 max-w-sm">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <Input className="pl-9" placeholder="Search categories..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
@@ -147,15 +147,15 @@ export default function CategoriesPage() {
             <TableEmpty colSpan={5} message="No categories yet. Create one to start organizing inventory." />
           ) : (
             categories.map((c) => (
-              <tr key={c.id} className="hover:bg-slate-50">
+              <tr key={c.id} className="hover:bg-neutral-50">
                 <Td>
-                  <div className="flex items-center gap-2 font-medium text-slate-900">
-                    <Tag className="h-4 w-4 text-slate-400" /> {c.name}
+                  <div className="flex items-center gap-2 font-medium text-neutral-900">
+                    <Tag className="h-4 w-4 text-neutral-400" /> {c.name}
                   </div>
                 </Td>
                 <Td>{c.itemCount}</Td>
-                <Td className="whitespace-nowrap text-xs text-slate-500">{formatDate(c.createdAt)}</Td>
-                <Td className="whitespace-nowrap text-xs text-slate-500">{formatDate(c.updatedAt)}</Td>
+                <Td className="whitespace-nowrap text-xs text-neutral-500">{formatDate(c.createdAt)}</Td>
+                <Td className="whitespace-nowrap text-xs text-neutral-500">{formatDate(c.updatedAt)}</Td>
                 <Td>
                   <div className="flex justify-end gap-1">
                     <button
@@ -163,14 +163,14 @@ export default function CategoriesPage() {
                         setEditCategory(c);
                         setFormOpen(true);
                       }}
-                      className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600"
+                      className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-brand-600"
                       title="Edit"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => setDeleteCategory(c)}
-                      className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600"
+                      className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-brand-600"
                       title="Delete"
                     >
                       <Trash2 className="h-4 w-4" />

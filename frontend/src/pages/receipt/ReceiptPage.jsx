@@ -54,7 +54,7 @@ export default function ReceiptPage() {
     }
   };
 
-  if (error) return <div className="rounded-lg bg-rose-50 p-4 text-sm text-rose-700">{error}</div>;
+  if (error) return <div className="rounded-lg bg-brand-50 p-4 text-sm text-brand-700">{error}</div>;
   if (!sale) return <PageSpinner />;
 
   const currentOutstanding = sale.newBalance;
@@ -62,7 +62,7 @@ export default function ReceiptPage() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between no-print">
-        <button type="button" onClick={goBack} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <button type="button" onClick={goBack} className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> {backLabel}
         </button>
         <div className="flex gap-2">
@@ -97,7 +97,7 @@ export default function ReceiptPage() {
 
       <div
         id="print-area"
-        className="mx-auto max-w-[148mm] rounded-2xl border border-slate-200 bg-white p-6 text-[13px] text-neutral-900 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
+        className="mx-auto max-w-[148mm] rounded-2xl border border-neutral-200/80 bg-white p-6 text-[13px] text-neutral-900 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
       >
         <DocHeader
           compact
@@ -110,7 +110,7 @@ export default function ReceiptPage() {
           </p>
         )}
         {sale.status === 'CANCELLED' && sale.cancelledReason && (
-          <p className="mt-2 text-center text-[11px] font-medium text-rose-600 no-print">Reason: {sale.cancelledReason}</p>
+          <p className="mt-2 text-center text-[11px] font-medium text-brand-600 no-print">Reason: {sale.cancelledReason}</p>
         )}
 
         <DocInfo
@@ -168,14 +168,14 @@ export default function ReceiptPage() {
       </div>
 
       {sale.returns?.length > 0 && (
-        <div className="mx-auto mt-4 max-w-[148mm] rounded-2xl border border-slate-200 bg-white p-4 text-sm no-print">
-          <p className="mb-2 flex items-center gap-1.5 font-semibold text-slate-700">
+        <div className="mx-auto mt-4 max-w-[148mm] rounded-2xl border border-neutral-200/80 bg-white p-4 text-sm no-print">
+          <p className="mb-2 flex items-center gap-1.5 font-semibold text-neutral-700">
             <Undo2 className="h-4 w-4" /> Returns on This Invoice ({sale.returns.length})
           </p>
           <div className="space-y-1.5">
             {sale.returns.map((r, i) => (
-              <div key={i} className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-xs">
-                <span className="text-slate-500">{formatDate(r.createdAt)} · {formatCurrency(r.amount)}</span>
+              <div key={i} className="flex items-center justify-between rounded-lg border border-neutral-100 px-3 py-2 text-xs">
+                <span className="text-neutral-500">{formatDate(r.createdAt)} · {formatCurrency(r.amount)}</span>
                 <Link to={`/receipt/${sale.id}/return/${r.index}`} className="font-semibold text-brand-600 hover:underline">
                   View / Print
                 </Link>

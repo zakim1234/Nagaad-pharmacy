@@ -33,14 +33,14 @@ export default function PageBranchPicker({ children }) {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 no-print">
-        <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+      <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-200/80 bg-white px-4 py-3 no-print">
+        <span className="flex items-center gap-1.5 text-sm font-semibold text-neutral-700">
           <Store className="h-4 w-4 text-brand-600" /> Branch
         </span>
         <select
           value={branchId}
           onChange={(e) => choose(e.target.value)}
-          className="min-w-52 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 outline-none focus:border-brand-500"
+          className="min-w-52 cursor-pointer rounded-lg border border-neutral-200/80 bg-white px-3 py-1.5 text-sm font-semibold text-neutral-900 outline-none focus:border-brand-500"
         >
           {branches.map((b) => (
             <option key={b.id} value={String(b.id)}>
@@ -49,7 +49,7 @@ export default function PageBranchPicker({ children }) {
           ))}
           <option value="">All branches (view only)</option>
         </select>
-        <span className="text-xs text-slate-500">{branchId ? 'Everything below is for this branch.' : 'All branches together — choose a branch to pay or make changes.'}</span>
+        <span className="text-xs text-neutral-500">{branchId ? 'Everything below is for this branch.' : 'All branches together — choose a branch to pay or make changes.'}</span>
       </div>
       <div key={branchId || 'all'}>{children}</div>
     </div>

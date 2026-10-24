@@ -40,9 +40,9 @@ function CustomerFilterSelect({ customer, onSelect, onClear }) {
 
   if (customer) {
     return (
-      <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm">
-        <span className="font-medium text-slate-800">{customer.name}</span>
-        <button type="button" onClick={onClear} className="text-slate-400 hover:text-rose-600" aria-label="Clear customer filter">
+      <div className="flex items-center gap-2 rounded-md border border-neutral-200/80 bg-white px-3 py-2 text-sm">
+        <span className="font-medium text-neutral-800">{customer.name}</span>
+        <button type="button" onClick={onClear} className="text-neutral-400 hover:text-brand-600" aria-label="Clear customer filter">
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
@@ -58,9 +58,9 @@ function CustomerFilterSelect({ customer, onSelect, onClear }) {
         placeholder="Search customer..."
       />
       {open && query.trim() && (
-        <div className="absolute z-30 mt-1 w-full min-w-60 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+        <div className="absolute z-30 mt-1 w-full min-w-60 overflow-hidden rounded-lg border border-neutral-200/80 bg-white shadow-lg">
           {results.length === 0 ? (
-            <div className="px-3 py-2.5 text-xs text-slate-400">No matching customers</div>
+            <div className="px-3 py-2.5 text-xs text-neutral-400">No matching customers</div>
           ) : (
             <ul className="max-h-60 overflow-y-auto py-1">
               {results.map((c) => (
@@ -68,9 +68,9 @@ function CustomerFilterSelect({ customer, onSelect, onClear }) {
                   <button
                     type="button"
                     onMouseDown={(e) => { e.preventDefault(); onSelect(c); setQuery(''); setOpen(false); }}
-                    className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50"
+                    className="block w-full px-3 py-2 text-left text-sm hover:bg-neutral-50"
                   >
-                    {c.name}{c.phone ? <span className="ml-1.5 text-xs text-slate-400">{c.phone}</span> : null}
+                    {c.name}{c.phone ? <span className="ml-1.5 text-xs text-neutral-400">{c.phone}</span> : null}
                   </button>
                 </li>
               ))}
@@ -113,13 +113,13 @@ export default function QuotationsPage({ report = false }) {
       <FormField label="Customer"><CustomerFilterSelect customer={customer} onSelect={c => { setCustomer(c); setPage(1); }} onClear={() => { setCustomer(null); setPage(1); }} /></FormField>
     </div>
     <DateRangeFilter allowAll range={range} onRangeChange={value => { setRange(value); setFrom(''); setTo(''); setPage(1); }} from={from} to={to} onFromChange={v => { setFrom(v); setPage(1); }} onToChange={v => { setTo(v); setPage(1); }} />
-    <div id={report ? 'print-area' : undefined} className={report ? 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none' : ''}>
+    <div id={report ? 'print-area' : undefined} className={report ? 'rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none' : ''}>
       {report && <PrintReportHeader showOnScreen title="Quotation Report" rangeLabel={[customer ? `Customer: ${customer.name}` : null, status || 'All statuses', from || to ? `${from || 'Start'} – ${to || 'Today'}` : range].filter(Boolean).join(' · ')} />}
-      {report && summary && <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">{[['Total Quotations', summary.totalQuotations], ...STATUSES.map(s => [`${s} Quotations`, summary.counts[s]]), ['Total Quotation Amount', formatCurrency(summary.totalQuotationAmount)]].map(([label, value]) => <div key={label} className="rounded-lg border border-slate-200 bg-white p-3"><p className="text-xs text-slate-500">{label}</p><p className="text-lg font-semibold">{value}</p></div>)}</div>}
-      <Card><div className="overflow-x-auto"><table className="w-full min-w-[820px] text-left text-sm"><thead><tr className="border-b text-xs uppercase text-slate-500">{['Quotation', 'Customer', 'Date', 'Expiry Date', 'Status', 'Discount', 'Grand Total', 'Converted Invoice'].map(h => <th key={h} className="p-3">{h}</th>)}</tr></thead><tbody>
-        {loading ? <tr><td colSpan={8} className="p-8 text-center">Loading quotations…</td></tr> : !result ? <tr><td colSpan={8} className="p-8 text-center">Unable to load quotations. Please refresh.</td></tr> : result.data.length === 0 ? <tr><td colSpan={8} className="p-8 text-center text-slate-500">No quotations found.</td></tr> : result.data.map(row => <tr key={row.id} className="border-b border-slate-100"><td className="p-3"><Link className="text-brand-700 hover:underline" to={`/quotations/${row.id}`}>{row.quotationNumber}</Link></td><td className="p-3">{row.customerName}</td><td className="p-3">{formatDate(row.date)}</td><td className="p-3">{formatDate(row.expiryDate)}</td><td className="p-3">{row.status}</td><td className="p-3 tabular-nums">{formatCurrency(row.totalDiscount)}</td><td className="p-3 tabular-nums">{formatCurrency(row.grandTotal)}</td><td className="p-3">{row.convertedInvoice ? <Link className="text-brand-700 hover:underline" to={`/receipt/${row.convertedInvoice}`}>{row.convertedInvoiceNumber}</Link> : '—'}</td></tr>)}
+      {report && summary && <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">{[['Total Quotations', summary.totalQuotations], ...STATUSES.map(s => [`${s} Quotations`, summary.counts[s]]), ['Total Quotation Amount', formatCurrency(summary.totalQuotationAmount)]].map(([label, value]) => <div key={label} className="rounded-lg border border-neutral-200/80 bg-white p-3"><p className="text-xs text-neutral-500">{label}</p><p className="text-lg font-semibold">{value}</p></div>)}</div>}
+      <Card><div className="overflow-x-auto"><table className="w-full min-w-[820px] text-left text-sm"><thead><tr className="border-b text-xs uppercase text-neutral-500">{['Quotation', 'Customer', 'Date', 'Expiry Date', 'Status', 'Discount', 'Grand Total', 'Converted Invoice'].map(h => <th key={h} className="p-3">{h}</th>)}</tr></thead><tbody>
+        {loading ? <tr><td colSpan={8} className="p-8 text-center">Loading quotations…</td></tr> : !result ? <tr><td colSpan={8} className="p-8 text-center">Unable to load quotations. Please refresh.</td></tr> : result.data.length === 0 ? <tr><td colSpan={8} className="p-8 text-center text-neutral-500">No quotations found.</td></tr> : result.data.map(row => <tr key={row.id} className="border-b border-neutral-100"><td className="p-3"><Link className="text-brand-700 hover:underline" to={`/quotations/${row.id}`}>{row.quotationNumber}</Link></td><td className="p-3">{row.customerName}</td><td className="p-3">{formatDate(row.date)}</td><td className="p-3">{formatDate(row.expiryDate)}</td><td className="p-3">{row.status}</td><td className="p-3 tabular-nums">{formatCurrency(row.totalDiscount)}</td><td className="p-3 tabular-nums">{formatCurrency(row.grandTotal)}</td><td className="p-3">{row.convertedInvoice ? <Link className="text-brand-700 hover:underline" to={`/receipt/${row.convertedInvoice}`}>{row.convertedInvoiceNumber}</Link> : '—'}</td></tr>)}
       </tbody></table></div>{result && <div className="no-print"><Pagination {...result.pagination} onChange={setPage} /></div>}</Card>
-      {report && <p className="mt-3 text-xs text-slate-500">Totals cover all matching quotations. Detail table: page {page} of {result?.pagination.pages || 1}. Open a quotation to view its products, prices and discounts. Quotation amounts are not sales revenue.</p>}
+      {report && <p className="mt-3 text-xs text-neutral-500">Totals cover all matching quotations. Detail table: page {page} of {result?.pagination.pages || 1}. Open a quotation to view its products, prices and discounts. Quotation amounts are not sales revenue.</p>}
     </div>
   </div>;
 }

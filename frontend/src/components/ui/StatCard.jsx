@@ -4,7 +4,7 @@ export default function StatCard({ label, value, icon: Icon, tone = 'slate', hin
     indigo: 'bg-brand-100 text-brand-600',
     emerald: 'bg-emerald-100 text-emerald-600',
     amber: 'bg-amber-100 text-amber-600',
-    rose: 'bg-rose-100 text-rose-600',
+    rose: 'bg-brand-100 text-brand-600',
   };
 
   return (
@@ -13,7 +13,7 @@ export default function StatCard({ label, value, icon: Icon, tone = 'slate', hin
         <div>
           <p className="eyebrow">{label}</p>
           <p className="figure mt-1.5 text-[26px] font-extrabold text-neutral-950">{value}</p>
-          {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+          {hint && <p className="mt-1 text-xs text-neutral-400">{hint}</p>}
         </div>
         {Icon && (
           <div className={`rounded-lg p-2 ${tones[tone]}`}>

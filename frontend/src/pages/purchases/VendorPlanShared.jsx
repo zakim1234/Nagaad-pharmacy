@@ -100,7 +100,7 @@ export function PaidPlan({ plan }) {
   const paidRows = plan.rows.filter((r) => r.paid > 0).length;
   const owedBefore = round2(plan.rows.reduce((s, r) => s + r.owed, 0));
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-neutral-200/80 bg-white">
       <div className="bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 px-5 py-4 text-white">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -143,12 +143,12 @@ export function PaidPlan({ plan }) {
         </div>
       </div>
 
-      <ul className="divide-y divide-slate-100">
+      <ul className="divide-y divide-neutral-100">
         {plan.rows.map((r, i) => {
           const pct = r.owed > 0 ? Math.min(100, Math.round((r.paid / r.owed) * 100)) : 0;
           return (
-            <li key={String(r.supplier)} className="flex flex-wrap items-center gap-4 px-5 py-3.5 hover:bg-slate-50/60">
-              <span className="w-5 text-sm text-slate-400">{i + 1}</span>
+            <li key={String(r.supplier)} className="flex flex-wrap items-center gap-4 px-5 py-3.5 hover:bg-neutral-50/60">
+              <span className="w-5 text-sm text-neutral-400">{i + 1}</span>
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">
                 {r.supplierName
                   .split(/\s+/)
@@ -157,40 +157,40 @@ export function PaidPlan({ plan }) {
                   .join('')}
               </span>
               <div className="min-w-[180px] flex-1">
-                <p className="font-semibold text-slate-900">
+                <p className="font-semibold text-neutral-900">
                   {r.supplierName}
                   {r.receiptNo && <span className="ml-2 rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] font-medium text-neutral-600">Receipt No. {r.receiptNo}</span>}
                 </p>
                 <div className="mt-1.5 flex items-center gap-2">
-                  <div className="h-1.5 w-40 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-1.5 w-40 overflow-hidden rounded-full bg-neutral-100">
                     <div className="h-full rounded-full bg-brand-600" style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="text-[11px] text-slate-400">{pct}% of balance</span>
+                  <span className="text-[11px] text-neutral-400">{pct}% of balance</span>
                 </div>
               </div>
               <div className="w-24 text-right text-xs">
-                <p className="text-slate-400">Balance</p>
-                <p className="font-medium text-slate-700">{formatCurrency(r.owed)}</p>
+                <p className="text-neutral-400">Balance</p>
+                <p className="font-medium text-neutral-700">{formatCurrency(r.owed)}</p>
               </div>
               <div className="w-24 text-right text-xs">
-                <p className="text-slate-400">Paid</p>
+                <p className="text-neutral-400">Paid</p>
                 <p className="text-sm font-bold text-brand-700">{formatCurrency(r.paid)}</p>
               </div>
               <div className="w-24 text-right text-xs">
-                <p className="text-slate-400">Left</p>
-                <p className="font-medium text-slate-700">{formatCurrency(round2(r.owed - r.paid))}</p>
+                <p className="text-neutral-400">Left</p>
+                <p className="font-medium text-neutral-700">{formatCurrency(round2(r.owed - r.paid))}</p>
               </div>
               <div className="w-40 text-right">
                 {r.bulkPayment ? (
                   <Link
                     to={`/purchases/bulk-payments/${r.bulkPayment}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-600"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:border-brand-300 hover:text-brand-600"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5 text-brand-600" /> Receipt {r.bulkNumber.replace(/^BPAY-\d{4}-0*/, '#')}
-                    {r.cancelled && <span className="ml-1 rounded bg-rose-100 px-1 text-[10px] font-bold uppercase text-rose-700">Cancelled</span>}
+                    {r.cancelled && <span className="ml-1 rounded bg-brand-100 px-1 text-[10px] font-bold uppercase text-brand-700">Cancelled</span>}
                   </Link>
                 ) : (
-                  <span className="text-xs text-slate-400">Nothing owed at payment</span>
+                  <span className="text-xs text-neutral-400">Nothing owed at payment</span>
                 )}
               </div>
             </li>
@@ -198,10 +198,10 @@ export function PaidPlan({ plan }) {
         })}
       </ul>
 
-      <div className="flex items-center justify-between border-t-2 border-slate-900 bg-slate-50 px-5 py-3 text-sm font-bold text-slate-900">
+      <div className="flex items-center justify-between border-t-2 border-neutral-900 bg-neutral-50 px-5 py-3 text-sm font-bold text-neutral-900">
         <span>Total</span>
         <span>
-          <span className="mr-4 text-xs font-medium text-slate-500">Allocated {formatCurrency(plan.totalAllocated)}</span>
+          <span className="mr-4 text-xs font-medium text-neutral-500">Allocated {formatCurrency(plan.totalAllocated)}</span>
           Paid <span className="text-brand-700">{formatCurrency(plan.totalPaid)}</span>
         </span>
       </div>

@@ -33,8 +33,8 @@ export default function DraftsPanel({ drafts, loading, onChanged }) {
     }
   };
 
-  if (loading) return <p className="py-6 text-center text-sm text-slate-400">Loading today's pending invoices...</p>;
-  if (drafts.length === 0) return <p className="py-6 text-center text-sm text-slate-400">No pending invoices yet today.</p>;
+  if (loading) return <p className="py-6 text-center text-sm text-neutral-400">Loading today's pending invoices...</p>;
+  if (drafts.length === 0) return <p className="py-6 text-center text-sm text-neutral-400">No pending invoices yet today.</p>;
 
   return (
     <div className="space-y-2">
@@ -43,28 +43,28 @@ export default function DraftsPanel({ drafts, loading, onChanged }) {
           <div className="flex items-center gap-2.5">
             <Clock className="h-4 w-4 shrink-0 text-amber-500" />
             <div>
-              <p className="text-sm font-semibold text-slate-800">
-                {d.receiptNumber} <span className="text-xs font-normal text-slate-400">· {d.customerName}</span>
+              <p className="text-sm font-semibold text-neutral-800">
+                {d.receiptNumber} <span className="text-xs font-normal text-neutral-400">· {d.customerName}</span>
               </p>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-neutral-400">
                 {formatTime(d.createdAt)} · {d.items.length} item(s) · Paid {formatCurrency(d.paidAmount)}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm font-bold tabular-nums text-slate-800">{formatCurrency(d.total)}</span>
+            <span className="text-sm font-bold tabular-nums text-neutral-800">{formatCurrency(d.total)}</span>
             <div className="flex gap-1">
               <button
                 disabled={!!d.quotation}
                 onClick={() => navigate(`/pos?edit=${d.id}`)}
-                className="rounded-md p-1.5 text-slate-400 hover:bg-brand-50 hover:text-brand-600"
+                className="rounded-md p-1.5 text-neutral-400 hover:bg-brand-50 hover:text-brand-600"
                 title="Open / Edit"
               >
                 <Pencil className="h-4 w-4" />
               </button>
               <button
                 onClick={() => navigate(`/receipt/${d.id}`)}
-                className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
                 title="Print"
               >
                 <Printer className="h-4 w-4" />
@@ -72,7 +72,7 @@ export default function DraftsPanel({ drafts, loading, onChanged }) {
               {canCancelInvoices && (
                 <button
                   onClick={() => setCancelTarget(d)}
-                  className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                  className="rounded-md p-1.5 text-neutral-400 hover:bg-brand-50 hover:text-brand-600"
                   title="Cancel"
                 >
                   <XCircle className="h-4 w-4" />

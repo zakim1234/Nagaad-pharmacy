@@ -82,7 +82,7 @@ function PaymentModal({ open, onClose, purchase, payment, onSaved }) {
   return (
     <Modal open={open} onClose={onClose} title={editing ? `Edit Payment ${payment.paymentNumber}` : 'Add Payment'} size="sm">
       <div className="space-y-4">
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-neutral-500">
           {editing ? 'Can be up to' : 'Balance Due'}: <strong>{formatCurrency(maxAmount)}</strong>
         </p>
         <FormField label="Amount" required>
@@ -106,8 +106,8 @@ function PaymentModal({ open, onClose, purchase, payment, onSaved }) {
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" maxLength={500} />
         </FormField>
         {Number.isFinite(amt) && amt > 0 && amt <= maxAmount && (
-          <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
-            Balance Due after saving: <strong className={newBalance > 0 ? 'text-rose-600' : 'text-emerald-600'}>{formatCurrency(newBalance)}</strong>
+          <p className="rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+            Balance Due after saving: <strong className={newBalance > 0 ? 'text-brand-600' : 'text-emerald-600'}>{formatCurrency(newBalance)}</strong>
           </p>
         )}
         <div className="flex justify-end gap-2">
@@ -172,7 +172,7 @@ export default function PurchaseDetailPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Link to="/purchases" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to="/purchases" className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Purchase Invoices
         </Link>
         <Link to={`/purchases/${id}/receipt`}>
@@ -183,9 +183,9 @@ export default function PurchaseDetailPage() {
       <Card dense>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{purchase.purchaseNumber}</h1>
-            <p className="text-sm text-slate-500"><Link to={`/purchases?supplier=${purchase.supplier}`} className="font-medium text-slate-700 hover:text-brand-600 hover:underline" title="All invoices from this supplier">{purchase.supplierName}</Link>{purchase.supplierInvoiceNumber ? ` · Supplier Invoice: ${purchase.supplierInvoiceNumber}` : ''}</p>
-            <p className="mt-1 text-xs text-slate-400">{formatDateTime(purchase.createdAt)}</p>
+            <h1 className="text-xl font-bold text-neutral-900">{purchase.purchaseNumber}</h1>
+            <p className="text-sm text-neutral-500"><Link to={`/purchases?supplier=${purchase.supplier}`} className="font-medium text-neutral-700 hover:text-brand-600 hover:underline" title="All invoices from this supplier">{purchase.supplierName}</Link>{purchase.supplierInvoiceNumber ? ` · Supplier Invoice: ${purchase.supplierInvoiceNumber}` : ''}</p>
+            <p className="mt-1 text-xs text-neutral-400">{formatDateTime(purchase.createdAt)}</p>
           </div>
           <div className="flex gap-2">
             {voided && <Badge color="red">Voided</Badge>}
@@ -193,16 +193,16 @@ export default function PurchaseDetailPage() {
         </div>
         <div className="mt-4 grid grid-cols-3 gap-4 text-center">
           <div>
-            <p className="text-xs uppercase text-slate-400">Total Amount</p>
-            <p className="text-lg font-bold text-slate-800">{formatCurrency(purchase.totalAmount)}</p>
+            <p className="text-xs uppercase text-neutral-400">Total Amount</p>
+            <p className="text-lg font-bold text-neutral-800">{formatCurrency(purchase.totalAmount)}</p>
           </div>
           <div>
-            <p className="text-xs uppercase text-slate-400">Amount Paid</p>
-            <p className="text-lg font-bold text-slate-800">{formatCurrency(purchase.paidAmount)}</p>
+            <p className="text-xs uppercase text-neutral-400">Amount Paid</p>
+            <p className="text-lg font-bold text-neutral-800">{formatCurrency(purchase.paidAmount)}</p>
           </div>
           <div>
-            <p className="text-xs uppercase text-slate-400">Balance Due</p>
-            <p className={`text-lg font-bold ${purchase.balanceDue > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{formatCurrency(purchase.balanceDue)}</p>
+            <p className="text-xs uppercase text-neutral-400">Balance Due</p>
+            <p className={`text-lg font-bold ${purchase.balanceDue > 0 ? 'text-brand-600' : 'text-emerald-600'}`}>{formatCurrency(purchase.balanceDue)}</p>
           </div>
         </div>
         {canPay && (
@@ -214,10 +214,10 @@ export default function PurchaseDetailPage() {
 
       <Card dense title={`Payment History — ${purchase.purchaseNumber} (${active.length})`}>
         {payments.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-400">No payments recorded yet.</p>
+          <p className="py-6 text-center text-sm text-neutral-400">No payments recorded yet.</p>
         ) : (
           <div className="space-y-2">
-            {active.length === 0 && <p className="py-3 text-center text-sm text-slate-400">No active payments.</p>}
+            {active.length === 0 && <p className="py-3 text-center text-sm text-neutral-400">No active payments.</p>}
             {active.map((p) => (
               <PaymentRow
                 key={p.id}
@@ -228,13 +228,13 @@ export default function PurchaseDetailPage() {
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => setEditTarget(p)}
-                        className="flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
+                        className="flex items-center gap-1 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-xs font-semibold text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
                       >
                         <Pencil className="h-3.5 w-3.5" /> Edit
                       </button>
                       <button
                         onClick={() => setDeleteTarget(p)}
-                        className="flex items-center gap-1 rounded-lg border border-rose-200 px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                        className="flex items-center gap-1 rounded-lg border border-brand-200 px-2.5 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-50"
                       >
                         <Trash2 className="h-3.5 w-3.5" /> Delete
                       </button>
@@ -245,7 +245,7 @@ export default function PurchaseDetailPage() {
             ))}
             {deleted.length > 0 && (
               <div className="pt-2">
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Deleted payments ({deleted.length})</p>
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-400">Deleted payments ({deleted.length})</p>
                 {deleted.map((p) => (
                   <PaymentRow key={p.id} payment={p} faded />
                 ))}
@@ -273,12 +273,12 @@ export default function PurchaseDetailPage() {
 
 function PaymentRow({ payment: p, actions, faded = false }) {
   return (
-    <div className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 p-3 ${faded ? 'bg-slate-50/60 opacity-70' : ''}`}>
+    <div className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-100 p-3 ${faded ? 'bg-neutral-50/60 opacity-70' : ''}`}>
       <div className="min-w-0">
-        <p className={`text-sm font-semibold ${faded ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
+        <p className={`text-sm font-semibold ${faded ? 'text-neutral-500 line-through' : 'text-neutral-800'}`}>
           {formatCurrency(p.amount)} – {p.paymentAccountName} – {formatDate(p.paymentDate)}
         </p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-400">
           <span>{p.paymentNumber}</span>
           {p.receiptNo && <span className="rounded bg-neutral-100 px-1.5 py-0.5 font-medium text-neutral-600">Receipt No. {p.receiptNo}</span>}
           {p.bulkPayment && (
@@ -288,7 +288,7 @@ function PaymentRow({ payment: p, actions, faded = false }) {
           )}
           {p.editedAt && !faded && <Badge color="blue">Edited</Badge>}
           {faded && <Badge color="red">Deleted</Badge>}
-          {p.note && <span className="text-slate-500">{p.note}</span>}
+          {p.note && <span className="text-neutral-500">{p.note}</span>}
         </p>
       </div>
       {actions}

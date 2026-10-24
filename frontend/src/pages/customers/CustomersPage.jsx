@@ -62,7 +62,7 @@ export default function CustomersPage() {
         subtitle="Manage customer records and outstanding balances"
         actions={
           <div className="flex flex-wrap gap-2">
-            <Link to="/customers/debtors" className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            <Link to="/customers/debtors" className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200/80 bg-white px-3.5 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50">
               <ScrollText className="h-4 w-4 text-brand-600" /> Debtors statement
             </Link>
             <Button
@@ -78,7 +78,7 @@ export default function CustomersPage() {
       />
 
       <div className="relative mb-4 max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
         <Input className="pl-9" placeholder="Search by name or phone..." value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
@@ -99,16 +99,16 @@ export default function CustomersPage() {
             <TableEmpty colSpan={5} message="No customers found." />
           ) : (
             items.map((c) => (
-              <tr key={c.id} className="hover:bg-slate-50">
+              <tr key={c.id} className="hover:bg-neutral-50">
                 <Td>
-                  <Link to={`/customers/${c.id}`} className="font-medium text-slate-900 hover:text-brand-600">
+                  <Link to={`/customers/${c.id}`} className="font-medium text-neutral-900 hover:text-brand-600">
                     {c.name}
                   </Link>
                 </Td>
                 <Td>{c.phone || '—'}</Td>
                 <Td>{formatCurrency(c.totalPurchased)}</Td>
                 <Td>
-                  <span className={`font-semibold ${c.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                  <span className={`font-semibold ${c.balance > 0 ? 'text-brand-600' : 'text-emerald-600'}`}>
                     {formatCurrency(c.balance)}
                   </span>
                 </Td>
@@ -119,12 +119,12 @@ export default function CustomersPage() {
                         setEditItem(c);
                         setFormOpen(true);
                       }}
-                      className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600"
+                      className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-brand-600"
                       title="Edit"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
-                    <button onClick={() => setDeleteItem(c)} className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600" title="Delete">
+                    <button onClick={() => setDeleteItem(c)} className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-brand-600" title="Delete">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
@@ -134,7 +134,7 @@ export default function CustomersPage() {
           )}
         </TBody>
       </Table>
-      <div className="rounded-b-xl border border-t-0 border-slate-200 bg-white">
+      <div className="rounded-b-xl border border-t-0 border-neutral-200/80 bg-white">
         <Pagination {...pagination} onChange={setPage} />
       </div>
 

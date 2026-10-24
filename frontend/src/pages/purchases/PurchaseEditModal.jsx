@@ -74,21 +74,21 @@ export default function PurchaseEditModal({ purchase, onClose, onSaved }) {
             <Input type="date" value={purchaseDate} max={dayString()} onChange={(e) => setPurchaseDate(e.target.value)} />
           </FormField>
         </div>
-        <div className="grid grid-cols-3 gap-2 rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
+        <div className="grid grid-cols-3 gap-2 rounded-lg bg-neutral-50 px-3 py-2.5 text-sm">
           <div>
-            <p className="text-xs text-slate-400">Already paid</p>
-            <p className="font-semibold tabular-nums text-slate-800">{formatCurrency(paid)}</p>
+            <p className="text-xs text-neutral-400">Already paid</p>
+            <p className="font-semibold tabular-nums text-neutral-800">{formatCurrency(paid)}</p>
           </div>
           <div>
-            <p className="text-xs text-slate-400">Balance due</p>
-            <p className={`font-semibold tabular-nums ${balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{formatCurrency(balance)}</p>
+            <p className="text-xs text-neutral-400">Balance due</p>
+            <p className={`font-semibold tabular-nums ${balance > 0 ? 'text-brand-600' : 'text-emerald-600'}`}>{formatCurrency(balance)}</p>
           </div>
           <div>
-            <p className="text-xs text-slate-400">Status</p>
-            <p className="font-semibold text-slate-800">{status}</p>
+            <p className="text-xs text-neutral-400">Status</p>
+            <p className="font-semibold text-neutral-800">{status}</p>
           </div>
         </div>
-        {tooLow && <p className="text-sm text-rose-600">Total cannot be less than the {formatCurrency(paid)} already paid. Edit or delete a payment first.</p>}
+        {tooLow && <p className="text-sm text-brand-600">Total cannot be less than the {formatCurrency(paid)} already paid. Edit or delete a payment first.</p>}
         <FormField label="Notes">
           <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={1000} placeholder="Optional" />
         </FormField>

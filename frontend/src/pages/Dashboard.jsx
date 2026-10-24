@@ -61,7 +61,7 @@ export default function Dashboard() {
       .catch(() => {});
   }, []);
 
-  if (error) return <div className="rounded-xl bg-rose-50 p-4 text-sm text-rose-700">{error}</div>;
+  if (error) return <div className="rounded-xl bg-brand-50 p-4 text-sm text-brand-700">{error}</div>;
   if (!data) return <PageSpinner />;
 
   const { cards, charts } = data;

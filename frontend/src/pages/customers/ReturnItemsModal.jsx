@@ -146,20 +146,20 @@ export default function ReturnItemsModal({ open, onClose, sale, onReturned }) {
         }
       >
         <div className="space-y-3">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-neutral-500">
             Enter how many units of each item the customer is returning. Stock will be restored to inventory and the
             invoice balance, customer debt and account will be reconciled automatically.
           </p>
 
           {showBulkControls && (
-            <div className="flex flex-wrap items-center gap-3 rounded-lg bg-slate-50 px-3 py-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+            <div className="flex flex-wrap items-center gap-3 rounded-lg bg-neutral-50 px-3 py-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-neutral-700">
                 <input
                   type="checkbox"
                   checked={allChecked}
                   ref={(el) => { if (el) el.indeterminate = someChecked; }}
                   onChange={toggleSelectAll}
-                  className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
+                  className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-400"
                 />
                 Select All Items
               </label>
@@ -169,18 +169,18 @@ export default function ReturnItemsModal({ open, onClose, sale, onReturned }) {
             </div>
           )}
 
-          <div className="overflow-hidden rounded-lg border border-slate-200">
+          <div className="overflow-hidden rounded-lg border border-neutral-200">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50">
+              <thead className="bg-neutral-50">
                 <tr>
                   <th className="w-8 px-3 py-2" />
-                  <th className="px-3 py-2 text-left text-xs font-medium uppercase text-slate-500">Item</th>
-                  <th className="px-2 py-2 text-center text-xs font-medium uppercase text-slate-500">Sold</th>
-                  <th className="px-2 py-2 text-center text-xs font-medium uppercase text-slate-500">Already Returned</th>
-                  <th className="px-2 py-2 text-center text-xs font-medium uppercase text-slate-500">Return Qty</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium uppercase text-neutral-500">Item</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium uppercase text-neutral-500">Sold</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium uppercase text-neutral-500">Already Returned</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium uppercase text-neutral-500">Return Qty</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-neutral-100">
                 {lines.map((l) => (
                   <tr key={l.item} className={l.returnable <= 0 ? 'opacity-50' : ''}>
                     <td className="px-3 py-2">
@@ -189,12 +189,12 @@ export default function ReturnItemsModal({ open, onClose, sale, onReturned }) {
                         disabled={l.returnable <= 0}
                         checked={isChecked(l.item)}
                         onChange={() => toggleRow(l)}
-                        className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
+                        className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-400"
                       />
                     </td>
                     <td className="px-3 py-2">
-                      <p className="font-medium text-slate-800">{l.name}</p>
-                      <p className="text-xs text-slate-400">{formatCurrency(l.unitPrice)} each</p>
+                      <p className="font-medium text-neutral-800">{l.name}</p>
+                      <p className="text-xs text-neutral-400">{formatCurrency(l.unitPrice)} each</p>
                     </td>
                     <td className="px-2 py-2 text-center tabular-nums">{l.quantity}</td>
                     <td className="px-2 py-2 text-center tabular-nums">{l.returnedQuantity || 0}</td>
@@ -216,7 +216,7 @@ export default function ReturnItemsModal({ open, onClose, sale, onReturned }) {
             </table>
           </div>
           <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (optional)" />
-          <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm font-semibold">
+          <div className="flex justify-between rounded-lg bg-neutral-50 px-3 py-2 text-sm font-semibold">
             <span>Return Value</span>
             <span className="tabular-nums">{formatCurrency(previewAmount)}</span>
           </div>

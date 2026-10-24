@@ -70,7 +70,7 @@ export default function TodayClosingPanel({ onChanged, refreshKey = 0 }) {
 
   if (!preview) {
     return (
-      <section className="flex items-center justify-center rounded-2xl border border-slate-200/70 bg-white py-10 shadow-sm">
+      <section className="flex items-center justify-center rounded-2xl border border-neutral-200/70 bg-white py-10">
         <Spinner />
       </section>
     );
@@ -79,19 +79,19 @@ export default function TodayClosingPanel({ onChanged, refreshKey = 0 }) {
   const isOpen = preview.businessDay.status === 'OPEN';
 
   return (
-    <section className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${isOpen ? 'border-emerald-200' : 'border-rose-200'}`}>
+    <section className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${isOpen ? 'border-emerald-200' : 'border-brand-200'}`}>
       {/* Status + actions */}
-      <div className={`flex flex-wrap items-center justify-between gap-4 px-5 py-4 ${isOpen ? 'bg-emerald-50/60' : 'bg-rose-50/60'}`}>
+      <div className={`flex flex-wrap items-center justify-between gap-4 px-5 py-4 ${isOpen ? 'bg-emerald-50/60' : 'bg-brand-50/60'}`}>
         <div className="flex items-center gap-3">
-          <div className={`flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-md ${isOpen ? 'bg-gradient-to-br from-emerald-500 to-teal-500' : 'bg-gradient-to-br from-rose-500 to-pink-500'}`}>
+          <div className={`flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-md ${isOpen ? 'bg-gradient-to-br from-emerald-500 to-neutral-500' : 'bg-gradient-to-br from-brand-500 to-neutral-500'}`}>
             {isOpen ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </div>
           <div>
-            <p className="flex items-center gap-2 text-base font-semibold text-slate-900">
+            <p className="flex items-center gap-2 text-base font-semibold text-neutral-900">
               Today · {formatDate(preview.date)}
               <Badge color={isOpen ? 'green' : 'red'}>{isOpen ? 'OPEN' : 'CLOSED'}</Badge>
             </p>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-neutral-500">
               {isOpen
                 ? 'Review the pending invoices below, then close the day / xir maalinta.'
                 : 'The day is closed. Seller/POS is locked until an admin opens the day.'}
@@ -120,11 +120,11 @@ export default function TodayClosingPanel({ onChanged, refreshKey = 0 }) {
       {isOpen && (
         <div className="space-y-4 p-5">
           {preview.problems.length > 0 && (
-            <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-4">
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-500" />
+            <div className="flex items-start gap-2.5 rounded-xl border border-brand-200 bg-brand-50 p-4">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-brand-500" />
               <div>
-                <p className="font-semibold text-rose-700">Some draft invoices need attention before the day can be closed</p>
-                <ul className="mt-2 space-y-1 text-sm text-rose-600">
+                <p className="font-semibold text-brand-700">Some draft invoices need attention before the day can be closed</p>
+                <ul className="mt-2 space-y-1 text-sm text-brand-600">
                   {preview.problems.map((p) => (
                     <li key={p.saleId}>
                       <strong>{p.receiptNumber}</strong>: {p.issues.join(' ')}
@@ -149,10 +149,10 @@ export default function TodayClosingPanel({ onChanged, refreshKey = 0 }) {
             </div>
           )}
 
-          <div className="overflow-x-auto rounded-xl border border-slate-100">
+          <div className="overflow-x-auto rounded-xl border border-neutral-100">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50/80">
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+              <thead className="bg-neutral-50/80">
+                <tr className="text-left text-xs uppercase tracking-wide text-neutral-400">
                   <th className="px-4 py-2.5 font-medium">Invoice</th>
                   <th className="px-4 py-2.5 font-medium">Customer</th>
                   <th className="px-4 py-2.5 font-medium">Time</th>
@@ -161,22 +161,22 @@ export default function TodayClosingPanel({ onChanged, refreshKey = 0 }) {
                   <th className="px-4 py-2.5 text-right font-medium">Paid</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-neutral-100">
                 {preview.invoices.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-400">
+                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-neutral-400">
                       No pending invoices to close.
                     </td>
                   </tr>
                 ) : (
                   preview.invoices.map((inv) => (
                     <tr key={inv.id}>
-                      <td className="px-4 py-2.5 font-medium text-slate-800">{inv.receiptNumber}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{inv.customerName}</td>
-                      <td className="px-4 py-2.5 text-slate-500">{formatTime(inv.createdAt)}</td>
-                      <td className="px-4 py-2.5 text-slate-500">{inv.items.length} item(s)</td>
-                      <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-slate-800">{formatCurrency(inv.total)}</td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-slate-600">{formatCurrency(inv.paidAmount)}</td>
+                      <td className="px-4 py-2.5 font-medium text-neutral-800">{inv.receiptNumber}</td>
+                      <td className="px-4 py-2.5 text-neutral-600">{inv.customerName}</td>
+                      <td className="px-4 py-2.5 text-neutral-500">{formatTime(inv.createdAt)}</td>
+                      <td className="px-4 py-2.5 text-neutral-500">{inv.items.length} item(s)</td>
+                      <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-neutral-800">{formatCurrency(inv.total)}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-neutral-600">{formatCurrency(inv.paidAmount)}</td>
                     </tr>
                   ))
                 )}
@@ -187,7 +187,7 @@ export default function TodayClosingPanel({ onChanged, refreshKey = 0 }) {
       )}
 
       <Modal open={confirmOpen} onClose={() => (closing ? null : setConfirmOpen(false))} title="Confirm Close Day" size="sm">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-neutral-600">
           You are about to close <strong>{formatDate(preview.date)}</strong>.
         </p>
         {preview.totalDraftInvoices > 0 && (
@@ -200,7 +200,7 @@ export default function TodayClosingPanel({ onChanged, refreshKey = 0 }) {
             </p>
           </div>
         )}
-        <p className="mt-2 text-sm font-medium text-rose-600">
+        <p className="mt-2 text-sm font-medium text-brand-600">
           After confirmation they can no longer be directly edited or deleted. Every operational Account will also be reset to $0 (fully audited).
         </p>
         <div className="mt-5 flex justify-end gap-2">
@@ -231,11 +231,11 @@ export default function TodayClosingPanel({ onChanged, refreshKey = 0 }) {
 
 function Stat({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3">
-      <Icon className="h-4 w-4 shrink-0 text-slate-400" />
+    <div className="flex items-center gap-3 rounded-xl border border-neutral-100 bg-neutral-50/60 px-4 py-3">
+      <Icon className="h-4 w-4 shrink-0 text-neutral-400" />
       <div className="min-w-0">
-        <p className="truncate text-[11px] font-medium uppercase tracking-wide text-slate-400">{label}</p>
-        <p className="text-lg font-bold tabular-nums text-slate-900">{value}</p>
+        <p className="truncate text-[11px] font-medium uppercase tracking-wide text-neutral-400">{label}</p>
+        <p className="text-lg font-bold tabular-nums text-neutral-900">{value}</p>
       </div>
     </div>
   );
@@ -243,18 +243,18 @@ function Stat({ icon: Icon, label, value }) {
 
 function Breakdown({ title, icon: Icon, rows }) {
   return (
-    <div className="rounded-xl border border-slate-100 p-4">
-      <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+    <div className="rounded-xl border border-neutral-100 p-4">
+      <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-400">
         <Icon className="h-3.5 w-3.5" /> {title}
       </p>
       {rows.length === 0 ? (
-        <p className="text-sm text-slate-400">No payments yet today.</p>
+        <p className="text-sm text-neutral-400">No payments yet today.</p>
       ) : (
         <div className="space-y-1.5">
           {rows.map((r) => (
             <div key={r.key} className="flex justify-between text-sm">
-              <span className="text-slate-600">{r.name}</span>
-              <span className="font-semibold tabular-nums text-slate-800">{formatCurrency(r.amount)}</span>
+              <span className="text-neutral-600">{r.name}</span>
+              <span className="font-semibold tabular-nums text-neutral-800">{formatCurrency(r.amount)}</span>
             </div>
           ))}
         </div>

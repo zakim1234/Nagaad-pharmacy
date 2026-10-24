@@ -139,7 +139,7 @@ function CommissionsForBranch() {
         }
       />
 
-      <div className="mb-4 flex gap-1 border-b border-slate-200">
+      <div className="mb-4 flex gap-1 border-b border-neutral-200">
         {[
           ['staff', 'Staff commission', 'Cashiers and managers'],
           ['admin', 'Admin commission', 'Branch admins'],
@@ -150,17 +150,17 @@ function CommissionsForBranch() {
               key={k}
               type="button"
               onClick={() => setParams({ kind: k, type, key })}
-              className={`-mb-px border-b-2 px-4 py-2 text-left ${active ? 'border-brand-600 text-brand-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+              className={`-mb-px border-b-2 px-4 py-2 text-left ${active ? 'border-brand-600 text-brand-700' : 'border-transparent text-neutral-500 hover:text-neutral-700'}`}
             >
               <span className="block text-sm font-semibold">{label}</span>
-              <span className="block text-[11px] text-slate-400">{hint}</span>
+              <span className="block text-[11px] text-neutral-400">{hint}</span>
             </button>
           );
         })}
       </div>
 
       <div className="mb-5 flex flex-wrap items-end gap-4">
-        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
+        <div className="inline-flex rounded-lg border border-neutral-200/80 bg-white p-1">
           {[
             ['month', 'Monthly'],
             ['year', 'Yearly'],
@@ -169,7 +169,7 @@ function CommissionsForBranch() {
               key={t}
               type="button"
               onClick={() => go({ type: t, key: DEFAULT_KEY[t] })}
-              className={`rounded-md px-4 py-1.5 text-sm font-semibold transition ${type === t ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              className={`rounded-md px-4 py-1.5 text-sm font-semibold transition ${type === t ? 'bg-brand-600 text-white' : 'text-neutral-600 hover:bg-neutral-50'}`}
             >
               {label}
             </button>
@@ -185,9 +185,9 @@ function CommissionsForBranch() {
         </div>
         )}
         {preview && (
-          <div className={`rounded-xl px-5 py-3 ${base > 0 ? 'bg-neutral-950 text-white' : 'border border-slate-200 bg-white text-slate-700'}`}>
-            <p className={`text-[11px] uppercase tracking-wider ${base > 0 ? 'text-white/70' : 'text-slate-500'}`}>Profit before commission · {periodLabel(type, key)}</p>
-            <p className="text-2xl font-bold tabular-nums">{formatCurrency(base)}</p>
+          <div className={`rounded-xl px-5 py-3 ${base > 0 ? 'bg-neutral-950 text-white' : 'border border-neutral-200 bg-white text-neutral-700'}`}>
+            <p className={`text-[11px] uppercase tracking-wider ${base > 0 ? 'text-white/70' : 'text-neutral-500'}`}>Profit before commission · {periodLabel(type, key)}</p>
+            <p className="text-2xl font-bold figure">{formatCurrency(base)}</p>
           </div>
         )}
       </div>
@@ -195,13 +195,13 @@ function CommissionsForBranch() {
       {!preview ? (
         <PageSpinner />
       ) : base <= 0 ? (
-        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500">{periodLabel(type, key)} has no profit to pay commission on.</div>
+        <div className="mb-6 rounded-xl border border-neutral-200/80 bg-white p-4 text-sm text-neutral-500">{periodLabel(type, key)} has no profit to pay commission on.</div>
       ) : (
         <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-5">
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white lg:col-span-3">
+          <div className="overflow-x-auto rounded-xl border border-neutral-200/80 bg-white lg:col-span-3">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
                   <th className="px-4 py-2.5">Person</th>
                   <th className="px-4 py-2.5">Role</th>
                   <th className="px-4 py-2.5 text-right">Commission %</th>
@@ -211,18 +211,18 @@ function CommissionsForBranch() {
               <tbody>
                 {staffLines.length === 0 && others.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-500">
+                    <td colSpan={4} className="px-4 py-6 text-center text-sm text-neutral-500">
                       {kind === 'ADMIN' ? 'No branch admins here yet.' : 'No cashiers or managers here yet.'} Add them on the Users page (with their branch).
                     </td>
                   </tr>
                 )}
                 {staffLines.map((s) => (
-                  <tr key={s.id} className="border-b border-slate-100">
-                    <td className="px-4 py-2 font-semibold text-slate-800">
+                  <tr key={s.id} className="border-b border-neutral-100">
+                    <td className="px-4 py-2 font-semibold text-neutral-800">
                       {s.name}
-                      {overview && <span className="block text-[11px] font-normal text-slate-400">{branchName(s.branch)}</span>}
+                      {overview && <span className="block text-[11px] font-normal text-neutral-400">{branchName(s.branch)}</span>}
                     </td>
-                    <td className="px-4 py-2 capitalize text-slate-500">{s.role}</td>
+                    <td className="px-4 py-2 capitalize text-neutral-500">{s.role}</td>
                     <td className="px-4 py-2 text-right">
                       <Input
                         type="number"
@@ -240,7 +240,7 @@ function CommissionsForBranch() {
                   </tr>
                 ))}
                 {others.map((o, i) => (
-                  <tr key={i} className="border-b border-slate-100">
+                  <tr key={i} className="border-b border-neutral-100">
                     <td className="px-4 py-2" colSpan={2}>
                       <div className="flex items-center gap-2">
                         <Input placeholder="Name" value={o.name} onChange={(e) => setOthers((list) => list.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
@@ -265,7 +265,7 @@ function CommissionsForBranch() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-slate-900 font-bold">
+                <tr className="border-t-2 border-neutral-900 font-bold">
                   <td className="px-4 py-2.5" colSpan={2}>
                     Total
                   </td>
@@ -279,16 +279,16 @@ function CommissionsForBranch() {
                 <Button size="sm" variant="secondary" onClick={() => setOthers((list) => [...list, { name: '', percent: '' }])}>
                   <Plus className="h-3.5 w-3.5" /> Add someone else
                 </Button>
-                <p className="text-xs text-slate-500">Leave a box empty for anyone who gets nothing.</p>
+                <p className="text-xs text-neutral-500">Leave a box empty for anyone who gets nothing.</p>
               </div>
             )}
           </div>
 
           <div className="space-y-3 lg:col-span-2">
             {preview.earlier.length > 0 && (
-              <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
-                <p className="font-semibold text-slate-800">Already paid for {periodLabel(type, key)}: {formatCurrency(earlierTotal)}</p>
-                <p className="text-xs text-slate-500">{preview.earlier.flatMap((c) => c.lines.map((l) => `${l.name} ${l.percent}%`)).join(' · ')}</p>
+              <div className="rounded-xl border border-neutral-200/80 bg-white p-3 text-sm">
+                <p className="font-semibold text-neutral-800">Already paid for {periodLabel(type, key)}: {formatCurrency(earlierTotal)}</p>
+                <p className="text-xs text-neutral-500">{preview.earlier.flatMap((c) => c.lines.map((l) => `${l.name} ${l.percent}%`)).join(' · ')}</p>
               </div>
             )}
             <FormField label="Paid from account" required>
@@ -302,7 +302,7 @@ function CommissionsForBranch() {
                 <BadgePercent className="h-4 w-4" /> Pay {formatCurrency(amountOf(totalPercent))} commission
               </Button>
             ) : (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-neutral-500">
                 {overview ? 'Choose a branch above to pay commission.' : 'Only the Super Admin pays commission.'}
               </p>
             )}
@@ -310,11 +310,11 @@ function CommissionsForBranch() {
         </div>
       )}
 
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-slate-500">Commission paid</h2>
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-neutral-500">Commission paid</h2>
+      <div className="overflow-x-auto rounded-xl border border-neutral-200/80 bg-white">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
               <th className="px-4 py-2.5">Number</th>
               {overview && <th className="px-4 py-2.5">Branch</th>}
               <th className="px-4 py-2.5">Kind</th>
@@ -329,34 +329,34 @@ function CommissionsForBranch() {
           <tbody>
             {history === null ? (
               <tr>
-                <td colSpan={9} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={9} className="px-4 py-6 text-center text-neutral-400">
                   Loading…
                 </td>
               </tr>
             ) : history.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={9} className="px-4 py-6 text-center text-neutral-400">
                   No commission paid yet.
                 </td>
               </tr>
             ) : (
               history.map((c) => (
-                <tr key={c.id} className="border-b border-slate-100 last:border-0">
-                  <td className="px-4 py-2.5 font-semibold text-slate-800">{c.commissionNumber}</td>
-                  {overview && <td className="px-4 py-2.5 text-slate-500">{branchName(c.branch)}</td>}
-                  <td className="px-4 py-2.5 text-slate-600">{c.kind === 'ADMIN' ? 'Admin' : 'Staff'}</td>
+                <tr key={c.id} className="border-b border-neutral-100 last:border-0">
+                  <td className="px-4 py-2.5 font-semibold text-neutral-800">{c.commissionNumber}</td>
+                  {overview && <td className="px-4 py-2.5 text-neutral-500">{branchName(c.branch)}</td>}
+                  <td className="px-4 py-2.5 text-neutral-600">{c.kind === 'ADMIN' ? 'Admin' : 'Staff'}</td>
                   <td className="px-4 py-2.5">
-                    {periodLabel(c.periodType, c.periodKey)} <span className="text-xs text-slate-400">{c.periodType === 'year' ? 'yearly' : 'monthly'}</span>
+                    {periodLabel(c.periodType, c.periodKey)} <span className="text-xs text-neutral-400">{c.periodType === 'year' ? 'yearly' : 'monthly'}</span>
                   </td>
-                  <td className="px-4 py-2.5 text-slate-600">{c.lines.map((l) => `${l.name} ${l.percent}%`).join(', ')}</td>
+                  <td className="px-4 py-2.5 text-neutral-600">{c.lines.map((l) => `${l.name} ${l.percent}%`).join(', ')}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums">{formatCurrency(c.total)}</td>
-                  <td className="px-4 py-2.5 text-slate-600">
+                  <td className="px-4 py-2.5 text-neutral-600">
                     {formatDate(c.createdAt)} · {c.accountName}
                   </td>
                   <td className="px-4 py-2.5">{c.status === 'ACTIVE' ? <Badge color="green">Paid</Badge> : <Badge color="slate">Cancelled</Badge>}</td>
                   <td className="px-4 py-2.5">
                     <div className="flex justify-end gap-1.5">
-                      <Link to={`/commissions/${c.id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                      <Link to={`/commissions/${c.id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50">
                         <FileText className="h-3.5 w-3.5" /> View
                       </Link>
                       {!overview && c.status === 'ACTIVE' && user?.isSuperAdmin && (
@@ -376,7 +376,7 @@ function CommissionsForBranch() {
       <Modal open={!!cancelTarget} onClose={() => setCancelTarget(null)} title={`Cancel ${cancelTarget?.commissionNumber}`} size="sm">
         {cancelTarget && (
           <div className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-neutral-600">
               The {formatCurrency(cancelTarget.total)} commission comes back into {cancelTarget.accountName}.
             </p>
             <FormField label="Reason">

@@ -20,7 +20,7 @@ export default function CancelPaymentDialog({ open, title, amount, account, load
           <p className="text-xs uppercase tracking-wide text-neutral-400">Goes back to {account || 'the account it came from'}</p>
           <p className="text-2xl font-bold">{formatCurrency(amount)}</p>
         </div>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-neutral-600">
           Ma hubtaa? Lacagta waxay dib ugu laabanaysaa account-kii laga bixiyey, shirkaddana lacagtaas ayaa mar kale lagu leeyahay. (The money goes back
           to the account and the supplier is owed it again.)
         </p>

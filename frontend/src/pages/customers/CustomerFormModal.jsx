@@ -58,7 +58,7 @@ export default function CustomerFormModal({ open, onClose, customer, onSaved }) 
   return (
     <Modal open={open} onClose={onClose} title={customer ? 'Edit Customer' : 'Add Customer'}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div>}
+        {error && <div className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">{error}</div>}
         <FormField label="Full Name" required>
           <Input value={form.name} onChange={set('name')} placeholder="e.g. Ahmed Ali" />
         </FormField>
@@ -81,7 +81,7 @@ export default function CustomerFormModal({ open, onClose, customer, onSaved }) 
         <FormField label="Notes">
           <Textarea rows={2} value={form.notes} onChange={set('notes')} placeholder="Optional" />
         </FormField>
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+        <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
           <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </Button>

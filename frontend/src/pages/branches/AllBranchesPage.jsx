@@ -88,19 +88,19 @@ export default function AllBranchesPage() {
         />
       </div>
 
-      <div id="print-area" className={`space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 print:border-0 print:p-0 print:shadow-none ${loading ? 'opacity-60' : ''}`}>
+      <div id="print-area" className={`space-y-5 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-8 print:border-0 print:p-0 print:shadow-none ${loading ? 'opacity-60' : ''}`}>
         <PrintReportHeader showOnScreen title="All Branches" rangeLabel={rangeLabel} />
 
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
           {CARDS.map(([key, label], i) => (
             <div
               key={key}
-              className={`rounded-xl px-4 py-3 ${i === 2 ? 'bg-brand-600 text-white' : i === 3 ? 'bg-neutral-950 text-white' : 'border border-slate-200 bg-white'}`}
+              className={`rounded-xl px-4 py-3 ${i === 2 ? 'bg-brand-600 text-white' : i === 3 ? 'bg-neutral-950 text-white' : 'border border-neutral-200 bg-white'}`}
               style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
             >
-              <p className={`text-[11px] uppercase tracking-wider ${i === 2 || i === 3 ? 'text-white/70' : 'text-slate-500'}`}>{label}</p>
-              <p className="mt-1 text-2xl font-bold tabular-nums">{formatCurrency(data.totals[key])}</p>
-              <p className={`text-[11px] ${i === 2 || i === 3 ? 'text-white/60' : 'text-slate-400'}`}>All branches</p>
+              <p className={`text-[11px] uppercase tracking-wider ${i === 2 || i === 3 ? 'text-white/70' : 'text-neutral-500'}`}>{label}</p>
+              <p className="mt-1 text-2xl font-bold figure">{formatCurrency(data.totals[key])}</p>
+              <p className={`text-[11px] ${i === 2 || i === 3 ? 'text-white/60' : 'text-neutral-400'}`}>All branches</p>
             </div>
           ))}
         </div>
@@ -126,7 +126,7 @@ export default function AllBranchesPage() {
                   <tr key={b.branchId} onClick={() => openBranch(b.branchId)} className={`cursor-pointer border-b border-neutral-200 hover:bg-brand-50/50 ${i % 2 ? 'bg-neutral-50' : ''}`}>
                     <td className="px-2 py-2.5 font-semibold">
                       {b.name}
-                      {!b.active && <span className="ml-2 text-[10px] font-semibold text-slate-400">(closed)</span>}
+                      {!b.active && <span className="ml-2 text-[10px] font-semibold text-neutral-400">(closed)</span>}
                     </td>
                     <td className="px-2 py-2.5 text-right tabular-nums">{formatCurrency(b.sales)}</td>
                     <td className="px-2 py-2.5 text-right tabular-nums">{formatCurrency(b.purchases)}</td>
@@ -135,7 +135,7 @@ export default function AllBranchesPage() {
                     <td className="px-2 py-2.5 text-right tabular-nums">{formatCurrency(b.customerDebt)}</td>
                     <td className="px-2 py-2.5 text-right tabular-nums">{formatCurrency(b.supplierDebt)}</td>
                     <td className="px-2 py-2.5 text-right no-print">
-                      <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-600">
+                      <span className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-2 py-1 text-xs font-semibold text-neutral-600">
                         Open <ArrowRight className="h-3.5 w-3.5" />
                       </span>
                     </td>
@@ -159,8 +159,8 @@ export default function AllBranchesPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 p-4">
-            <p className="mb-2 text-sm font-semibold text-slate-900">Sales by branch</p>
+          <div className="rounded-xl border border-neutral-200 p-4">
+            <p className="mb-2 text-sm font-semibold text-neutral-900">Sales by branch</p>
             <div className="h-60">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.branches} margin={{ left: 0, right: 8, top: 8 }}>
@@ -174,12 +174,12 @@ export default function AllBranchesPage() {
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="rounded-xl border border-slate-200 p-4">
-            <p className="mb-2 text-sm font-semibold text-slate-900">Profit by branch</p>
+          <div className="rounded-xl border border-neutral-200 p-4">
+            <p className="mb-2 text-sm font-semibold text-neutral-900">Profit by branch</p>
             {data.branches.some((b) => b.profit > 0) ? (
               <DonutChart data={data.branches.filter((b) => b.profit > 0)} valueKey="profit" nameKey="name" centerLabel="Profit" />
             ) : (
-              <p className="py-16 text-center text-sm text-slate-400">No profit in this period yet.</p>
+              <p className="py-16 text-center text-sm text-neutral-400">No profit in this period yet.</p>
             )}
           </div>
         </div>
@@ -189,7 +189,7 @@ export default function AllBranchesPage() {
             <AlertTriangle className="h-3.5 w-3.5 text-brand-600" /> Alerts (all branches)
           </p>
           {alerts.length === 0 ? (
-            <p className="rounded-lg bg-neutral-50 px-3 py-3 text-sm text-slate-500">No stock alerts in any branch.</p>
+            <p className="rounded-lg bg-neutral-50 px-3 py-3 text-sm text-neutral-500">No stock alerts in any branch.</p>
           ) : (
             <ul className="divide-y divide-neutral-200 rounded-lg border border-neutral-200">
               {alerts.map((b) => (
@@ -207,7 +207,7 @@ export default function AllBranchesPage() {
           )}
         </div>
       </div>
-      <div className="no-print text-xs text-slate-400">Click a branch row to open that branch (Stock, Seller, Accounts, Reports switch to it).</div>
+      <div className="no-print text-xs text-neutral-400">Click a branch row to open that branch (Stock, Seller, Accounts, Reports switch to it).</div>
     </div>
   );
 }

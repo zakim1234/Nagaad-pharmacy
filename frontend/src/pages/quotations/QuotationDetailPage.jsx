@@ -68,7 +68,7 @@ export default function QuotationDetailPage() {
   const subtotal = items.reduce((sum, i) => sum + Math.round(Number(i.unitPrice || 0) * 100) * Number(i.quantity || 0), 0) / 100;
   const totalDiscount = items.reduce((sum, i) => sum + Math.round(Number(i.discount || 0) * 100), Math.round(Number(discount || 0) * 100)) / 100;
   if (loading) return <p>Loading quotation…</p>;
-  if (error) return <p className="text-rose-700">{error}</p>;
+  if (error) return <p className="text-brand-700">{error}</p>;
   return <div className="space-y-4 min-w-0">
     <Link className="text-sm text-brand-700 no-print" to="/quotations">← Quotations</Link>
     <div className="no-print"><PageHeader title={id ? quotation?.quotationNumber : 'New Quotation'} actions={<div className="flex flex-wrap gap-2">
@@ -87,7 +87,7 @@ export default function QuotationDetailPage() {
         <QuotationItemsGrid items={items} onAddLine={addLine} onChangeLine={changeLine} onRemoveLine={itemId => setItems(rows => rows.filter(r => r.itemId !== itemId))} subtotal={subtotal} discount={discount} onDiscountChange={setDiscount} totalDiscount={totalDiscount} />
         <FormField label="Notes"><Textarea maxLength={4000} value={notes} onChange={e => setNotes(e.target.value)} /></FormField>
       </div></Card>
-    </> : quotation && <div id="print-area" className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+    </> : quotation && <div id="print-area" className="mx-auto max-w-4xl rounded-2xl border border-neutral-200/80 bg-white p-6 text-neutral-900 sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
       <DocHeader title="Quotation" meta={<span className="font-semibold">{quotation.quotationNumber}</span>} />
       <DocInfo
         left={['Prepared for', quotation.customerName, quotation.customerPhone]}

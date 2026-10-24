@@ -37,7 +37,7 @@ export default function SuperDashboardPage() {
       .catch((err) => setError(err.friendlyMessage || 'Could not load the dashboard.'));
   }, []);
 
-  if (error) return <div className="rounded-xl bg-rose-50 p-4 text-sm text-rose-700">{error}</div>;
+  if (error) return <div className="rounded-xl bg-brand-50 p-4 text-sm text-brand-700">{error}</div>;
   if (!data) return <PageSpinner />;
 
   const { totals, branches, days } = data;
@@ -68,10 +68,10 @@ export default function SuperDashboardPage() {
           <Link to="/all-branches" className="inline-flex items-center gap-2 rounded-xl bg-neutral-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800">
             <Globe2 className="h-4 w-4" /> Compare branches
           </Link>
-          <Link to="/branches" className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-800 hover:border-neutral-300">
+          <Link to="/branches" className="inline-flex items-center gap-2 rounded-xl border border-neutral-200/80 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-800 hover:border-neutral-300">
             <Store className="h-4 w-4" /> Branches
           </Link>
-          <Link to="/users" className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-800 hover:border-neutral-300">
+          <Link to="/users" className="inline-flex items-center gap-2 rounded-xl border border-neutral-200/80 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-800 hover:border-neutral-300">
             <Users className="h-4 w-4" /> Users
           </Link>
         </div>

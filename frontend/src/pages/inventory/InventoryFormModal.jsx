@@ -117,11 +117,11 @@ export default function InventoryFormModal({ open, onClose, item, onSaved }) {
     <Modal open={open} onClose={onClose} title={item ? 'Edit Item' : 'Add Inventory Item'} size="lg">
       <form onSubmit={handleSubmit} className="space-y-6">
         <section>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Basic Information</h4>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-400">Basic Information</h4>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {item && (
               <FormField label="Item ID">
-                <Input value={item.itemCode || ''} disabled className="bg-slate-50 font-mono text-slate-500" />
+                <Input value={item.itemCode || ''} disabled className="bg-neutral-50 font-mono text-neutral-500" />
               </FormField>
             )}
             <FormField label="Item Name" required error={errors.name}>
@@ -144,7 +144,7 @@ export default function InventoryFormModal({ open, onClose, item, onSaved }) {
             </FormField>
             <FormField label="Category">
               {categories.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-500">
+                <div className="rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-sm text-neutral-500">
                   No categories yet.{' '}
                   <Link to="/categories" className="font-medium text-brand-600 hover:underline" onClick={onClose}>
                     Create one
@@ -165,12 +165,12 @@ export default function InventoryFormModal({ open, onClose, item, onSaved }) {
         </section>
 
         <section>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Pricing</h4>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-400">Pricing</h4>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField label={item ? 'Average Cost' : 'Cost Price'} required error={errors.costPrice}>
               <Input type="number" step="0.01" min="0" value={form.costPrice} onChange={set('costPrice')} placeholder="0.00" />
               {item && (
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-neutral-400">
                   System-computed from Stock IN receipts. Editing this directly overrides the computed average.
                 </p>
               )}
@@ -182,7 +182,7 @@ export default function InventoryFormModal({ open, onClose, item, onSaved }) {
         </section>
 
         <section>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Stock Information</h4>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-400">Stock Information</h4>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField label="Quantity (receive goods through Stock)" error={errors.quantity}>
               <Input type="number" min="0" value={form.quantity} readOnly />
@@ -192,13 +192,13 @@ export default function InventoryFormModal({ open, onClose, item, onSaved }) {
             </FormField>
             <FormField label="Minimum Stock" required error={errors.lowStockThreshold}>
               <Input type="number" min="0" step="1" value={form.lowStockThreshold} onChange={set('lowStockThreshold')} />
-              <p className="mt-1 text-xs text-slate-400">Low Stock alerts start at or below this quantity.</p>
+              <p className="mt-1 text-xs text-neutral-400">Low Stock alerts start at or below this quantity.</p>
             </FormField>
           </div>
         </section>
 
         <section>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Supplier &amp; Expiration</h4>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-400">Supplier &amp; Expiration</h4>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField label="Supplier">
               <Select value={form.supplier} onChange={set('supplier')}>
@@ -216,7 +216,7 @@ export default function InventoryFormModal({ open, onClose, item, onSaved }) {
           </div>
         </section>
 
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+        <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
           <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </Button>

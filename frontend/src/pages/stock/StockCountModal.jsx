@@ -136,14 +136,14 @@ export default function StockCountModal({ open, onClose, onSaved }) {
       size="xl"
       footer={
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-slate-500">
-            <strong className="text-slate-900">{changed.length}</strong> item(s) will change
+          <p className="text-sm text-neutral-500">
+            <strong className="text-neutral-900">{changed.length}</strong> item(s) will change
             {changed.length > 0 && (
               <>
                 {writtenOff > 0 && (
                   <>
                     {' · '}
-                    <span className="text-rose-600">{formatCurrency(writtenOff)} written off</span>
+                    <span className="text-brand-600">{formatCurrency(writtenOff)} written off</span>
                   </>
                 )}
                 {added > 0 && (
@@ -154,7 +154,7 @@ export default function StockCountModal({ open, onClose, onSaved }) {
                 )}
               </>
             )}
-            {errors.length > 0 && <span className="ml-2 font-semibold text-rose-600">{errors.length} row(s) to fix</span>}
+            {errors.length > 0 && <span className="ml-2 font-semibold text-brand-600">{errors.length} row(s) to fix</span>}
           </p>
           <div className="flex gap-2">
             <Button variant="secondary" onClick={onClose} disabled={saving}>
@@ -181,12 +181,12 @@ export default function StockCountModal({ open, onClose, onSaved }) {
                   key={key}
                   type="button"
                   onClick={() => switchMode(key)}
-                  className={`rounded-xl border p-3 text-left transition ${active ? 'border-brand-300 bg-brand-50 ring-1 ring-brand-200' : 'border-slate-200 hover:border-slate-300'}`}
+                  className={`rounded-xl border p-3 text-left transition ${active ? 'border-brand-300 bg-brand-50 ring-1 ring-brand-200' : 'border-neutral-200 hover:border-neutral-300'}`}
                 >
-                  <p className={`flex items-center gap-1.5 text-sm font-semibold ${active ? 'text-brand-700' : 'text-slate-700'}`}>
+                  <p className={`flex items-center gap-1.5 text-sm font-semibold ${active ? 'text-brand-700' : 'text-neutral-700'}`}>
                     <Icon className="h-4 w-4" /> {m.label}
                   </p>
-                  <p className="mt-0.5 text-xs text-slate-400">{m.hint}</p>
+                  <p className="mt-0.5 text-xs text-neutral-400">{m.hint}</p>
                 </button>
               );
             })}
@@ -194,16 +194,16 @@ export default function StockCountModal({ open, onClose, onSaved }) {
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative min-w-[220px] flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
               <Input className="pl-9" placeholder={`Search ${items.length} items by name or code`} value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
             </div>
             {mode !== 'COUNT' && (
-              <label className="flex items-center gap-2 text-sm text-slate-600">
+              <label className="flex items-center gap-2 text-sm text-neutral-600">
                 Reason for all
                 <select
                   onChange={(e) => e.target.value && setReasonForAll(e.target.value)}
                   value=""
-                  className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm outline-none focus:border-brand-500"
+                  className="rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-brand-500"
                 >
                   <option value="">Choose…</option>
                   {(mode === 'INCREASE' ? INCREASE_REASONS : DECREASE_REASONS).map(([value, label]) => (
@@ -214,16 +214,16 @@ export default function StockCountModal({ open, onClose, onSaved }) {
                 </select>
               </label>
             )}
-            <label className="flex items-center gap-2 text-sm text-slate-600">
+            <label className="flex items-center gap-2 text-sm text-neutral-600">
               <input type="checkbox" className="h-4 w-4 accent-brand-600" checked={onlyChanged} onChange={(e) => setOnlyChanged(e.target.checked)} />
               Show only changed
             </label>
           </div>
 
-          <div className="max-h-[400px] overflow-auto rounded-xl border border-slate-200">
+          <div className="max-h-[400px] overflow-auto rounded-xl border border-neutral-200">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 z-10 bg-slate-50">
-                <tr className="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+              <thead className="sticky top-0 z-10 bg-neutral-50">
+                <tr className="text-left text-xs font-medium uppercase tracking-wide text-neutral-500">
                   <th className="px-3 py-2.5">Item</th>
                   <th className="px-3 py-2.5 text-right">In stock</th>
                   <th className="px-3 py-2.5 text-right">Held</th>
@@ -232,24 +232,24 @@ export default function StockCountModal({ open, onClose, onSaved }) {
                   <th className="w-44 px-3 py-2.5">Reason</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-neutral-100">
                 {visible.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-slate-400">
+                    <td colSpan={6} className="px-3 py-8 text-center text-neutral-400">
                       {onlyChanged ? 'No changes yet.' : 'No items match.'}
                     </td>
                   </tr>
                 )}
                 {visible.map((r) => (
-                  <tr key={r.id} className={r.error ? 'bg-rose-50/60' : r.diff !== 0 ? 'bg-slate-50/70' : ''}>
+                  <tr key={r.id} className={r.error ? 'bg-brand-50/60' : r.diff !== 0 ? 'bg-neutral-50/70' : ''}>
                     <td className="px-3 py-2">
-                      <p className="font-medium text-slate-800">{r.name}</p>
-                      <p className="text-xs text-slate-400">{r.itemCode}</p>
+                      <p className="font-medium text-neutral-800">{r.name}</p>
+                      <p className="text-xs text-neutral-400">{r.itemCode}</p>
                     </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-slate-700">
-                      {r.quantity} <span className="text-xs text-slate-400">{r.unit}</span>
+                    <td className="px-3 py-2 text-right tabular-nums text-neutral-700">
+                      {r.quantity} <span className="text-xs text-neutral-400">{r.unit}</span>
                     </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-slate-400">{r.reservedQuantity || '—'}</td>
+                    <td className="px-3 py-2 text-right tabular-nums text-neutral-400">{r.reservedQuantity || '—'}</td>
                     <td className="px-3 py-2">
                       <input
                         type="number"
@@ -259,23 +259,23 @@ export default function StockCountModal({ open, onClose, onSaved }) {
                         onChange={(e) => setRow(r.id, { value: e.target.value })}
                         placeholder={mode === 'COUNT' ? String(r.quantity) : '0'}
                         className={`no-spinner w-full rounded-lg border px-2.5 py-1.5 text-right text-sm tabular-nums outline-none focus:ring-2 ${
-                          r.error ? 'border-rose-300 focus:ring-rose-100' : 'border-slate-300 focus:border-neutral-900 focus:ring-neutral-200'
+                          r.error ? 'border-brand-300 focus:ring-brand-100' : 'border-neutral-300 focus:border-neutral-900 focus:ring-neutral-200'
                         }`}
                         aria-label={`${MODES[mode].column} quantity for ${r.name}`}
                       />
-                      {r.error && <p className="mt-0.5 text-[11px] text-rose-600">{r.error}</p>}
+                      {r.error && <p className="mt-0.5 text-[11px] text-brand-600">{r.error}</p>}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">
                       {r.diff !== 0 && !r.error ? (
                         <>
-                          <span className="font-semibold text-slate-900">{r.quantity + r.diff}</span>{' '}
-                          <span className={`text-xs font-semibold ${r.diff < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                          <span className="font-semibold text-neutral-900">{r.quantity + r.diff}</span>{' '}
+                          <span className={`text-xs font-semibold ${r.diff < 0 ? 'text-brand-600' : 'text-emerald-600'}`}>
                             ({r.diff > 0 ? '+' : ''}
                             {r.diff})
                           </span>
                         </>
                       ) : (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-neutral-300">—</span>
                       )}
                     </td>
                     <td className="px-3 py-2">
@@ -283,7 +283,7 @@ export default function StockCountModal({ open, onClose, onSaved }) {
                         <select
                           value={r.reason}
                           onChange={(e) => setRow(r.id, { reason: e.target.value })}
-                          className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm outline-none focus:border-brand-500"
+                          className="w-full rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-brand-500"
                           aria-label={`Reason for ${r.name}`}
                         >
                           {reasonOptions(r.diff).map(([value, label]) => (
@@ -293,7 +293,7 @@ export default function StockCountModal({ open, onClose, onSaved }) {
                           ))}
                         </select>
                       ) : (
-                        <span className="text-xs text-slate-300">—</span>
+                        <span className="text-xs text-neutral-300">—</span>
                       )}
                     </td>
                   </tr>
@@ -303,9 +303,9 @@ export default function StockCountModal({ open, onClose, onSaved }) {
           </div>
 
           <div>
-            <p className="mb-1 text-sm font-medium text-slate-700">Note {needsNote ? <span className="text-rose-500">*</span> : '(optional)'}</p>
+            <p className="mb-1 text-sm font-medium text-neutral-700">Note {needsNote ? <span className="text-brand-500">*</span> : '(optional)'}</p>
             <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="e.g. Month-end stock count" />
-            {needsNote && <p className="mt-1 text-xs text-rose-600">A note is required when a reason is "Other".</p>}
+            {needsNote && <p className="mt-1 text-xs text-brand-600">A note is required when a reason is "Other".</p>}
           </div>
         </div>
       )}

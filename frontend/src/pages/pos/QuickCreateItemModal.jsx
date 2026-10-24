@@ -87,7 +87,7 @@ export default function QuickCreateItemModal({ open, initialName, onClose, onCre
         </div>
         <FormField label="Cost (optional)" error={errors.cost}>
           <Input type="number" min="0" step="0.01" value={form.cost} onChange={set('cost')} placeholder="0.00" error={errors.cost} />
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-neutral-400">
             The purchase cost per unit, if you know it — it becomes the item's starting Average Cost. Left blank, the cost is 0 and profit on this item will look like 100%
             until a real purchase is recorded.
           </p>
@@ -95,7 +95,7 @@ export default function QuickCreateItemModal({ open, initialName, onClose, onCre
         <p className="rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-700">
           Saving adds the item to Inventory, receives the Initial Qty into Stock, and puts that quantity on this sale.
         </p>
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+        <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
           <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </Button>

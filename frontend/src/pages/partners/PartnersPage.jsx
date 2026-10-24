@@ -130,9 +130,9 @@ function CapitalModal({ open, mode, partner, onClose, onSaved }) {
           <Input value={partner.name} disabled />
         </FormField>
         {isWithdraw && (
-          <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm">
-            <span className="text-slate-500">Current Equity: </span>
-            <span className="font-semibold text-slate-800">{formatCurrency(partner.currentEquity)}</span>
+          <div className="rounded-lg bg-neutral-50 px-3 py-2 text-sm">
+            <span className="text-neutral-500">Current Equity: </span>
+            <span className="font-semibold text-neutral-800">{formatCurrency(partner.currentEquity)}</span>
           </div>
         )}
         <FormField label={isWithdraw ? 'Amount to Withdraw' : 'Amount'} required>
@@ -199,11 +199,11 @@ function HistoryModal({ partner, onClose }) {
                   {t.type === 'CONTRIBUTION' ? (
                     <span className="text-emerald-600">Contribution</span>
                   ) : t.type === 'PROFIT_SHARE' ? (
-                    <span className="font-medium text-slate-900">Profit share</span>
+                    <span className="font-medium text-neutral-900">Profit share</span>
                   ) : t.type === 'PROFIT_SHARE_CANCELLED' ? (
-                    <span className="text-slate-500">Profit share cancelled</span>
+                    <span className="text-neutral-500">Profit share cancelled</span>
                   ) : (
-                    <span className="text-rose-600">Withdrawal</span>
+                    <span className="text-brand-600">Withdrawal</span>
                   )}
                 </Td>
                 <Td className="font-medium">{formatCurrency(t.amount)}</Td>
@@ -272,7 +272,7 @@ export default function PartnersPage() {
             {overview && (
             <Link
               to="/partners/profit-sharing"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200/80 bg-white px-3 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
             >
               <PieChart className="h-4 w-4" /> Share Year Profit
             </Link>
@@ -311,7 +311,7 @@ export default function PartnersPage() {
           ) : (
             buildPartnerRows().map((r) =>
               r.sub ? (
-                <tr key={r.key} className="border-b-2 border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700">
+                <tr key={r.key} className="border-b-2 border-neutral-200 bg-neutral-50 text-sm font-semibold text-neutral-700">
                   <Td>{r.label}</Td>
                   <Td />
                   <Td>{formatCurrency(r.contributed)}</Td>
@@ -322,8 +322,8 @@ export default function PartnersPage() {
                 </tr>
               ) : ((p) => (
               <tr key={p.id}>
-                <Td className="font-medium text-slate-900">{p.name}</Td>
-                {overview && <Td className="text-slate-500">{branchName(p.branch)}</Td>}
+                <Td className="font-medium text-neutral-900">{p.name}</Td>
+                {overview && <Td className="text-neutral-500">{branchName(p.branch)}</Td>}
                 <Td>{formatCurrency(p.totalContributed)}</Td>
                 <Td>{formatCurrency(p.totalWithdrawn)}</Td>
                 <Td className="font-semibold">{formatCurrency(p.currentEquity)}</Td>
@@ -345,7 +345,7 @@ export default function PartnersPage() {
                         <ArrowDownCircle className="h-3.5 w-3.5 text-emerald-600" /> Contribute
                       </Button>
                       <Button size="sm" variant="secondary" onClick={() => setCapitalModal({ mode: 'withdraw', partner: p })}>
-                        <ArrowUpCircle className="h-3.5 w-3.5 text-rose-600" /> Withdraw
+                        <ArrowUpCircle className="h-3.5 w-3.5 text-brand-600" /> Withdraw
                       </Button>
                       </>
                       )}

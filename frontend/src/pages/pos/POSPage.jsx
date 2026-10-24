@@ -335,7 +335,7 @@ export default function POSPage() {
           picks this exact invoice back up automatically. Styled to match the
           "Back to X" link used on every other detail page in the app. */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link to="/pos" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to="/pos" className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Sales Invoices
         </Link>
         <Button variant="secondary" disabled={submitting} onClick={handleCancel}>
@@ -385,10 +385,10 @@ export default function POSPage() {
           <button
             type="button"
             onClick={() => setMobilePanelOpen((o) => !o)}
-            className="mb-3 flex w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-sm lg:hidden"
+            className="mb-3 flex w-full items-center justify-between gap-2 rounded-xl border border-neutral-200/80 bg-white px-4 py-2.5 text-left text-sm font-medium text-neutral-700 lg:hidden"
           >
             <span className="truncate">{panelSummary}</span>
-            <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${mobilePanelOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`h-4 w-4 shrink-0 text-neutral-400 transition-transform ${mobilePanelOpen ? 'rotate-180' : ''}`} />
           </button>
 
           <div className={`${mobilePanelOpen ? 'block' : 'hidden'} space-y-4 lg:block`}>
@@ -398,12 +398,12 @@ export default function POSPage() {
 
             <Card dense title="Payment">
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-neutral-600">
                   <span>Subtotal</span>
-                  <span className="font-medium tabular-nums text-slate-800">{formatCurrency(subtotal)}</span>
+                  <span className="font-medium tabular-nums text-neutral-800">{formatCurrency(subtotal)}</span>
                 </div>
                 {lineDiscountTotal > 0 && (
-                  <div className="flex justify-between text-slate-500">
+                  <div className="flex justify-between text-neutral-500">
                     <span>Line Discounts</span>
                     <span className="tabular-nums">{formatCurrency(lineDiscountTotal)}</span>
                   </div>
@@ -420,7 +420,7 @@ export default function POSPage() {
                     disabled={submitting || !!quotationId}
                   />
                 </div>
-                <div className="flex justify-between border-t border-slate-100 pt-2 text-base font-bold text-slate-900">
+                <div className="flex justify-between border-t border-neutral-100 pt-2 text-base font-bold text-neutral-900">
                   <span>Total After Discount</span>
                   <span className="tabular-nums">{formatCurrency(total)}</span>
                 </div>
@@ -465,7 +465,7 @@ export default function POSPage() {
                     disabled={submitting}
                   />
                 </div>
-                {needsAccount && <p className="text-right text-xs font-medium text-rose-600">Select an account to record this payment.</p>}
+                {needsAccount && <p className="text-right text-xs font-medium text-brand-600">Select an account to record this payment.</p>}
 
                 <div className={`flex justify-between rounded-lg px-3 py-2 font-semibold tabular-nums ${remaining > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
                   <span className="font-semibold">{remaining > 0 ? 'Outstanding Balance (added to debt)' : 'Fully Paid'}</span>
@@ -487,7 +487,7 @@ export default function POSPage() {
                     <ShoppingCart className="h-4 w-4" /> {editId ? 'Save Changes' : 'Save / Create Sale'}
                   </Button>
                 </div>
-                <p className="text-center text-xs text-slate-400">
+                <p className="text-center text-xs text-neutral-400">
                   {editId ? 'This draft stays PENDING until Close Day confirms it.' : 'This invoice is PENDING until Close Day confirms it.'}
                 </p>
               </div>

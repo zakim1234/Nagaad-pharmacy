@@ -57,7 +57,7 @@ export default function SalaryStatementPage() {
   return (
     <div>
       <div className="no-print">
-        <Link to="/salaries" className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to="/salaries" className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Salaries
         </Link>
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -109,7 +109,7 @@ export default function SalaryStatementPage() {
       ) : data ? (
         <div
           id="print-area"
-          className={`mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none ${loading ? 'opacity-60' : ''}`}
+          className={`mx-auto max-w-4xl rounded-2xl border border-neutral-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none ${loading ? 'opacity-60' : ''}`}
         >
           <DocHeader title="Salary Payment Statement" meta={<span className="font-semibold">{rangeLabel}</span>} />
           <DocInfo

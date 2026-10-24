@@ -46,7 +46,7 @@ export default function VendorPlanPage() {
       .catch((err) => setError(err.friendlyMessage || 'Sheet not found.'));
   }, [planId]);
 
-  if (error) return <div className="rounded-lg bg-rose-50 p-4 text-sm text-rose-700">{error}</div>;
+  if (error) return <div className="rounded-lg bg-brand-50 p-4 text-sm text-brand-700">{error}</div>;
   if (!plan) return <PageSpinner />;
 
   const paid = plan.status === 'PAID' || plan.status === 'CANCELLED';
@@ -55,16 +55,16 @@ export default function VendorPlanPage() {
   return (
     <div>
       <div className="no-print">
-        <Link to="/purchases/vendor-balances" className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to="/purchases/vendor-balances" className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Vendor Balances
         </Link>
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="flex items-center gap-2 text-xl font-bold text-slate-900">
+            <h1 className="flex items-center gap-2 text-xl font-bold text-neutral-900">
               {plan.planNumber}
               {plan.status === 'CANCELLED' ? <Badge color="red">Cancelled</Badge> : <Badge color={paid ? 'green' : 'amber'}>{paid ? 'Paid' : 'Not paid yet'}</Badge>}
             </h1>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-neutral-500">
               Vendor Balance Summary · {formatDate(paid ? plan.paymentDate : plan.updatedAt)}
               {plan.note ? ` · ${plan.note}` : ''}
             </p>
@@ -95,8 +95,8 @@ export default function VendorPlanPage() {
         {paid ? (
           <PaidPlan plan={plan} />
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <p className="border-b border-slate-100 bg-amber-50 px-5 py-2.5 text-xs text-amber-700">
+          <div className="overflow-hidden rounded-2xl border border-neutral-200/80 bg-white">
+            <p className="border-b border-neutral-100 bg-amber-50 px-5 py-2.5 text-xs text-amber-700">
               This sheet is still being prepared. Edit or pay it from{' '}
               <Link to="/purchases/vendor-balances" className="font-semibold underline">
                 Vendor Balances
@@ -105,7 +105,7 @@ export default function VendorPlanPage() {
             </p>
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
                   <th className="w-12 px-5 py-2.5 font-medium">#</th>
                   <th className="px-5 py-2.5 font-medium">Supplier</th>
                   <th className="px-5 py-2.5 text-right font-medium">Balance</th>
@@ -114,16 +114,16 @@ export default function VendorPlanPage() {
               </thead>
               <tbody>
                 {plan.rows.map((r, i) => (
-                  <tr key={String(r.supplier)} className="border-t border-slate-100">
-                    <td className="px-5 py-2.5 text-slate-400">{i + 1}</td>
-                    <td className="px-5 py-2.5 font-medium text-slate-800">{r.supplierName}</td>
-                    <td className="px-5 py-2.5 text-right text-slate-600">{formatCurrency(r.owed)}</td>
+                  <tr key={String(r.supplier)} className="border-t border-neutral-100">
+                    <td className="px-5 py-2.5 text-neutral-400">{i + 1}</td>
+                    <td className="px-5 py-2.5 font-medium text-neutral-800">{r.supplierName}</td>
+                    <td className="px-5 py-2.5 text-right text-neutral-600">{formatCurrency(r.owed)}</td>
                     <td className="px-5 py-2.5 text-right font-semibold text-brand-700">{formatCurrency(r.allocation)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-slate-900 bg-slate-50 font-bold text-slate-900">
+                <tr className="border-t-2 border-neutral-900 bg-neutral-50 font-bold text-neutral-900">
                   <td className="px-5 py-3" colSpan={2}>
                     Total
                   </td>

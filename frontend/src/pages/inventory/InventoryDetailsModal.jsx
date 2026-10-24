@@ -10,9 +10,9 @@ import { formatCurrency, formatDate } from '../../utils/format.js';
 
 function Row({ label, value }) {
   return (
-    <div className="flex items-center justify-between border-b border-slate-50 py-2 last:border-0">
-      <span className="text-sm text-slate-500">{label}</span>
-      <span className="text-sm font-medium text-slate-800">{value}</span>
+    <div className="flex items-center justify-between border-b border-neutral-50 py-2 last:border-0">
+      <span className="text-sm text-neutral-500">{label}</span>
+      <span className="text-sm font-medium text-neutral-800">{value}</span>
     </div>
   );
 }

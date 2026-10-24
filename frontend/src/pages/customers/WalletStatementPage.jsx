@@ -46,7 +46,7 @@ export default function WalletStatementPage() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
-        <Link to={`/customers/${id}`} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to={`/customers/${id}`} className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to customer
         </Link>
         <div className="flex flex-wrap items-center gap-2">
@@ -57,7 +57,7 @@ export default function WalletStatementPage() {
         </div>
       </div>
 
-      <div id="print-area" className="mx-auto max-w-6xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+      <div id="print-area" className="mx-auto max-w-6xl rounded-2xl border border-neutral-200/80 bg-white p-6 text-neutral-900 sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
         <DocHeader
           title="Wallet Statement"
           meta={

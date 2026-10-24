@@ -113,7 +113,7 @@ export default function ExpenseFormModal({ open, onClose, onSaved, categories, o
         <FormField label="Note">
           <Textarea rows={2} maxLength={500} value={form.note} onChange={set('note')} placeholder="e.g. Cumar's salary" />
         </FormField>
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+        <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
           <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </Button>

@@ -211,7 +211,7 @@ export default function AppLayout() {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden no-print">
           <div
-            className="absolute inset-0 bg-slate-900/40 transition-opacity"
+            className="absolute inset-0 bg-neutral-900/40 transition-opacity"
             onClick={() => setMobileOpen(false)}
           />
           <aside className="absolute left-0 top-0 h-full w-64 bg-neutral-950 shadow-xl transition-transform duration-200">
@@ -231,12 +231,12 @@ export default function AppLayout() {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 md:hidden no-print">
-          <button onClick={() => setMobileOpen(true)} className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100">
+        <header className="flex items-center gap-3 border-b border-neutral-200/80 bg-white px-4 py-3 md:hidden no-print">
+          <button onClick={() => setMobileOpen(true)} className="rounded-md p-1.5 text-neutral-600 hover:bg-neutral-100">
             <Menu className="h-5 w-5" />
           </button>
           <img src={logo} alt={BUSINESS.name} className="h-7 w-7 rounded-md object-contain" />
-          <p className="text-sm font-semibold text-slate-900">{BUSINESS.name}</p>
+          <p className="text-sm font-semibold text-neutral-900">{BUSINESS.name}</p>
         </header>
 
         <TopBar />

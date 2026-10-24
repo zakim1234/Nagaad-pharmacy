@@ -13,8 +13,8 @@ export default function RequirePermission({ module, adminOnly, roles, superAdmin
   if (!allowed) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center text-center">
-        <p className="text-lg font-semibold text-rose-600">Ma lihi ogolaansho aad u gasho boggan.</p>
-        <p className="mt-1 text-sm text-slate-400">You do not have permission to access this page.</p>
+        <p className="text-lg font-semibold text-brand-600">Ma lihi ogolaansho aad u gasho boggan.</p>
+        <p className="mt-1 text-sm text-neutral-400">You do not have permission to access this page.</p>
       </div>
     );
   }

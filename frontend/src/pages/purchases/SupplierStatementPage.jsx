@@ -33,7 +33,7 @@ export default function SupplierStatementPage() {
       .catch((err) => setError(err.friendlyMessage || 'Could not load this statement.'));
   }, [supplierId]);
 
-  if (error) return <div className="rounded-lg bg-rose-50 p-4 text-sm text-rose-700">{error}</div>;
+  if (error) return <div className="rounded-lg bg-brand-50 p-4 text-sm text-brand-700">{error}</div>;
   if (!data) return <PageSpinner />;
 
   const { supplier, lines, totals } = data;
@@ -42,16 +42,16 @@ export default function SupplierStatementPage() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
-        <Link to={`/purchases?supplier=${supplier.id}`} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700">
+        <Link to={`/purchases?supplier=${supplier.id}`} className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to {supplier.name}
         </Link>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-lg border border-slate-200 bg-white p-0.5">
+          <div className="flex rounded-lg border border-neutral-200/80 bg-white p-0.5">
             {FILTERS.map(([key, label]) => (
               <button
                 key={key}
                 onClick={() => setFilter(key)}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold ${filter === key ? 'bg-neutral-900 text-white' : 'text-slate-500 hover:text-slate-800'}`}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold ${filter === key ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:text-neutral-800'}`}
               >
                 {label}
               </button>
@@ -66,7 +66,7 @@ export default function SupplierStatementPage() {
 
       <div
         id="print-area"
-        className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 text-neutral-900 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
+        className="mx-auto max-w-4xl rounded-2xl border border-neutral-200/80 bg-white p-6 text-neutral-900 sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
         style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
       >
         <div className="flex flex-col items-center text-center">

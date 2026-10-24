@@ -73,7 +73,7 @@ export default function SuppliersPage() {
       />
 
       <div className="relative mb-4 max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
         <Input className="pl-9" placeholder="Search by name or phone..." value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
@@ -94,9 +94,9 @@ export default function SuppliersPage() {
             <TableEmpty colSpan={5} message="No suppliers found." />
           ) : (
             items.map((s) => (
-              <tr key={s.id} className="hover:bg-slate-50">
+              <tr key={s.id} className="hover:bg-neutral-50">
                 <Td>
-                  <Link to={`/suppliers/${s.id}`} className="font-medium text-slate-900 hover:text-brand-600">
+                  <Link to={`/suppliers/${s.id}`} className="font-medium text-neutral-900 hover:text-brand-600">
                     {s.name}
                   </Link>
                 </Td>
@@ -110,12 +110,12 @@ export default function SuppliersPage() {
                         setEditItem(s);
                         setFormOpen(true);
                       }}
-                      className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600"
+                      className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-brand-600"
                       title="Edit"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
-                    <button onClick={() => setDeleteItem(s)} className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600" title="Delete">
+                    <button onClick={() => setDeleteItem(s)} className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-brand-600" title="Delete">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
@@ -125,7 +125,7 @@ export default function SuppliersPage() {
           )}
         </TBody>
       </Table>
-      <div className="rounded-b-xl border border-t-0 border-slate-200 bg-white">
+      <div className="rounded-b-xl border border-t-0 border-neutral-200/80 bg-white">
         <Pagination {...pagination} onChange={setPage} />
       </div>
 

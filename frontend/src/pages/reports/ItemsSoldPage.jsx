@@ -45,13 +45,13 @@ export default function ItemsSoldPage() {
         subtitle={`What was sold each ${noun}: open one to see every item, its quantity, cost, selling price and profit.${isAllBranchesView(user) ? ` All branches together.` : ''}`}
       />
 
-      <div className="mb-4 inline-flex rounded-lg border border-slate-200 bg-white p-1">
+      <div className="mb-4 inline-flex rounded-lg border border-neutral-200/80 bg-white p-1">
         {TABS.map((t) => (
           <button
             key={t.type}
             type="button"
             onClick={() => setParams({ type: t.type })}
-            className={`rounded-md px-4 py-1.5 text-sm font-semibold transition ${type === t.type ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`rounded-md px-4 py-1.5 text-sm font-semibold transition ${type === t.type ? 'bg-brand-600 text-white' : 'text-neutral-600 hover:bg-neutral-50'}`}
           >
             {t.label}
           </button>
@@ -61,10 +61,10 @@ export default function ItemsSoldPage() {
       {!rows ? (
         <PageSpinner />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-neutral-200/80 bg-white">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
                 <th className="px-4 py-2.5">{type === 'day' ? 'Day' : type === 'month' ? 'Month' : 'Year'}</th>
                 {type !== 'day' && <th className="px-4 py-2.5 text-center">Days closed</th>}
                 <th className="px-4 py-2.5 text-center">Invoices</th>
@@ -78,24 +78,24 @@ export default function ItemsSoldPage() {
             <tbody>
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-slate-400">
+                  <td colSpan={8} className="px-4 py-10 text-center text-neutral-400">
                     No closed days yet. Reports appear here after Close Day.
                   </td>
                 </tr>
               )}
               {rows.map((p) => (
-                <tr key={p.key} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60">
-                  <td className="px-4 py-2.5 font-semibold text-slate-800">{periodTitle(type, p.key)}</td>
-                  {type !== 'day' && <td className="px-4 py-2.5 text-center tabular-nums text-slate-600">{p.dayCount}</td>}
-                  <td className="px-4 py-2.5 text-center tabular-nums text-slate-600">{p.invoiceCount}</td>
+                <tr key={p.key} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50/60">
+                  <td className="px-4 py-2.5 font-semibold text-neutral-800">{periodTitle(type, p.key)}</td>
+                  {type !== 'day' && <td className="px-4 py-2.5 text-center tabular-nums text-neutral-600">{p.dayCount}</td>}
+                  <td className="px-4 py-2.5 text-center tabular-nums text-neutral-600">{p.invoiceCount}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums">{formatCurrency(p.sales)}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-slate-500">{formatCurrency(p.cost)}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-slate-500">{formatCurrency(p.expenses)}</td>
-                  <td className={`px-4 py-2.5 text-right font-bold tabular-nums ${p.netProfit < 0 ? 'text-brand-700' : 'text-slate-900'}`}>{formatCurrency(p.netProfit)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-neutral-500">{formatCurrency(p.cost)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-neutral-500">{formatCurrency(p.expenses)}</td>
+                  <td className={`px-4 py-2.5 text-right font-bold tabular-nums ${p.netProfit < 0 ? 'text-brand-700' : 'text-neutral-900'}`}>{formatCurrency(p.netProfit)}</td>
                   <td className="px-4 py-2.5 text-right">
                     <Link
                       to={`/items-sold/view?type=${type}&key=${p.key}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-700"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:border-brand-300 hover:text-brand-700"
                     >
                       <FileText className="h-3.5 w-3.5" /> View report
                     </Link>

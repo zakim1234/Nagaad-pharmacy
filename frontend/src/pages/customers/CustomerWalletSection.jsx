@@ -24,15 +24,15 @@ function ChoiceCard({ active, onClick, title, text }) {
       type="button"
       onClick={onClick}
       className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors ${
-        active ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-slate-200 hover:bg-slate-50'
+        active ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-neutral-200 hover:bg-neutral-50'
       }`}
     >
-      <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${active ? 'border-brand-600' : 'border-slate-300'}`}>
+      <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${active ? 'border-brand-600' : 'border-neutral-300'}`}>
         {active && <span className="h-2 w-2 rounded-full bg-brand-600" />}
       </span>
       <span>
-        <span className="block text-sm font-semibold text-slate-900">{title}</span>
-        <span className="block text-xs text-slate-500">{text}</span>
+        <span className="block text-sm font-semibold text-neutral-900">{title}</span>
+        <span className="block text-xs text-neutral-500">{text}</span>
       </span>
     </button>
   );
@@ -101,7 +101,7 @@ function AddDepositModal({ open, onClose, customerId, customerName, customerDebt
         </FormField>
         {customerDebt > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-700">This customer owes {formatCurrency(customerDebt)}. What should this money do?</p>
+            <p className="text-sm font-medium text-neutral-700">This customer owes {formatCurrency(customerDebt)}. What should this money do?</p>
             <ChoiceCard
               active={!applyToDebt}
               onClick={() => setApplyToDebt(false)}
@@ -173,9 +173,9 @@ function WithdrawModal({ open, onClose, customerId, customerName, walletBalance,
   return (
     <Modal open={open} onClose={onClose} title={`Withdraw – ${customerName}`} size="sm">
       <div className="space-y-4">
-        <div className="rounded-lg border border-slate-200 px-3 py-2 text-center">
-          <p className="text-[10px] uppercase tracking-wide text-slate-500">In wallet</p>
-          <p className="text-lg font-bold text-slate-900">{formatCurrency(walletBalance)}</p>
+        <div className="rounded-lg border border-neutral-200 px-3 py-2 text-center">
+          <p className="text-[10px] uppercase tracking-wide text-neutral-500">In wallet</p>
+          <p className="text-lg font-bold text-neutral-900">{formatCurrency(walletBalance)}</p>
         </div>
         <FormField label={`Amount (up to ${formatCurrency(walletBalance)})`} required>
           <Input type="number" min="0.01" step="0.01" max={walletBalance} value={amount} onChange={(e) => setAmount(e.target.value)} autoFocus />
@@ -241,9 +241,9 @@ function PayFromWalletModal({ open, onClose, customerId, walletBalance, customer
     <Modal open={open} onClose={onClose} title="Pay debt from wallet" size="sm">
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-2 text-center">
-          <div className="rounded-lg border border-slate-200 px-3 py-2">
-            <p className="text-[10px] uppercase tracking-wide text-slate-500">In wallet</p>
-            <p className="text-lg font-bold text-slate-900">{formatCurrency(walletBalance)}</p>
+          <div className="rounded-lg border border-neutral-200 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wide text-neutral-500">In wallet</p>
+            <p className="text-lg font-bold text-neutral-900">{formatCurrency(walletBalance)}</p>
           </div>
           <div className="rounded-lg bg-brand-600 px-3 py-2 text-white">
             <p className="text-[10px] uppercase tracking-wide text-white/75">Debt</p>
@@ -253,7 +253,7 @@ function PayFromWalletModal({ open, onClose, customerId, walletBalance, customer
         <FormField label={`Amount to take from the wallet (up to ${formatCurrency(max)})`} required>
           <Input type="number" min="0.01" step="0.01" max={max} value={amount} onChange={(e) => setAmount(e.target.value)} autoFocus />
         </FormField>
-        <p className="text-xs text-slate-500">Only do this when the customer agrees. It pays the oldest invoices first.</p>
+        <p className="text-xs text-neutral-500">Only do this when the customer agrees. It pays the oldest invoices first.</p>
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={onClose}>
             Cancel
@@ -310,9 +310,9 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
       <Card dense>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs uppercase text-slate-400">Current Wallet Balance</p>
-            <p className="text-2xl font-bold text-slate-900">{formatCurrency(walletBalance)}</p>
-            {customerDebt > 0 && <p className="text-xs font-medium text-rose-600">Debt: {formatCurrency(customerDebt)}</p>}
+            <p className="text-xs uppercase text-neutral-400">Current Wallet Balance</p>
+            <p className="text-2xl font-bold text-neutral-900">{formatCurrency(walletBalance)}</p>
+            {customerDebt > 0 && <p className="text-xs font-medium text-brand-600">Debt: {formatCurrency(customerDebt)}</p>}
           </div>
           <div className="flex flex-wrap gap-2">
             {canPayFromWallet && (
@@ -322,7 +322,7 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
             )}
             <Link
               to={`/customers/${customerId}/wallet-statement`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200/80 bg-white px-3 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
             >
               <FileText className="h-4 w-4" /> Wallet statement
             </Link>
@@ -336,10 +336,10 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
             </Button>
           </div>
         </div>
-        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2.5">
+        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-neutral-200 px-3 py-2.5">
           <span>
-            <span className="block text-sm font-semibold text-slate-800">Pay debt from wallet automatically</span>
-            <span className="block text-xs text-slate-500">
+            <span className="block text-sm font-semibold text-neutral-800">Pay debt from wallet automatically</span>
+            <span className="block text-xs text-neutral-500">
               {walletAutoPay
                 ? 'On: deposits and wallet money go to the debt by themselves.'
                 : 'Off: wallet money stays in the wallet; use "Pay debt from wallet" when the customer agrees.'}
@@ -351,7 +351,7 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
             aria-checked={walletAutoPay}
             disabled={togglingAuto}
             onClick={toggleAuto}
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-60 ${walletAutoPay ? 'bg-brand-600' : 'bg-slate-300'}`}
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-60 ${walletAutoPay ? 'bg-brand-600' : 'bg-neutral-300'}`}
           >
             <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${walletAutoPay ? 'left-5.5' : 'left-0.5'}`} />
           </button>
@@ -360,35 +360,35 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
 
       <Card dense title="Wallet History">
         <div className="relative mb-3">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <Input className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by reference, type, or note..." />
         </div>
         {loading ? (
-          <p className="py-6 text-center text-sm text-slate-400">Loading...</p>
+          <p className="py-6 text-center text-sm text-neutral-400">Loading...</p>
         ) : !history || history.transactions.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-400">No wallet activity yet.</p>
+          <p className="py-6 text-center text-sm text-neutral-400">No wallet activity yet.</p>
         ) : (
           <div className="space-y-2">
             {history.transactions.map((t) => {
               const meta = TYPE_LABEL[t.type] || { label: t.type, color: 'slate' };
               return (
-                <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 p-3">
+                <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-100 p-3">
                   <div className="flex items-center gap-2">
-                    <span className={`font-semibold tabular-nums ${t.amount > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <span className={`font-semibold tabular-nums ${t.amount > 0 ? 'text-emerald-600' : 'text-brand-600'}`}>
                       {t.amount > 0 ? '+' : ''}
                       {formatCurrency(t.amount)}
                     </span>
                     <Badge color={meta.color}>{meta.label}</Badge>
-                    {t.saleReceiptNumber && <span className="text-xs text-slate-500">{t.saleReceiptNumber}</span>}
-                    {t.accountName && <span className="text-xs text-slate-500">{t.accountName}</span>}
+                    {t.saleReceiptNumber && <span className="text-xs text-neutral-500">{t.saleReceiptNumber}</span>}
+                    {t.accountName && <span className="text-xs text-neutral-500">{t.accountName}</span>}
                     {t.reference && (
-                      <span className="text-xs font-medium text-slate-600">
+                      <span className="text-xs font-medium text-neutral-600">
                         {t.type === 'WITHDRAWAL' ? 'to' : 'from'} {t.reference}
                       </span>
                     )}
-                    {t.note && <span className="text-xs text-slate-400">{t.note}</span>}
+                    {t.note && <span className="text-xs text-neutral-400">{t.note}</span>}
                   </div>
-                  <span className="text-xs text-slate-400">{formatDateTime(t.createdAt)}</span>
+                  <span className="text-xs text-neutral-400">{formatDateTime(t.createdAt)}</span>
                 </div>
               );
             })}
