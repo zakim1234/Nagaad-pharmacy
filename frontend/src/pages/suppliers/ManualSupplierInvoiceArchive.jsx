@@ -73,10 +73,11 @@ export default function ManualSupplierInvoiceArchive() {
     setDeleting(true);
     try {
       const res = await client.delete(`/supplier-invoice-archives/${deleteTarget.id}`);
+      const alsoPurchase = deleteTarget.purchaseNumber ? ` and its purchase invoice ${deleteTarget.purchaseNumber}` : '';
       toast.success(
         res.data.data.refunded > 0
-          ? `Serial ${deleteTarget.serialNumber} deleted — ${formatCurrency(res.data.data.refunded)} paid on it went back to the account.`
-          : `Serial ${deleteTarget.serialNumber} deleted.`
+          ? `Serial ${deleteTarget.serialNumber}${alsoPurchase} deleted — ${formatCurrency(res.data.data.refunded)} paid on it went back to the account.`
+          : `Serial ${deleteTarget.serialNumber}${alsoPurchase} deleted.`
       );
       setDeleteTarget(null);
       load();
