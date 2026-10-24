@@ -141,22 +141,20 @@ export default function ReceiptPage() {
           </tbody>
         </table>
 
+        {/* Short on purpose: total, what was paid, and what is still owed. */}
         <DocSummary
           lines={[
-            ['Subtotal', formatCurrency(sale.subtotal)],
+            sale.discount > 0 && ['Subtotal', formatCurrency(sale.subtotal)],
             sale.discount > 0 && ['Discount', `-${formatCurrency(sale.discount)}`],
           ]}
-          grand={['Grand Total', formatCurrency(sale.total)]}
+          grand={['Total', formatCurrency(sale.total)]}
         />
         <DocSummary
           lines={[
-            ['Paid', formatCurrency(sale.paidAmount)],
-            sale.paidAmount > 0 && ['Payment method', sale.paymentAccountName || '—'],
-            sale.total - sale.paidAmount > 0 && ['Balance on this invoice', formatCurrency(sale.total - sale.paidAmount)],
-            ['Previous balance', formatCurrency(sale.previousBalance)],
-            ['Balance from this sale', formatCurrency(sale.balanceAdded)],
+            [sale.paidAmount > 0 && sale.paymentAccountName ? `Paid (${sale.paymentAccountName})` : 'Paid', formatCurrency(sale.paidAmount)],
+            sale.previousBalance > 0 && ['Previous balance', formatCurrency(sale.previousBalance)],
           ]}
-          owed={['Current outstanding balance', formatCurrency(currentOutstanding)]}
+          owed={currentOutstanding > 0 ? ['Balance due', formatCurrency(currentOutstanding)] : null}
         />
 
         {sale.notes && (
