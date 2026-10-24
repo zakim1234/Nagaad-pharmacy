@@ -21,8 +21,8 @@ async function setup(dbName) {
   const admin = await User.create({ username: 'admin', name: 'Admin', passwordHash: 'unused' });
   const server = app.listen(0, '127.0.0.1');
   await new Promise((resolve) => server.once('listening', resolve));
-  const token = jwt.sign({ sub: String(admin._id) }, process.env.JWT_SECRET);
-  const request = async (path, body, method = 'POST') => {
+  const request = async (path, body, method = 'POST', as = admin) => {
+    const token = jwt.sign({ sub: String(as._id) }, process.env.JWT_SECRET);
     const r = await fetch(`http://127.0.0.1:${server.address().port}/api${path}`, {
       method,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -398,44 +398,51 @@ test('CANCEL PAID INVOICE -- cash paid at the sale goes to the wallet, or is han
   }
 });
 
-test('DELETE ITEM -- always allowed; its old invoices still return, cancel and close', { timeout: 90000 }, async () => {
+test('DELETE ITEM -- a sold item cannot be deleted; one never sold can', { timeout: 90000 }, async () => {
   const ctx = await setup('delete_item');
   try {
     const account = await Account.create({ name: 'Cash' });
     const sold = await InventoryItem.create({ name: 'Gvagzol Supp', itemCode: 'GV-1', quantity: 100, costPriceCents: 100, sellingPriceCents: 500 });
     const pending = await InventoryItem.create({ name: 'Pending Item', itemCode: 'PD-1', quantity: 50, costPriceCents: 100, sellingPriceCents: 300 });
+    const neverSold = await InventoryItem.create({ name: 'Never Sold', itemCode: 'NS-1', quantity: 5, costPriceCents: 100, sellingPriceCents: 300 });
     const customer = await Customer.create({ name: 'History Customer', phone: '201' });
 
-    // A confirmed sale of `sold`, then the item is deleted.
-    const saleId = await giveDebt(ctx, customer, account, sold, 4); // $20 owed
+    // Sold on a confirmed invoice: refused, the item stays.
+    await giveDebt(ctx, customer, account, sold, 4);
     const del = await ctx.request(`/inventory/${sold.id}`, undefined, 'DELETE');
-    assert.equal(del.status, 200, JSON.stringify(del));
-    assert.equal(await InventoryItem.countDocuments({ _id: sold.id }), 0);
+    assert.equal(del.status, 409, JSON.stringify(del));
+    assert.match(del.message, /has been sold/);
+    assert.equal(await InventoryItem.countDocuments({ _id: sold.id }), 1);
 
-    // Its invoice still returns and cancels.
-    const ret = await ctx.request(`/sales/${saleId}/return`, { items: [{ itemId: sold.id, quantity: 1 }], reason: 'test' });
-    assert.equal(ret.status, 200, JSON.stringify(ret));
-    assert.equal((await Customer.findById(customer.id)).balanceCents, 1500);
-    const rev = await ctx.request(`/sales/${saleId}/reverse`, { reason: 'test' });
-    assert.equal(rev.status, 200, JSON.stringify(rev));
-    assert.equal((await Customer.findById(customer.id)).balanceCents, 0);
+    // On a pending (not yet closed) invoice: refused too.
+    await ctx.request('/day-close/open', {}); // the day was closed by giveDebt
+    const draft = await ctx.request('/sales', { customerId: customer.id, items: [{ itemId: pending.id, quantity: 2 }], paidAmount: 0, paymentAccountId: account.id });
+    assert.equal(draft.status, 201, JSON.stringify(draft));
+    assert.equal((await ctx.request(`/inventory/${pending.id}`, undefined, 'DELETE')).status, 409);
+
+    // Never sold: deleted.
+    assert.equal((await ctx.request(`/inventory/${neverSold.id}`, undefined, 'DELETE')).status, 200);
+    assert.equal(await InventoryItem.countDocuments({ _id: neverSold.id }), 0);
   } finally {
     await teardown(ctx.server);
   }
 });
 
-test('DELETE ITEM -- on a pending invoice: Close Day still confirms it', { timeout: 90000 }, async () => {
-  const ctx = await setup('delete_item_pending');
+test('EDIT INVOICE -- needs the "Edit invoices" permission (admins always)', { timeout: 90000 }, async () => {
+  const ctx = await setup('edit_invoice_perm');
   try {
     const account = await Account.create({ name: 'Cash' });
-    const item = await InventoryItem.create({ name: 'Pending Item', itemCode: 'PD-2', quantity: 50, costPriceCents: 100, sellingPriceCents: 300 });
-    const customer = await Customer.create({ name: 'Pending Customer', phone: '202' });
+    const item = await InventoryItem.create({ name: 'E', itemCode: 'E-1', quantity: 50, costPriceCents: 100, sellingPriceCents: 300 });
+    const customer = await Customer.create({ name: 'Edit Customer', phone: '203' });
     const draft = await ctx.request('/sales', { customerId: customer.id, items: [{ itemId: item.id, quantity: 2 }], paidAmount: 0, paymentAccountId: account.id });
     assert.equal(draft.status, 201, JSON.stringify(draft));
-    assert.equal((await ctx.request(`/inventory/${item.id}`, undefined, 'DELETE')).status, 200);
-    await closeDay({ user: ctx.admin });
-    assert.equal((await Sale.findById(draft.data.id)).status, 'CONFIRMED');
-    assert.equal((await Customer.findById(customer.id)).balanceCents, 600);
+    const body = { customerId: customer.id, items: [{ itemId: item.id, quantity: 3 }], paidAmount: 0, paymentAccountId: account.id };
+
+    const cashier = await User.create({ username: 'cashier_e', name: 'Cashier', passwordHash: 'unused', role: 'cashier', permissions: ['pos'] });
+    assert.equal((await ctx.request(`/sales/${draft.data.id}`, body, 'PUT', cashier)).status, 403, 'not allowed by default');
+    await User.updateOne({ _id: cashier._id }, { $push: { permissions: 'editInvoices' } });
+    assert.equal((await ctx.request(`/sales/${draft.data.id}`, body, 'PUT', cashier)).status, 200, 'allowed once switched on');
+    assert.equal((await ctx.request(`/sales/${draft.data.id}`, body, 'PUT')).status, 200, 'admins always can');
   } finally {
     await teardown(ctx.server);
   }

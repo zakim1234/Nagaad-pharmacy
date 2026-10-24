@@ -171,19 +171,19 @@ function TopBar() {
   }, [user]);
   const where = inOverview(user) ? 'All branches' : branchName;
   return (
-    <div className="hidden items-center justify-between border-b border-neutral-200/70 bg-white/80 px-8 py-2.5 backdrop-blur md:flex no-print">
-      <p className="flex items-center gap-2 text-[13px] text-neutral-500">
+    <div className="hidden items-center justify-between border-b border-white/[0.06] bg-neutral-950 px-8 py-2.5 md:flex no-print">
+      <p className="flex items-center gap-2 text-[13px] text-neutral-400">
         {where && (
           <>
-            <Store className="h-3.5 w-3.5 text-brand-600" />
-            <span className="font-semibold text-neutral-900">{where}</span>
-            <span className="text-neutral-300">/</span>
+            <Store className="h-3.5 w-3.5 text-brand-400" />
+            <span className="font-semibold text-white">{where}</span>
+            <span className="text-neutral-700">/</span>
           </>
         )}
         {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
       </p>
-      <p className="text-[13px] text-neutral-500">
-        Signed in as <span className="font-semibold text-neutral-900">{user?.name}</span>
+      <p className="text-[13px] text-neutral-400">
+        Signed in as <span className="font-semibold text-white">{user?.name}</span>
       </p>
     </div>
   );

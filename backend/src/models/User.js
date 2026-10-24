@@ -20,6 +20,9 @@ export const PERMISSION_MODULES = [
   // Cancel invoices (pending or confirmed). Admins always can; anyone else
   // only when an admin switches it on for them.
   'cancelInvoices',
+  // Edit an invoice. Admins always can; anyone else only when an admin
+  // switches it on for them.
+  'editInvoices',
   'partners',
   'fixedAssets',
   'zakat',

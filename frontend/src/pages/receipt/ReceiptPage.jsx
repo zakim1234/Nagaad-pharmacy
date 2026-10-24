@@ -68,9 +68,11 @@ export default function ReceiptPage() {
         <div className="flex gap-2">
           {sale.status === 'DRAFT' && (
             <>
-              <Button variant="secondary" onClick={() => navigate(`/pos?edit=${sale.id}`)}>
-                <Pencil className="h-4 w-4" /> Edit
-              </Button>
+              {hasPermission(user, 'editInvoices') && (
+                <Button variant="secondary" onClick={() => navigate(`/pos?edit=${sale.id}`)}>
+                  <Pencil className="h-4 w-4" /> Edit
+                </Button>
+              )}
               {canCancelInvoices && (
                 <Button variant="danger" onClick={() => setCancelOpen(true)}>
                   <XCircle className="h-4 w-4" /> Cancel

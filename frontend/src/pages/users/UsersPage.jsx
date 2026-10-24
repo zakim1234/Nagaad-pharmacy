@@ -149,11 +149,12 @@ export default function UsersPage() {
 
   useEffect(() => load(), [load]);
 
-  const toggleCancel = async (u) => {
-    const on = u.permissions.includes('cancelInvoices');
+  // Switch one invoice permission on/off for a non-admin (admins always have them).
+  const togglePerm = async (u, key, what) => {
+    const on = u.permissions.includes(key);
     try {
-      await client.put(`/users/${u.id}`, { permissions: on ? u.permissions.filter((p) => p !== 'cancelInvoices') : [...u.permissions, 'cancelInvoices'] });
-      toast.success(on ? `${u.name} can no longer cancel invoices.` : `${u.name} can now cancel invoices.`);
+      await client.put(`/users/${u.id}`, { permissions: on ? u.permissions.filter((p) => p !== key) : [...u.permissions, key] });
+      toast.success(on ? `${u.name} can no longer ${what}.` : `${u.name} can now ${what}.`);
       load();
     } catch (err) {
       toast.error(err.friendlyMessage || 'Could not change this permission.');
@@ -195,6 +196,7 @@ export default function UsersPage() {
             {showBranch && <Th>Branch</Th>}
             <Th>Permissions</Th>
             <Th>Cancel invoices</Th>
+            <Th>Edit invoices</Th>
             <Th>Status</Th>
             <Th>Created</Th>
             <Th className="text-right">Actions</Th>
@@ -202,9 +204,9 @@ export default function UsersPage() {
         </THead>
         <TBody>
           {loading ? (
-            <TableLoading colSpan={showBranch ? 9 : 8} />
+            <TableLoading colSpan={showBranch ? 10 : 9} />
           ) : users.length === 0 ? (
-            <TableEmpty colSpan={showBranch ? 9 : 8} message="No users found." />
+            <TableEmpty colSpan={showBranch ? 10 : 9} message="No users found." />
           ) : (
             users.map((u) => (
               <tr key={u.id} className="hover:bg-neutral-50">
@@ -221,19 +223,24 @@ export default function UsersPage() {
                     <span className="text-xs text-neutral-500">{u.permissions.length} module{u.permissions.length > 1 ? 's' : ''}</span>
                   )}
                 </Td>
-                <Td>
-                  {u.role === 'admin' ? (
-                    <span className="text-xs text-neutral-400">Always</span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => toggleCancel(u)}
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${u.permissions.includes('cancelInvoices') ? 'bg-brand-600 text-white hover:bg-brand-700' : 'border border-neutral-200 text-neutral-500 hover:bg-neutral-50'}`}
-                    >
-                      {u.permissions.includes('cancelInvoices') ? 'On — click to turn off' : 'Off — click to allow'}
-                    </button>
-                  )}
-                </Td>
+                {[
+                  ['cancelInvoices', 'cancel invoices'],
+                  ['editInvoices', 'edit invoices'],
+                ].map(([key, what]) => (
+                  <Td key={key}>
+                    {u.role === 'admin' ? (
+                      <span className="text-xs text-neutral-400">Always</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => togglePerm(u, key, what)}
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${u.permissions.includes(key) ? 'bg-brand-600 text-white hover:bg-brand-700' : 'border border-neutral-200 text-neutral-500 hover:bg-neutral-50'}`}
+                      >
+                        {u.permissions.includes(key) ? 'On — click to turn off' : 'Off — click to allow'}
+                      </button>
+                    )}
+                  </Td>
+                ))}
                 <Td><Badge color={u.active ? 'green' : 'red'}>{u.active ? 'Active' : 'Deactivated'}</Badge></Td>
                 <Td className="text-xs text-neutral-400">{formatDate(u.createdAt)}</Td>
                 <Td>

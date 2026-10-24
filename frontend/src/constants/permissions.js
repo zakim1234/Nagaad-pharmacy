@@ -14,6 +14,7 @@ export const PERMISSION_MODULES = [
   { key: 'expenses', label: 'Expenses' },
   { key: 'createItems', label: 'Can create items (POS quick-create)' },
   { key: 'cancelInvoices', label: 'Can cancel invoices' },
+  { key: 'editInvoices', label: 'Can edit invoices' },
   { key: 'partners', label: 'Partners / Investors' },
   { key: 'fixedAssets', label: 'Fixed Assets' },
   { key: 'zakat', label: 'Zakat Calculator' },
