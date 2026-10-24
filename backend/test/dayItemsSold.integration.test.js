@@ -99,3 +99,43 @@ test('DAY CLOSE -- items sold report: per item units, cost, sales, profit; total
     await mongoose.disconnect();
   }
 });
+
+test('ITEMS SOLD -- items with the same name are one line (quantities added, average prices)', { timeout: 90000 }, async () => {
+  await mongoose.connect(`mongodb://127.0.0.1:27028/day_items_same_${Date.now()}?replicaSet=stocktest`);
+  process.env.JWT_SECRET = 'isolated-day-items-same-secret';
+  await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
+  const admin = await User.create({ username: 'admin', name: 'Admin', passwordHash: 'unused' });
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise((resolve) => server.once('listening', resolve));
+  const token = jwt.sign({ sub: String(admin._id) }, process.env.JWT_SECRET);
+  const request = async (path, body, method = 'POST') => {
+    const r = await fetch(`http://127.0.0.1:${server.address().port}/api${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      ...(body != null ? { body: JSON.stringify(body) } : {}),
+    });
+    return { status: r.status, ...(await r.json()) };
+  };
+  try {
+    const customer = await Customer.create({ name: 'Cali', phone: '1' });
+    const account = await Account.create({ name: 'Cash' });
+    const zincA = await InventoryItem.create({ name: 'Zinc', itemCode: 'Z-1', quantity: 1000, costPriceCents: 200, sellingPriceCents: 300 });
+    const zincB = await InventoryItem.create({ name: 'zinc ', itemCode: 'Z-2', quantity: 100, costPriceCents: 532, sellingPriceCents: 582 });
+    await request('/sales', { customerId: customer.id, items: [{ itemId: zincA.id, quantity: 580 }, { itemId: zincB.id, quantity: 20 }], paidAmount: 0, paymentAccountId: account.id });
+    await closeDay({ user: admin });
+    const day = (await request('/day-close/daily', null, 'GET')).data[0];
+    const rep = await request(`/day-close/daily/items?date=${encodeURIComponent(day.businessDate)}`, null, 'GET');
+    assert.equal(rep.data.items.length, 1, JSON.stringify(rep.data.items));
+    assert.equal(rep.data.items[0].quantity, 600);
+    assert.equal(rep.data.items[0].cost, 1160 + 106.4);
+    assert.equal(rep.data.items[0].sales, 1740 + 116.4);
+
+    const bought = await request(`/customers/${customer.id}/items`, null, 'GET');
+    assert.equal(bought.data.items.length, 1);
+    assert.equal(bought.data.items[0].quantity, 600);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await mongoose.connection.dropDatabase();
+    await mongoose.disconnect();
+  }
+});

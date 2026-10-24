@@ -2,7 +2,6 @@ import DayClose from '../models/DayClose.js';
 import Sale from '../models/Sale.js';
 import Expense from '../models/Expense.js';
 import { ApiError } from '../utils/ApiError.js';
-import { currentBranch } from './branchContext.js';
 
 // Items sold, built from the saved Close Day records: one report per day,
 // month or year, each with every item's units, cost, sales and profit.
@@ -46,6 +45,9 @@ export function periodRange(type, key) {
 
 // Adds a confirmed sale's lines to a per-item tally; returns the part of its
 // discount given on the whole invoice rather than on a line.
+// 'Zinc ', 'zinc' and 'ZINC' are the same item on a report.
+export const nameKey = (name) => String(name || '').trim().replace(/\s+/g, ' ').toLowerCase();
+
 export function tallySaleItems(sale, byItem, keyOf = (line) => String(line.item)) {
   let lineDiscountCents = 0;
   for (const line of sale.items) {
@@ -69,15 +71,15 @@ function addRow(byItem, key, r) {
   byItem.set(key, row);
 }
 
-// One period's report. In the Super Admin's all-branches view the same item
-// lives in every branch under its own id, so rows are merged by name.
+// One period's report: every item sold, with totals and net profit.
 export async function getItemsSold({ type, key }) {
   const { start, end } = periodRange(type, key);
   const closes = await DayClose.find({ businessDate: { $gte: start, $lt: end } }).sort({ closedAt: 1 });
   if (!closes.length) throw new ApiError(404, 'No closing found for that period.');
 
-  const byName = !currentBranch();
-  const keyOf = (r) => (byName ? String(r.itemName || '').trim().toLowerCase() : String(r.item));
+  // Rows are merged by item name: two inventory items called 'zinc' (or the
+  // same item in two branches) are one line, with average cost and price.
+  const keyOf = (r) => nameKey(r.itemName) || String(r.item);
   const byItem = new Map();
   let invoiceDiscountCents = 0;
   for (const c of closes) {

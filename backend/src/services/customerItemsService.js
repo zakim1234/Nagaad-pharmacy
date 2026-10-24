@@ -1,7 +1,7 @@
 import Sale from '../models/Sale.js';
 import Customer from '../models/Customer.js';
 import { ApiError } from '../utils/ApiError.js';
-import { periodRange, periodKey } from './itemsSoldService.js';
+import { periodRange, periodKey, nameKey } from './itemsSoldService.js';
 
 // What one customer bought, item by item, over all time or one day, month or
 // year: units (net of returns), average price, amount spent and the profit
@@ -25,7 +25,7 @@ export async function getCustomerItems({ customerId, type = 'all', key }) {
       const net = line.quantity - (line.returnedQuantity || 0);
       if (net <= 0) continue;
       const share = net / line.quantity; // returned units come off proportionally
-      const k = String(line.item);
+      const k = nameKey(line.itemName) || String(line.item); // same name = one line
       const row = byItem.get(k) || { item: line.item, itemName: line.itemName, quantity: 0, salesCents: 0, costCents: 0, invoices: 0, lastBought: null };
       row.quantity += net;
       row.salesCents += Math.round((line.subtotalCents - (line.discountCents || 0)) * share);
