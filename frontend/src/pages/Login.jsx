@@ -61,8 +61,23 @@ export default function Login() {
       {/* Sign-in */}
       <div className="flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
+        {/* Phones and tablets: the black brand panel becomes a header card. */}
+        <div className="relative mb-8 overflow-hidden rounded-3xl bg-neutral-950 p-6 text-white lg:hidden">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-brand-600/30 blur-3xl" />
+          <div className="relative flex items-center gap-3">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white p-1.5">
+              <img src={logo} alt={BUSINESS.name} className="h-full w-full object-contain" />
+            </span>
+            <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+              {BUSINESS.name}
+            </span>
+          </div>
+          <p className="relative mt-5 text-[10.5px] font-semibold uppercase tracking-[0.2em] text-brand-400">Inventory &amp; POS</p>
+          <p className="relative mt-1 text-2xl font-extrabold leading-tight tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            Every sale, every shelf, every branch.
+          </p>
+        </div>
         <div className="mb-8">
-          <img src={logo} alt={BUSINESS.name} className="mb-6 h-20 w-auto object-contain lg:hidden" />
           <p className="eyebrow">Welcome back</p>
           <h1 className="mt-1 text-[30px] font-extrabold leading-tight tracking-tight text-neutral-950">Sign in</h1>
           <p className="mt-1 text-sm text-neutral-500">Use the username and password you were given.</p>
