@@ -18,7 +18,7 @@ export default function PrintReportHeader({ title, rangeLabel, subtitle, showOnS
         title={title}
         meta={
           <span>
-            {allBranches && <span className="mr-2 rounded bg-brand-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">All branches</span>}
+            {allBranches && <span className="mr-2 rounded bg-brand-400 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-950">All branches</span>}
             {rangeLabel && <span className="font-semibold">{rangeLabel}</span>}
             {subtitle && <span className="ml-2 text-neutral-400">{subtitle}</span>}
           </span>

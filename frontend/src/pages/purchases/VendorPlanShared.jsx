@@ -23,7 +23,7 @@ export function PlanPrintSheet({ rows, date, planNumber, paid }) {
         <p className="text-[11px] text-neutral-600">{BUSINESS.addressLine} · {BUSINESS.phone}</p>
       </div>
 
-      <div className="mt-4 h-1 bg-brand-600" />
+      <div className="mt-4 h-1 bg-brand-400" />
       <div className="flex items-center justify-between bg-neutral-950 px-4 py-2 text-white">
         <p className="text-sm font-bold uppercase tracking-[0.25em]">Vendor Balance Summary</p>
         <p className="text-[11px]">
@@ -52,7 +52,7 @@ export function PlanPrintSheet({ rows, date, planNumber, paid }) {
               <td className="px-3 py-2 text-right font-bold text-brand-700">{r.allocation > 0 ? formatCurrency(r.allocation) : '—'}</td>
               <td className="px-3 py-2">{r.receiptNo || <span className="inline-block w-20 border-b border-dotted border-neutral-400">&nbsp;</span>}</td>
               <td className="px-3 py-2 text-center">
-                <span className={`inline-flex h-4 w-4 items-center justify-center rounded-sm border text-[11px] font-bold leading-none ${r.ok ? 'border-brand-600 text-brand-600' : 'border-neutral-400'}`}>
+                <span className={`inline-flex h-4 w-4 items-center justify-center rounded-sm border text-[11px] font-bold leading-none ${r.ok ? 'border-brand-400 text-brand-600' : 'border-neutral-400'}`}>
                   {r.ok ? '✓' : ''}
                 </span>
               </td>
@@ -77,8 +77,8 @@ export function PlanPrintSheet({ rows, date, planNumber, paid }) {
           <p className="text-[10px] uppercase tracking-wider text-neutral-500">Total owed to all suppliers</p>
           <p className="mt-1 text-lg font-bold">{formatCurrency(printOwed)}</p>
         </div>
-        <div className="rounded-lg bg-brand-600 px-4 py-3 text-center text-white">
-          <p className="text-[10px] uppercase tracking-wider text-white/80">Total {paid ? 'paid' : 'allocated'}</p>
+        <div className="rounded-lg bg-brand-400 px-4 py-3 text-center text-neutral-950">
+          <p className="text-[10px] uppercase tracking-wider text-neutral-700">Total {paid ? 'paid' : 'allocated'}</p>
           <p className="mt-1 text-lg font-bold">{formatCurrency(printAllocated)}</p>
         </div>
         <div className="rounded-lg bg-neutral-950 px-4 py-3 text-center text-white">
@@ -104,7 +104,7 @@ export function PaidPlan({ plan }) {
       <div className="bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 px-5 py-4 text-white">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-600">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-400 text-neutral-950">
               <CheckCircle2 className="h-5 w-5" />
             </span>
             <div>
@@ -163,7 +163,7 @@ export function PaidPlan({ plan }) {
                 </p>
                 <div className="mt-1.5 flex items-center gap-2">
                   <div className="h-1.5 w-40 overflow-hidden rounded-full bg-neutral-100">
-                    <div className="h-full rounded-full bg-brand-600" style={{ width: `${pct}%` }} />
+                    <div className="h-full rounded-full bg-brand-400" style={{ width: `${pct}%` }} />
                   </div>
                   <span className="text-[11px] text-neutral-400">{pct}% of balance</span>
                 </div>

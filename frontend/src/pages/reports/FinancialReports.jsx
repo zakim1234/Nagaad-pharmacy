@@ -9,7 +9,7 @@ import ReportStatRow from '../../components/reports/ReportStatRow.jsx';
 import EmptyReportState from '../../components/reports/EmptyReportState.jsx';
 import { axisProps, gridProps, compactMoney, ChartTooltip, DonutChart } from '../../components/reports/chartKit.jsx';
 
-const COLORS = ['#dc2626', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#171717'];
+const COLORS = ['#6FA8F5', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#171717'];
 
 export function ExpenseReport({ data }) {
   return (

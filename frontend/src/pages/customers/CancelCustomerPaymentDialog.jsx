@@ -14,11 +14,11 @@ function Choice({ active, onClick, title, text, disabled }) {
       disabled={disabled}
       onClick={onClick}
       className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-        active ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-neutral-200 hover:bg-neutral-50'
+        active ? 'border-brand-400 bg-brand-50/60 ring-1 ring-brand-500' : 'border-neutral-200 hover:bg-neutral-50'
       }`}
     >
-      <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${active ? 'border-brand-600' : 'border-neutral-300'}`}>
-        {active && <span className="h-2 w-2 rounded-full bg-brand-600" />}
+      <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${active ? 'border-brand-400' : 'border-neutral-300'}`}>
+        {active && <span className="h-2 w-2 rounded-full bg-brand-400" />}
       </span>
       <span>
         <span className="block text-sm font-semibold text-neutral-900">{title}</span>

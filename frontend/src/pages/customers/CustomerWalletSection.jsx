@@ -24,11 +24,11 @@ function ChoiceCard({ active, onClick, title, text }) {
       type="button"
       onClick={onClick}
       className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors ${
-        active ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-neutral-200 hover:bg-neutral-50'
+        active ? 'border-brand-400 bg-brand-50/60 ring-1 ring-brand-500' : 'border-neutral-200 hover:bg-neutral-50'
       }`}
     >
-      <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${active ? 'border-brand-600' : 'border-neutral-300'}`}>
-        {active && <span className="h-2 w-2 rounded-full bg-brand-600" />}
+      <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${active ? 'border-brand-400' : 'border-neutral-300'}`}>
+        {active && <span className="h-2 w-2 rounded-full bg-brand-400" />}
       </span>
       <span>
         <span className="block text-sm font-semibold text-neutral-900">{title}</span>
@@ -245,8 +245,8 @@ function PayFromWalletModal({ open, onClose, customerId, walletBalance, customer
             <p className="text-[10px] uppercase tracking-wide text-neutral-500">In wallet</p>
             <p className="text-lg font-bold text-neutral-900">{formatCurrency(walletBalance)}</p>
           </div>
-          <div className="rounded-lg bg-brand-600 px-3 py-2 text-white">
-            <p className="text-[10px] uppercase tracking-wide text-white/75">Debt</p>
+          <div className="rounded-lg bg-brand-400 px-3 py-2 text-neutral-950">
+            <p className="text-[10px] uppercase tracking-wide text-neutral-700">Debt</p>
             <p className="text-lg font-bold">{formatCurrency(customerDebt)}</p>
           </div>
         </div>
@@ -351,7 +351,7 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
             aria-checked={walletAutoPay}
             disabled={togglingAuto}
             onClick={toggleAuto}
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-60 ${walletAutoPay ? 'bg-brand-600' : 'bg-neutral-300'}`}
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-60 ${walletAutoPay ? 'bg-brand-400' : 'bg-neutral-300'}`}
           >
             <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${walletAutoPay ? 'left-5.5' : 'left-0.5'}`} />
           </button>

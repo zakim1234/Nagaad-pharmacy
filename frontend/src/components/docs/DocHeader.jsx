@@ -14,7 +14,7 @@ export default function DocHeader({ title, meta, compact = false }) {
           {BUSINESS.addressLine} · {BUSINESS.phone}
         </p>
       </div>
-      <div className={`${compact ? 'mt-3' : 'mt-4'} h-1 bg-brand-600`} />
+      <div className={`${compact ? 'mt-3' : 'mt-4'} h-1 bg-brand-400`} />
       <div className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 bg-neutral-950 text-white ${compact ? 'px-3 py-1.5' : 'px-4 py-2'}`}>
         <p className={`font-bold uppercase ${compact ? 'text-xs tracking-[0.2em]' : 'text-sm tracking-[0.25em]'}`}>{title}</p>
         {meta && <div className="text-[11px]">{meta}</div>}
@@ -25,7 +25,7 @@ export default function DocHeader({ title, meta, compact = false }) {
 
 // Three totals boxes (white / red / black) used at the bottom of documents.
 export function DocTotals({ items }) {
-  const tone = ['border border-neutral-300 bg-white text-neutral-900', 'bg-brand-600 text-white', 'bg-neutral-950 text-white'];
+  const tone = ['border border-neutral-300 bg-white text-neutral-900', 'bg-brand-400 text-neutral-950', 'bg-neutral-950 text-neutral-950'];
   return (
     <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`, WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
       {items.map(([label, value], i) => (
@@ -86,7 +86,7 @@ export function DocSummary({ lines = [], grand, owed }) {
         </div>
       )}
       {owed && (
-        <div className="mt-1.5 flex justify-between bg-brand-600 px-3 py-2 text-sm font-bold text-white">
+        <div className="mt-1.5 flex justify-between bg-brand-400 px-3 py-2 text-sm font-bold text-neutral-950">
           <span>{owed[0]}</span>
           <span className="tabular-nums">{owed[1]}</span>
         </div>

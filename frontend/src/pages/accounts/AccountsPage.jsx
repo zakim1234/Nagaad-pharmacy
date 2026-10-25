@@ -208,7 +208,7 @@ export default function AccountsPage() {
                         !a.isActive ? 'opacity-60' : ''
                       }`}
                     >
-                      {active && <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-brand-600" />}
+                      {active && <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-brand-400" />}
                       <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${t.tint}`}>
                         <Icon className="h-4 w-4" />
                       </div>

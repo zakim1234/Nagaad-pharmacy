@@ -25,7 +25,7 @@ export default function DateRangeFilter({ range, onRangeChange, from, to, onFrom
               type="button"
               onClick={() => onRangeChange(p.value)}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                active ? 'bg-brand-600 text-white shadow-sm' : 'text-neutral-600 hover:bg-neutral-100'
+                active ? 'bg-brand-400 text-neutral-950 shadow-sm' : 'text-neutral-600 hover:bg-neutral-100'
               }`}
             >
               {p.label}

@@ -40,7 +40,7 @@ export default function PageBranchPicker({ children }) {
         <select
           value={branchId}
           onChange={(e) => choose(e.target.value)}
-          className="min-w-52 cursor-pointer rounded-lg border border-neutral-200/80 bg-white px-3 py-1.5 text-sm font-semibold text-neutral-900 outline-none focus:border-brand-500"
+          className="min-w-52 cursor-pointer rounded-lg border border-neutral-200/80 bg-white px-3 py-1.5 text-sm font-semibold text-neutral-900 outline-none focus:border-brand-400"
         >
           {branches.map((b) => (
             <option key={b.id} value={String(b.id)}>

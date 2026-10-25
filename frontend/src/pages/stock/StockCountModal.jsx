@@ -203,7 +203,7 @@ export default function StockCountModal({ open, onClose, onSaved }) {
                 <select
                   onChange={(e) => e.target.value && setReasonForAll(e.target.value)}
                   value=""
-                  className="rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-brand-500"
+                  className="rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-brand-400"
                 >
                   <option value="">Choose…</option>
                   {(mode === 'INCREASE' ? INCREASE_REASONS : DECREASE_REASONS).map(([value, label]) => (
@@ -215,7 +215,7 @@ export default function StockCountModal({ open, onClose, onSaved }) {
               </label>
             )}
             <label className="flex items-center gap-2 text-sm text-neutral-600">
-              <input type="checkbox" className="h-4 w-4 accent-brand-600" checked={onlyChanged} onChange={(e) => setOnlyChanged(e.target.checked)} />
+              <input type="checkbox" className="h-4 w-4 accent-brand-400" checked={onlyChanged} onChange={(e) => setOnlyChanged(e.target.checked)} />
               Show only changed
             </label>
           </div>
@@ -283,7 +283,7 @@ export default function StockCountModal({ open, onClose, onSaved }) {
                         <select
                           value={r.reason}
                           onChange={(e) => setRow(r.id, { reason: e.target.value })}
-                          className="w-full rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-brand-500"
+                          className="w-full rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-brand-400"
                           aria-label={`Reason for ${r.name}`}
                         >
                           {reasonOptions(r.diff).map(([value, label]) => (

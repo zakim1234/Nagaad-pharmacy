@@ -234,7 +234,7 @@ export default function UsersPage() {
                       <button
                         type="button"
                         onClick={() => togglePerm(u, key, what)}
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${u.permissions.includes(key) ? 'bg-brand-600 text-white hover:bg-brand-700' : 'border border-neutral-200 text-neutral-500 hover:bg-neutral-50'}`}
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${u.permissions.includes(key) ? 'bg-brand-400 text-neutral-950 hover:bg-brand-300' : 'border border-neutral-200 text-neutral-500 hover:bg-neutral-50'}`}
                       >
                         {u.permissions.includes(key) ? 'On — click to turn off' : 'Off — click to allow'}
                       </button>

@@ -127,7 +127,7 @@ function SidebarContent({ onNavigate }) {
                 >
                   {({ isActive }) => (
                     <>
-                      <span className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full ${isActive ? 'bg-brand-500' : 'bg-transparent'}`} />
+                      <span className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full ${isActive ? 'bg-brand-400' : 'bg-transparent'}`} />
                       <Icon className={`h-[17px] w-[17px] shrink-0 ${isActive ? 'text-brand-400' : 'text-neutral-500 group-hover:text-neutral-300'}`} />
                       <span className="truncate">{label}</span>
                     </>
@@ -141,7 +141,7 @@ function SidebarContent({ onNavigate }) {
 
       <div className="border-t border-white/[0.06] p-3">
         <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-bold text-white">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-300 to-brand-400 text-xs font-bold text-neutral-950">
             {user?.name?.slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">

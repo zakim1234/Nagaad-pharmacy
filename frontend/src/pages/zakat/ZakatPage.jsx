@@ -74,15 +74,15 @@ function ZakatCalculator({ onConfirmed }) {
       type="button"
       onClick={() => setDeductionMode(value)}
       className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors ${
-        deductionMode === value ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-neutral-200 hover:bg-neutral-50'
+        deductionMode === value ? 'border-brand-400 bg-brand-50/60 ring-1 ring-brand-500' : 'border-neutral-200 hover:bg-neutral-50'
       }`}
     >
       <span
         className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
-          deductionMode === value ? 'border-brand-600' : 'border-neutral-300'
+          deductionMode === value ? 'border-brand-400' : 'border-neutral-300'
         }`}
       >
-        {deductionMode === value && <span className="h-2 w-2 rounded-full bg-brand-600" />}
+        {deductionMode === value && <span className="h-2 w-2 rounded-full bg-brand-400" />}
       </span>
       <span>
         <span className="block text-sm font-semibold text-neutral-900">{title}</span>
@@ -136,7 +136,7 @@ function ZakatCalculator({ onConfirmed }) {
             />
           </label>
           <label className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-white/15 px-3 py-2 text-sm">
-            <input type="checkbox" className="h-4 w-4 accent-brand-600" checked={includeFixedAssets} onChange={(e) => setIncludeFixedAssets(e.target.checked)} />
+            <input type="checkbox" className="h-4 w-4 accent-brand-400" checked={includeFixedAssets} onChange={(e) => setIncludeFixedAssets(e.target.checked)} />
             Include Fixed Assets
           </label>
         </div>
@@ -170,7 +170,7 @@ function ZakatCalculator({ onConfirmed }) {
                 <span className="text-sm font-semibold text-neutral-700">Net zakatable wealth</span>
                 <span className="text-lg font-bold tabular-nums text-neutral-900">{formatCurrency(preview.netZakatableWealth)}</span>
               </div>
-              <div className="flex items-center justify-between rounded-xl bg-brand-600 px-4 py-3 text-white">
+              <div className="flex items-center justify-between rounded-xl bg-brand-400 px-4 py-3 text-neutral-950">
                 <span className="text-sm font-semibold">× {preview.ratePct}% = Zakat due</span>
                 <span className="text-xl font-bold figure">{formatCurrency(preview.zakatDue)}</span>
               </div>

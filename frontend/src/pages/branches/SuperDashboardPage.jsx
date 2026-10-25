@@ -9,7 +9,7 @@ import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import { ChartTooltip, axisProps, compactMoney } from '../../components/reports/chartKit.jsx';
 
 // Branch series in the house colours: red first, then black and greys.
-const SERIES = ['#dc2626', '#171717', '#737373', '#a3a3a3', '#d4d4d4', '#991b1b', '#404040'];
+const SERIES = ['#6FA8F5', '#171717', '#737373', '#a3a3a3', '#d4d4d4', '#CFE2FF', '#404040'];
 
 function greeting() {
   const h = new Date().getHours();
@@ -98,12 +98,12 @@ export default function SuperDashboardPage() {
                 <AreaChart data={companyDaily} margin={{ left: 0, right: 0, top: 6, bottom: 0 }}>
                   <defs>
                     <linearGradient id="heroFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#ef4444" stopOpacity={0.45} />
-                      <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#9EC5FE" stopOpacity={0.45} />
+                      <stop offset="100%" stopColor="#9EC5FE" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.2)' }} />
-                  <Area type="monotone" dataKey="sales" name="Sales" stroke="#ef4444" strokeWidth={2.5} fill="url(#heroFill)" isAnimationActive={false} />
+                  <Area type="monotone" dataKey="sales" name="Sales" stroke="#9EC5FE" strokeWidth={2.5} fill="url(#heroFill)" isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -119,7 +119,7 @@ export default function SuperDashboardPage() {
               <span className="figure font-bold text-neutral-900">{formatCurrency(totals.monthProfit)}</span>
             </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-neutral-100">
-              <div className="h-full rounded-full bg-brand-600" style={{ width: `${Math.min(100, Math.max(0, margin))}%` }} />
+              <div className="h-full rounded-full bg-brand-400" style={{ width: `${Math.min(100, Math.max(0, margin))}%` }} />
             </div>
             <p className="mt-1.5 text-xs text-neutral-400">{margin}% margin</p>
           </section>
@@ -160,7 +160,7 @@ export default function SuperDashboardPage() {
                 return (
                   <tr key={b.branchId} className={`border-b border-neutral-100 last:border-0 ${b.active ? '' : 'opacity-50'}`}>
                     <td className="px-6 py-3.5">
-                      <span className={`figure flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${i === 0 ? 'bg-brand-600 text-white' : 'bg-neutral-100 text-neutral-600'}`}>{i + 1}</span>
+                      <span className={`figure flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${i === 0 ? 'bg-brand-400 text-neutral-950' : 'bg-neutral-100 text-neutral-600'}`}>{i + 1}</span>
                     </td>
                     <td className="px-3 py-3.5">
                       <p className="font-semibold text-neutral-950">{b.name}</p>
@@ -183,7 +183,7 @@ export default function SuperDashboardPage() {
                     <td className="px-3 py-3.5">
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-100">
-                          <div className={`h-full rounded-full ${i === 0 ? 'bg-brand-600' : 'bg-neutral-900'}`} style={{ width: `${share}%` }} />
+                          <div className={`h-full rounded-full ${i === 0 ? 'bg-brand-400' : 'bg-neutral-900'}`} style={{ width: `${share}%` }} />
                         </div>
                         <span className="figure w-9 text-right text-xs font-semibold text-neutral-500">{share}%</span>
                       </div>

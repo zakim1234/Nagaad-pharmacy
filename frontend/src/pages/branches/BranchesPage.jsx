@@ -74,7 +74,7 @@ export default function BranchesPage() {
                     setSelectedBranch(String(b.id));
                     window.location.href = '/dashboard';
                   }}
-                  className="rounded-lg bg-brand-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
+                  className="rounded-lg bg-brand-400 px-2.5 py-1.5 text-xs font-semibold text-neutral-950 hover:bg-brand-300"
                 >
                   Open branch
                 </button>

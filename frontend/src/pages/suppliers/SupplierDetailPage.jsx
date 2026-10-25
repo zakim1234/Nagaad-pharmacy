@@ -128,7 +128,7 @@ export default function SupplierDetailPage() {
                 <Tooltip />
                 <Legend />
                 <Bar dataKey="Purchased" fill="#94a3b8" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="Sold" fill="#dc2626" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Sold" fill="#6FA8F5" radius={[3, 3, 0, 0]} />
                 <Bar dataKey="Remaining" fill="#10b981" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

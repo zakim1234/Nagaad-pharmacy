@@ -147,7 +147,7 @@ export default function ReportsPage() {
       {/* Hero: which report is open, for which period */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 p-6 text-white shadow-lg shadow-black/20 no-print">
         <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-red-600/25 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-brand-400/25 blur-3xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25 backdrop-blur">
@@ -201,7 +201,7 @@ export default function ReportsPage() {
                     onClick={() => setTab(key)}
                     className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                       active
-                        ? 'border-brand-600 bg-brand-600 text-white shadow-sm'
+                        ? 'border-brand-400 bg-brand-400 text-neutral-950 shadow-sm'
                         : 'border-neutral-200 text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
                     }`}
                   >
@@ -297,7 +297,7 @@ const dayTick = (d) => String(d).slice(5);
 
 // A ranked list with proportional bars -- reads faster than a horizontal
 // bar chart for "top N" lists, and prints cleanly.
-function RankedBars({ rows, valueKey, nameKey = 'name', money = false, color = 'from-red-500 to-red-700', suffix = '' }) {
+function RankedBars({ rows, valueKey, nameKey = 'name', money = false, color = 'from-brand-300 to-brand-400', suffix = '' }) {
   const max = Math.max(...rows.map((r) => Math.abs(r[valueKey]) || 0), 1);
   return (
     <ul className="space-y-3">
@@ -527,7 +527,7 @@ function ProfitReport({ data, onDrilldown }) {
           {data.topProfitItems.length === 0 ? (
             <EmptyReportState message="No sales found for this date range." />
           ) : (
-            <RankedBars rows={data.topProfitItems} valueKey="profit" money color="from-brand-500 to-brand-700" />
+            <RankedBars rows={data.topProfitItems} valueKey="profit" money color="from-brand-300 to-brand-400" />
           )}
         </ReportSection>
 
@@ -727,7 +727,7 @@ function UserPerformancePicker({ userId, onUserChange }) {
         id="perf-user-select"
         value={userId}
         onChange={(e) => onUserChange(e.target.value)}
-        className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
+        className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm focus:border-brand-400 focus:outline-none"
       >
         <option value="">— Choose a user —</option>
         {(users || []).map((u) => (

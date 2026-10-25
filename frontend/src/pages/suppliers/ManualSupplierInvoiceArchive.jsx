@@ -149,7 +149,7 @@ export default function ManualSupplierInvoiceArchive() {
                     type="button"
                     disabled={sending === a.id}
                     onClick={() => sendToPurchases(a)}
-                    className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+                    className="inline-flex items-center gap-1 rounded-md bg-brand-400 px-2.5 py-1.5 text-[11px] font-semibold text-neutral-950 hover:bg-brand-300 disabled:opacity-60"
                   >
                     <ArrowRightLeft className="h-3.5 w-3.5" /> {sending === a.id ? 'Adding…' : 'Add to Purchase Invoices'}
                   </button>

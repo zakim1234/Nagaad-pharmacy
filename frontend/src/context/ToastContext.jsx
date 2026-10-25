@@ -42,7 +42,7 @@ export function ToastProvider({ children }) {
               t.type === 'success'
                 ? 'bg-emerald-600 text-white'
                 : t.type === 'error'
-                ? 'bg-brand-600 text-white'
+                ? 'bg-brand-400 text-neutral-950'
                 : 'bg-neutral-800 text-white'
             }`}
           >

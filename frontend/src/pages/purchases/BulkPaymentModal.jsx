@@ -179,7 +179,7 @@ export default function BulkPaymentModal({ open, onClose, onPaid, initialSupplie
                   const p = preview.find((x) => x.id === inv.id);
                   return (
                     <li key={inv.id} className="flex items-center gap-3 px-3 py-2.5 text-sm">
-                      <input type="checkbox" className="h-4 w-4 accent-brand-600" checked={selected.has(inv.id)} onChange={() => toggle(inv.id)} aria-label={`Include ${inv.purchaseNumber}`} />
+                      <input type="checkbox" className="h-4 w-4 accent-brand-400" checked={selected.has(inv.id)} onChange={() => toggle(inv.id)} aria-label={`Include ${inv.purchaseNumber}`} />
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-neutral-800">{inv.purchaseNumber}</p>
                         <p className="text-xs text-neutral-400">
@@ -223,7 +223,7 @@ export default function BulkPaymentModal({ open, onClose, onPaid, initialSupplie
                       pickPct(pct);
                     }}
                     className={`rounded-lg border px-3.5 py-1.5 text-sm font-semibold transition ${
-                      percentage === pct && customPct === '' ? 'border-brand-600 bg-brand-600 text-white' : 'border-neutral-200 text-neutral-600 hover:bg-brand-50'
+                      percentage === pct && customPct === '' ? 'border-brand-400 bg-brand-400 text-neutral-950' : 'border-neutral-200 text-neutral-600 hover:bg-brand-50'
                     }`}
                   >
                     {pct}%

@@ -189,7 +189,7 @@ export default function CustomerDetailPage() {
       {/* Profile + stats */}
       <section className="overflow-hidden rounded-2xl border border-neutral-200/70 bg-white no-print">
         <div className="flex flex-wrap items-center gap-4 border-b border-neutral-100 bg-gradient-to-r from-brand-50/70 via-white to-white px-6 py-5">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-red-700 text-lg font-bold text-white shadow-md">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-300 to-brand-400 text-lg font-bold text-neutral-950 shadow-md">
             {initials(customer.name)}
           </div>
           <div className="min-w-0 flex-1">
@@ -546,7 +546,7 @@ export default function CustomerDetailPage() {
                 const increases = t.amount > 0;
                 return (
                   <li key={t.id} className="ml-5 py-3">
-                    <span className={`absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full ring-4 ring-white ${increases ? 'bg-brand-500' : 'bg-emerald-500'}`} />
+                    <span className={`absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full ring-4 ring-white ${increases ? 'bg-brand-400' : 'bg-emerald-500'}`} />
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <Badge color={meta.color}>{meta.label}</Badge>
@@ -744,10 +744,10 @@ function ReverseMessage({ sale, refundTo, onRefundTo }) {
       tabIndex={0}
       onClick={() => onRefundTo(value)}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onRefundTo(value)}
-      className={`mt-1.5 flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${refundTo === value ? 'border-brand-500 bg-brand-50/60 font-semibold text-neutral-900' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
+      className={`mt-1.5 flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${refundTo === value ? 'border-brand-400 bg-brand-50/60 font-semibold text-neutral-900' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
     >
-      <span className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${refundTo === value ? 'border-brand-600' : 'border-neutral-300'}`}>
-        {refundTo === value && <span className="h-2 w-2 rounded-full bg-brand-600" />}
+      <span className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${refundTo === value ? 'border-brand-400' : 'border-neutral-300'}`}>
+        {refundTo === value && <span className="h-2 w-2 rounded-full bg-brand-400" />}
       </span>
       {title}
     </span>

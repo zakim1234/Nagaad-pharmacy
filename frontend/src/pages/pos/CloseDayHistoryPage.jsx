@@ -30,7 +30,7 @@ import Pagination from '../../components/ui/Pagination.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import TodayClosingPanel from './TodayClosingPanel.jsx';
 
-const SALES_COLOR = '#dc2626';
+const SALES_COLOR = '#6FA8F5';
 const NET_COLOR = '#10b981';
 
 function dayLabel(date) {
@@ -121,7 +121,7 @@ export default function CloseDayHistoryPage() {
       {/* Hero: the most recent closed day */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 p-6 text-white shadow-lg shadow-black/20 sm:p-7">
         <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-red-600/25 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-brand-400/25 blur-3xl" />
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="flex items-center gap-1.5 text-sm text-white/70">
@@ -284,7 +284,7 @@ function DayCard({ day, open, onToggle, isAdmin, onReopen }) {
     <div className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition ${open ? 'border-brand-200 ring-1 ring-brand-100' : 'border-neutral-200/70 hover:shadow-md'}`}>
       <button onClick={onToggle} className="flex w-full flex-wrap items-center gap-4 p-4 text-left sm:p-5">
         {/* Date block */}
-        <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-red-700 text-white shadow-md">
+        <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-brand-300 to-brand-400 text-neutral-950 shadow-md">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-white/70">{date.toLocaleDateString(undefined, { month: 'short' })}</span>
           <span className="text-2xl font-bold leading-none">{date.getDate()}</span>
         </div>
@@ -297,7 +297,7 @@ function DayCard({ day, open, onToggle, isAdmin, onReopen }) {
           </p>
           <div className="mt-2 flex items-center gap-2">
             <div className="h-1.5 w-32 overflow-hidden rounded-full bg-neutral-100">
-              <div className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-700" style={{ width: `${margin}%` }} />
+              <div className="h-full rounded-full bg-gradient-to-r from-brand-300 to-brand-400" style={{ width: `${margin}%` }} />
             </div>
             <span className="text-[11px] font-medium text-neutral-500">{margin}% net margin</span>
           </div>
@@ -320,7 +320,7 @@ function DayCard({ day, open, onToggle, isAdmin, onReopen }) {
           <p className="text-sm text-neutral-500">Each item sold this day: quantity, cost, selling price and profit.</p>
           <Link
             to={`/daily-closing/items?date=${encodeURIComponent(day.businessDate)}`}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-400 px-3 py-2 text-sm font-semibold text-neutral-950 shadow-sm hover:bg-brand-300"
           >
             <PackageCheck className="h-4 w-4" /> Items sold report
           </Link>
@@ -358,7 +358,7 @@ function DayCard({ day, open, onToggle, isAdmin, onReopen }) {
                     </div>
                     <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-red-500 to-red-700"
+                        className="h-full rounded-full bg-gradient-to-r from-brand-300 to-brand-400"
                         style={{ width: `${day.cashCollected > 0 ? (p.amount / day.cashCollected) * 100 : 0}%` }}
                       />
                     </div>
@@ -373,7 +373,7 @@ function DayCard({ day, open, onToggle, isAdmin, onReopen }) {
             <ol className="relative ml-1.5 border-l border-neutral-200">
               {day.closes.map((c, i) => (
                 <li key={c.id} className="relative pb-4 pl-5 last:pb-0">
-                  <span className="absolute -left-[6px] top-1 h-3 w-3 rounded-full bg-brand-500 ring-4 ring-white" />
+                  <span className="absolute -left-[6px] top-1 h-3 w-3 rounded-full bg-brand-400 ring-4 ring-white" />
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-800">
@@ -432,11 +432,11 @@ function DayCard({ day, open, onToggle, isAdmin, onReopen }) {
 }
 
 const TONES = {
-  indigo: { chip: 'from-red-500 to-red-700', glow: 'bg-brand-400/15', soft: 'bg-brand-50 text-brand-600' },
+  indigo: { chip: 'from-brand-300 to-brand-400', glow: 'bg-brand-400/15', soft: 'bg-brand-50 text-brand-600' },
   emerald: { chip: 'from-neutral-700 to-neutral-950', glow: 'bg-neutral-400/15', soft: 'bg-emerald-50 text-emerald-600' },
   teal: { chip: 'from-neutral-700 to-neutral-950', glow: 'bg-neutral-400/15', soft: 'bg-neutral-50 text-neutral-600' },
   amber: { chip: 'from-neutral-400 to-neutral-600', glow: 'bg-neutral-300/20', soft: 'bg-amber-50 text-amber-600' },
-  rose: { chip: 'from-red-500 to-red-700', glow: 'bg-brand-400/15', soft: 'bg-brand-50 text-brand-600' },
+  rose: { chip: 'from-brand-300 to-brand-400', glow: 'bg-brand-400/15', soft: 'bg-brand-50 text-brand-600' },
 };
 
 // Flat figure card: small grey icon, big number (red only when it means a loss).

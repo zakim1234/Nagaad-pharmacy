@@ -77,7 +77,7 @@ export default function SupplierStatementPage() {
           </p>
         </div>
 
-        <div className="mt-4 h-1 bg-brand-600" />
+        <div className="mt-4 h-1 bg-brand-400" />
         <div className="flex flex-wrap items-center justify-between gap-2 bg-neutral-950 px-4 py-2 text-white">
           <p className="text-sm font-bold uppercase tracking-[0.25em]">Supplier Statement</p>
           <p className="text-[11px]">
@@ -166,8 +166,8 @@ export default function SupplierStatementPage() {
             <p className="text-[10px] uppercase tracking-wider text-neutral-500">Total goods taken</p>
             <p className="mt-1 text-lg font-bold">{formatCurrency(totals.bought)}</p>
           </div>
-          <div className="rounded-lg bg-brand-600 px-4 py-3 text-center text-white">
-            <p className="text-[10px] uppercase tracking-wider text-white/80">Total paid</p>
+          <div className="rounded-lg bg-brand-400 px-4 py-3 text-center text-neutral-950">
+            <p className="text-[10px] uppercase tracking-wider text-neutral-700">Total paid</p>
             <p className="mt-1 text-lg font-bold">{formatCurrency(totals.paid)}</p>
           </div>
           <div className="rounded-lg bg-neutral-950 px-4 py-3 text-center text-white">

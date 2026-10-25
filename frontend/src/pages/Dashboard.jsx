@@ -24,7 +24,7 @@ import { PageSpinner } from '../components/ui/Spinner.jsx';
 
 // House colours: sales in black, profit in red.
 const REVENUE_COLOR = '#171717';
-const PROFIT_COLOR = '#dc2626';
+const PROFIT_COLOR = '#6FA8F5';
 const DISPLAY = { fontFamily: 'var(--font-display)' };
 
 function greeting() {
@@ -102,7 +102,7 @@ export default function Dashboard() {
                 key={to}
                 to={to}
                 className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
-                  primary ? 'bg-brand-600 text-white hover:bg-brand-700' : 'border border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
+                  primary ? 'bg-brand-400 text-neutral-950 hover:bg-brand-300' : 'border border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
                 }`}
               >
                 <Icon className="h-4 w-4" /> {label}
@@ -135,12 +135,12 @@ export default function Dashboard() {
                 <AreaChart data={charts.dailySales} margin={{ left: 0, right: 0, top: 6, bottom: 0 }}>
                   <defs>
                     <linearGradient id="branchHero" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#ef4444" stopOpacity={0.45} />
-                      <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#9EC5FE" stopOpacity={0.45} />
+                      <stop offset="100%" stopColor="#9EC5FE" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <Tooltip content={<MoneyTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.2)' }} />
-                  <Area type="monotone" dataKey="revenue" name="Sales" stroke="#ef4444" strokeWidth={2.5} fill="url(#branchHero)" isAnimationActive={false} />
+                  <Area type="monotone" dataKey="revenue" name="Sales" stroke="#9EC5FE" strokeWidth={2.5} fill="url(#branchHero)" isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -156,7 +156,7 @@ export default function Dashboard() {
               <span className="figure font-bold text-neutral-900">{formatCurrency(thisMonth.profit)}</span>
             </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-neutral-100">
-              <div className="h-full rounded-full bg-brand-600" style={{ width: `${Math.min(100, Math.max(0, monthMargin))}%` }} />
+              <div className="h-full rounded-full bg-brand-400" style={{ width: `${Math.min(100, Math.max(0, monthMargin))}%` }} />
             </div>
             <p className="mt-1.5 text-xs text-neutral-400">{monthMargin}% margin</p>
           </section>
@@ -307,7 +307,7 @@ function SmallFigure({ label, value, hint, to }) {
 function HealthTile({ label, value, hint, icon: Icon, alert = false }) {
   return (
     <Link to="/inventory" className="group flex items-center gap-4 bg-white p-5 transition-colors hover:bg-neutral-50">
-      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${alert ? 'bg-brand-600 text-white' : 'bg-neutral-100 text-neutral-500'}`}>
+      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${alert ? 'bg-brand-400 text-neutral-950' : 'bg-neutral-100 text-neutral-500'}`}>
         <Icon className="h-5 w-5" />
       </span>
       <span className="min-w-0">
@@ -373,7 +373,7 @@ function TopSellingList({ rows }) {
     <ul className="space-y-4">
       {rows.map((r, i) => (
         <li key={r.name} className="flex items-center gap-3">
-          <span className={`figure flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${i === 0 ? 'bg-brand-600 text-white' : 'bg-neutral-100 text-neutral-600'}`}>
+          <span className={`figure flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${i === 0 ? 'bg-brand-400 text-neutral-950' : 'bg-neutral-100 text-neutral-600'}`}>
             {i + 1}
           </span>
           <div className="min-w-0 flex-1">
@@ -382,7 +382,7 @@ function TopSellingList({ rows }) {
               <p className="figure shrink-0 text-xs font-semibold text-neutral-500">{r.quantity} sold</p>
             </div>
             <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
-              <div className={`h-full rounded-full ${i === 0 ? 'bg-brand-600' : 'bg-neutral-900'}`} style={{ width: `${(r.quantity / max) * 100}%` }} />
+              <div className={`h-full rounded-full ${i === 0 ? 'bg-brand-400' : 'bg-neutral-900'}`} style={{ width: `${(r.quantity / max) * 100}%` }} />
             </div>
           </div>
         </li>

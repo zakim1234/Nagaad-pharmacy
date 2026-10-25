@@ -3,10 +3,10 @@
 const ACCENTS = {
   'text-emerald-600': 'bg-emerald-500',
   'text-amber-600': 'bg-amber-500',
-  'text-brand-600': 'bg-brand-500',
-  'text-brand-600': 'bg-brand-500',
-  // Plain totals: black figure, red brand accent bar.
-  'text-neutral-900': 'bg-brand-600',
+  'text-brand-600': 'bg-brand-400',
+  'text-brand-600': 'bg-brand-400',
+  // Plain totals: black figure, blue brand accent bar.
+  'text-neutral-900': 'bg-brand-400',
   'text-neutral-600': 'bg-neutral-500',
 };
 

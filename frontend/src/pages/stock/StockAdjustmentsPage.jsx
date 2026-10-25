@@ -498,16 +498,16 @@ function NewAdjustmentModal({ open, onClose, onSaved }) {
 }
 
 const TONES = {
-  rose: 'from-red-500 to-red-700',
-  emerald: 'from-neutral-700 to-neutral-950',
-  amber: 'from-neutral-400 to-neutral-600',
-  indigo: 'from-red-500 to-red-700',
+  rose: 'from-brand-300 to-brand-400 text-neutral-950',
+  emerald: 'from-neutral-700 to-neutral-950 text-white',
+  amber: 'from-neutral-400 to-neutral-600 text-white',
+  indigo: 'from-brand-300 to-brand-400 text-neutral-950',
 };
 
 function SummaryCard({ icon: Icon, tone, label, value, hint }) {
   return (
     <div className="flex items-center gap-4 rounded-2xl border border-neutral-200/70 bg-white p-5">
-      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${TONES[tone]} text-white shadow-md`}>
+      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${TONES[tone]} shadow-md`}>
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">

@@ -51,7 +51,7 @@ export default function ItemsSoldPage() {
             key={t.type}
             type="button"
             onClick={() => setParams({ type: t.type })}
-            className={`rounded-md px-4 py-1.5 text-sm font-semibold transition ${type === t.type ? 'bg-brand-600 text-white' : 'text-neutral-600 hover:bg-neutral-50'}`}
+            className={`rounded-md px-4 py-1.5 text-sm font-semibold transition ${type === t.type ? 'bg-brand-400 text-neutral-950' : 'text-neutral-600 hover:bg-neutral-50'}`}
           >
             {t.label}
           </button>

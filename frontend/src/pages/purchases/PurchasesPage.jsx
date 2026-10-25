@@ -275,7 +275,7 @@ export default function PurchasesPage() {
             <div className="mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 text-white shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-600 text-sm font-bold">{initials(selected.name)}</span>
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-400 text-sm font-bold text-neutral-950">{initials(selected.name)}</span>
                   <div>
                     <h2 className="text-lg font-bold">{selected.name}</h2>
                     <p className="text-xs text-neutral-400">

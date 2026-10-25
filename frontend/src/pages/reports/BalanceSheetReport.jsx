@@ -28,7 +28,7 @@ function Amount({ value }) {
 }
 
 function SummaryCard({ label, value, tone }) {
-  const styles = tone === 'red' ? 'bg-brand-600 text-white' : tone === 'black' ? 'bg-neutral-950 text-white' : 'border border-neutral-300 bg-white';
+  const styles = tone === 'red' ? 'bg-brand-400 text-neutral-950' : tone === 'black' ? 'bg-neutral-950 text-white' : 'border border-neutral-300 bg-white';
   return (
     <div className={`rounded-xl px-4 py-3 text-center ${styles}`}>
       <p className={`text-[10px] uppercase tracking-wider ${tone ? 'text-white/70' : 'text-neutral-500'}`}>{label}</p>
@@ -176,7 +176,7 @@ export default function BalanceSheetReport() {
             </p>
           </div>
 
-          <div className="mt-4 h-1 bg-brand-600" />
+          <div className="mt-4 h-1 bg-brand-400" />
           <div className="flex flex-wrap items-center justify-between gap-2 bg-neutral-950 px-4 py-2 text-white">
             <p className="text-sm font-bold uppercase tracking-[0.25em]">
               Balance Sheet{allBranches && <span className="ml-2 tracking-wider text-brand-300">· All branches</span>}
