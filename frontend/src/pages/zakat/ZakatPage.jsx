@@ -94,7 +94,7 @@ function ZakatCalculator({ onConfirmed }) {
   return (
     <div className="space-y-4">
       {/* Hero: the answer first, with the settings that change it. */}
-      <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 text-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl surface-blue text-white shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-6 px-6 pt-5">
           <div>
             <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-neutral-400">
@@ -195,7 +195,7 @@ function ZakatCalculator({ onConfirmed }) {
                       </div>
                       <div className="mt-1.5 flex items-center gap-2">
                         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-100">
-                          <div className="h-full rounded-full bg-neutral-900" style={{ width: `${Math.min(100, b.equityPct)}%` }} />
+                          <div className="h-full rounded-full bg-brand-400" style={{ width: `${Math.min(100, b.equityPct)}%` }} />
                         </div>
                         <span className="w-12 text-right text-xs text-neutral-500">{b.equityPct}%</span>
                       </div>

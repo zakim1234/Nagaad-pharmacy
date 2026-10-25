@@ -51,7 +51,7 @@ export default function SupplierStatementPage() {
               <button
                 key={key}
                 onClick={() => setFilter(key)}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold ${filter === key ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:text-neutral-800'}`}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold ${filter === key ? 'bg-brand-400 text-neutral-950' : 'text-neutral-500 hover:text-neutral-800'}`}
               >
                 {label}
               </button>
@@ -78,7 +78,7 @@ export default function SupplierStatementPage() {
         </div>
 
         <div className="mt-4 h-1 bg-brand-400" />
-        <div className="flex flex-wrap items-center justify-between gap-2 bg-neutral-950 px-4 py-2 text-white">
+        <div className="flex flex-wrap items-center justify-between gap-2 surface-blue px-4 py-2 text-white">
           <p className="text-sm font-bold uppercase tracking-[0.25em]">Supplier Statement</p>
           <p className="text-[11px]">
             Date: <span className="font-semibold">{formatDate(data.asOf)}</span>
@@ -170,7 +170,7 @@ export default function SupplierStatementPage() {
             <p className="text-[10px] uppercase tracking-wider text-neutral-700">Total paid</p>
             <p className="mt-1 text-lg font-bold">{formatCurrency(totals.paid)}</p>
           </div>
-          <div className="rounded-lg bg-neutral-950 px-4 py-3 text-center text-white">
+          <div className="rounded-lg surface-blue px-4 py-3 text-center text-white">
             <p className="text-[10px] uppercase tracking-wider text-neutral-400">Remaining owed</p>
             <p className="mt-1 text-lg font-bold">{formatCurrency(totals.remaining)}</p>
           </div>

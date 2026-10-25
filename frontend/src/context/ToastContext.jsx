@@ -43,7 +43,7 @@ export function ToastProvider({ children }) {
                 ? 'bg-emerald-600 text-white'
                 : t.type === 'error'
                 ? 'bg-brand-400 text-neutral-950'
-                : 'bg-neutral-800 text-white'
+                : 'surface-blue'
             }`}
           >
             {t.message}

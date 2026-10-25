@@ -37,7 +37,7 @@ export default function Login() {
   return (
     <div className="grid min-h-screen bg-[#f6f6f4] lg:grid-cols-[1.05fr_1fr]">
       {/* Brand panel */}
-      <div className="relative hidden overflow-hidden bg-neutral-950 p-12 text-white lg:flex lg:flex-col lg:justify-between">
+      <div className="relative hidden overflow-hidden surface-blue p-12 text-white lg:flex lg:flex-col lg:justify-between">
         <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-brand-600/25 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-40 right-0 h-96 w-96 rounded-full bg-brand-700/15 blur-3xl" />
         <div className="relative flex items-center gap-3">
@@ -62,7 +62,7 @@ export default function Login() {
       <div className="flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         {/* Phones and tablets: the black brand panel becomes a header card. */}
-        <div className="relative mb-8 overflow-hidden rounded-3xl bg-neutral-950 p-6 text-white lg:hidden">
+        <div className="relative mb-8 overflow-hidden rounded-3xl surface-blue p-6 text-white lg:hidden">
           <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-brand-600/30 blur-3xl" />
           <div className="relative flex items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white p-1.5">

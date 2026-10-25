@@ -29,7 +29,7 @@ import AccountFormModal from './AccountFormModal.jsx';
 // A soft tint per account type -- just enough colour to tell them apart.
 const TYPES = {
   MOBILE_MONEY: { label: 'Mobile Money', icon: Smartphone, tint: 'bg-brand-50 text-brand-600' },
-  BANK: { label: 'Bank', icon: Landmark, tint: 'bg-neutral-900 text-white' },
+  BANK: { label: 'Bank', icon: Landmark, tint: 'surface-blue' },
   MERCHANT: { label: 'Merchant', icon: Store, tint: 'bg-neutral-100 text-neutral-700' },
   OTHER: { label: 'Other', icon: CircleDollarSign, tint: 'bg-neutral-100 text-neutral-500' },
 };
@@ -168,7 +168,7 @@ export default function AccountsPage() {
       {/* Summary strip */}
       <div className="grid grid-cols-2 divide-neutral-100 rounded-2xl border border-neutral-200/70 bg-white lg:grid-cols-4 lg:divide-x">
         <Summary label="Total balance" value={formatCurrency(data.totalBalance)} valueClass={data.totalBalance < 0 ? 'text-brand-600' : 'text-neutral-900'} icon={Wallet} tint="bg-brand-50 text-brand-600" />
-        <Summary label="Accounts" value={`${activeCount} active`} hint={data.accounts.length > activeCount ? `${data.accounts.length - activeCount} inactive` : null} icon={Landmark} tint="bg-neutral-900 text-white" />
+        <Summary label="Accounts" value={`${activeCount} active`} hint={data.accounts.length > activeCount ? `${data.accounts.length - activeCount} inactive` : null} icon={Landmark} tint="surface-blue" />
         <Summary label="Money in" value={totals ? formatCurrency(totals.in) : '—'} hint={periodLabel} icon={ArrowDownLeft} tint="bg-emerald-50 text-emerald-600" />
         <Summary label="Money out" value={totals ? formatCurrency(totals.out) : '—'} hint={periodLabel} icon={ArrowUpRight} tint="bg-brand-50 text-brand-600" />
       </div>

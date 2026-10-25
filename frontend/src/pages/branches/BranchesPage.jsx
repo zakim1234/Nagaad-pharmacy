@@ -53,7 +53,7 @@ export default function BranchesPage() {
         {branches.map((b) => (
           <div key={b.id} className={`rounded-2xl border bg-white p-4 shadow-sm ${b.active ? 'border-neutral-200' : 'border-dashed border-neutral-300 opacity-70'}`}>
             <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-950 text-white">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl surface-blue text-white">
                 <Store className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">

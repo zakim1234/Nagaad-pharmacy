@@ -19,7 +19,7 @@ export default function Modal({ open, onClose, title, children, footer, size = '
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print">
-      <div className="absolute inset-0 bg-neutral-950/50 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="absolute inset-0 surface-blue/50 backdrop-blur-[2px]" onClick={onClose} />
       <div
         className={`relative z-10 w-full ${widths[size]} max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl ring-1 ring-black/5`}
       >

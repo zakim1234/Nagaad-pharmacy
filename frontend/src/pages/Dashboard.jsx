@@ -23,7 +23,7 @@ import { stockStatusBadge } from '../components/ui/Badge.jsx';
 import { PageSpinner } from '../components/ui/Spinner.jsx';
 
 // House colours: sales in black, profit in red.
-const REVENUE_COLOR = '#171717';
+const REVENUE_COLOR = '#24548F';
 const PROFIT_COLOR = '#6FA8F5';
 const DISPLAY = { fontFamily: 'var(--font-display)' };
 
@@ -114,7 +114,7 @@ export default function Dashboard() {
 
       {/* Today + this month */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <section className="relative overflow-hidden rounded-3xl bg-neutral-950 p-6 text-white xl:col-span-2 sm:p-7">
+        <section className="relative overflow-hidden rounded-3xl surface-blue p-6 text-white xl:col-span-2 sm:p-7">
           <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand-600/20 blur-3xl" />
           <div className="relative grid gap-6 md:grid-cols-[1fr_1.1fr] md:items-end">
             <div>
@@ -135,12 +135,12 @@ export default function Dashboard() {
                 <AreaChart data={charts.dailySales} margin={{ left: 0, right: 0, top: 6, bottom: 0 }}>
                   <defs>
                     <linearGradient id="branchHero" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#9EC5FE" stopOpacity={0.45} />
-                      <stop offset="100%" stopColor="#9EC5FE" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.7} />
+                      <stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <Tooltip content={<MoneyTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.2)' }} />
-                  <Area type="monotone" dataKey="revenue" name="Sales" stroke="#9EC5FE" strokeWidth={2.5} fill="url(#branchHero)" isAnimationActive={false} />
+                  <Tooltip content={<MoneyTooltip />} cursor={{ stroke: 'rgba(36,84,143,0.3)' }} />
+                  <Area type="monotone" dataKey="revenue" name="Sales" stroke="#24548F" strokeWidth={2.5} fill="url(#branchHero)" isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -382,7 +382,7 @@ function TopSellingList({ rows }) {
               <p className="figure shrink-0 text-xs font-semibold text-neutral-500">{r.quantity} sold</p>
             </div>
             <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
-              <div className={`h-full rounded-full ${i === 0 ? 'bg-brand-400' : 'bg-neutral-900'}`} style={{ width: `${(r.quantity / max) * 100}%` }} />
+              <div className={`h-full rounded-full ${i === 0 ? 'bg-brand-400' : 'bg-brand-300'}`} style={{ width: `${(r.quantity / max) * 100}%` }} />
             </div>
           </div>
         </li>

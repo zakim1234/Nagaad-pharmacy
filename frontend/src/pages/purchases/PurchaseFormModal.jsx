@@ -81,7 +81,7 @@ export default function PurchaseFormModal({ open, onClose, onSaved, initialSuppl
           </FormField>
         </div>
         {supplier && total > 0 && (
-          <p className="rounded-lg bg-neutral-950 px-3 py-2.5 text-sm text-white">
+          <p className="rounded-lg surface-blue px-3 py-2.5 text-sm text-white">
             <span className="font-bold text-brand-400">{formatCurrency(total)}</span> will be added to what you owe <span className="font-semibold">{supplier.name}</span>.
           </p>
         )}

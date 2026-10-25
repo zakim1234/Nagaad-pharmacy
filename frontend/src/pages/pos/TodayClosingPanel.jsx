@@ -303,7 +303,7 @@ function DaySummary({ result }) {
 function SummaryRow({ label, value, highlight }) {
   return (
     <div
-      className={`rounded-lg px-3 py-2 ${highlight ? 'bg-neutral-950 text-white' : 'border border-neutral-200 bg-white'}`}
+      className={`rounded-lg px-3 py-2 ${highlight ? 'surface-blue text-white' : 'border border-neutral-200 bg-white'}`}
       style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
     >
       <p className={`text-[10px] uppercase tracking-wider ${highlight ? 'text-white/70' : 'text-neutral-500'}`}>{label}</p>

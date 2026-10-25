@@ -192,7 +192,7 @@ export default function PurchasesPage() {
         <td colSpan={cols} className="px-4 py-2.5">
           <div className="flex w-full items-center gap-2.5">
             <button onClick={() => (toggle ? toggleGroup(sid) : pickSupplier(sid))} className="group flex min-w-0 flex-1 items-center gap-2.5 text-left">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-[11px] font-bold text-white">{initials(name)}</span>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full surface-blue text-[11px] font-bold">{initials(name)}</span>
               <span className="truncate font-semibold text-neutral-900 group-hover:text-brand-600">{name}</span>
               {s && (
                 <span className="shrink-0 text-xs text-neutral-500">
@@ -272,7 +272,7 @@ export default function PurchasesPage() {
             </button>
           )}
           {selected && (
-            <div className="mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 text-white shadow-sm">
+            <div className="mb-4 overflow-hidden rounded-2xl surface-blue text-white shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4">
                 <div className="flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-400 text-sm font-bold text-neutral-950">{initials(selected.name)}</span>

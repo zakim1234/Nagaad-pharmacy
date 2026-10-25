@@ -159,7 +159,7 @@ export default function ProfitSharingPage() {
           </Select>
         </FormField>
         {preview && (
-          <div className={`rounded-xl px-5 py-3 ${profit > 0 ? 'bg-neutral-950 text-white' : 'border border-neutral-200 bg-white text-neutral-700'}`}>
+          <div className={`rounded-xl px-5 py-3 ${profit > 0 ? 'surface-blue text-white' : 'border border-neutral-200 bg-white text-neutral-700'}`}>
             <p className={`text-[11px] uppercase tracking-wider ${profit > 0 ? 'text-white/70' : 'text-neutral-500'}`}>{year} net profit</p>
             <p className="text-2xl font-bold figure">{formatCurrency(profit)}</p>
           </div>

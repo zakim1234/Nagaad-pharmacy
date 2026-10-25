@@ -50,7 +50,7 @@ export default function AllBranchesPage() {
 
   return (
     <div className="space-y-5">
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 p-6 text-white shadow-lg shadow-black/20 no-print">
+      <section className="relative overflow-hidden rounded-2xl surface-blue p-6 text-white shadow-lg shadow-black/20 no-print">
         <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-brand-400/25 blur-3xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -95,7 +95,7 @@ export default function AllBranchesPage() {
           {CARDS.map(([key, label], i) => (
             <div
               key={key}
-              className={`rounded-xl px-4 py-3 ${i === 2 ? 'bg-brand-400 text-neutral-950' : i === 3 ? 'bg-neutral-950 text-white' : 'border border-neutral-200 bg-white'}`}
+              className={`rounded-xl px-4 py-3 ${i === 2 ? 'bg-brand-400 text-neutral-950' : i === 3 ? 'surface-blue text-white' : 'border border-neutral-200 bg-white'}`}
               style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
             >
               <p className={`text-[11px] uppercase tracking-wider ${i === 2 || i === 3 ? 'text-white/70' : 'text-neutral-500'}`}>{label}</p>

@@ -343,7 +343,7 @@ export default function PartnersPage() {
                             <span className="figure font-semibold text-neutral-700">{share}%</span>
                           </div>
                           <div className="mt-1 h-1 overflow-hidden rounded-full bg-neutral-100">
-                            <div className="h-full rounded-full bg-neutral-900" style={{ width: `${Math.min(100, share)}%` }} />
+                            <div className="h-full rounded-full bg-brand-400" style={{ width: `${Math.min(100, share)}%` }} />
                           </div>
                         </div>
                         <p className="figure w-32 text-right text-base font-extrabold text-neutral-950">{formatCurrency(p.currentEquity)}</p>

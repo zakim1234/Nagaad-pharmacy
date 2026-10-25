@@ -28,7 +28,7 @@ function Amount({ value }) {
 }
 
 function SummaryCard({ label, value, tone }) {
-  const styles = tone === 'red' ? 'bg-brand-400 text-neutral-950' : tone === 'black' ? 'bg-neutral-950 text-white' : 'border border-neutral-300 bg-white';
+  const styles = tone === 'red' ? 'bg-brand-400 text-neutral-950' : tone === 'black' ? 'surface-blue text-white' : 'border border-neutral-300 bg-white';
   return (
     <div className={`rounded-xl px-4 py-3 text-center ${styles}`}>
       <p className={`text-[10px] uppercase tracking-wider ${tone ? 'text-white/70' : 'text-neutral-500'}`}>{label}</p>
@@ -40,7 +40,7 @@ function SummaryCard({ label, value, tone }) {
 function Side({ title, icon: Icon, children }) {
   return (
     <section className="overflow-hidden rounded-xl border border-neutral-200 print:break-inside-avoid">
-      <h2 className="flex items-center gap-2 bg-neutral-950 px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-white">
+      <h2 className="flex items-center gap-2 surface-blue px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-white">
         <Icon className="h-4 w-4 text-brand-400" /> {title}
       </h2>
       <div className="p-2">{children}</div>
@@ -177,7 +177,7 @@ export default function BalanceSheetReport() {
           </div>
 
           <div className="mt-4 h-1 bg-brand-400" />
-          <div className="flex flex-wrap items-center justify-between gap-2 bg-neutral-950 px-4 py-2 text-white">
+          <div className="flex flex-wrap items-center justify-between gap-2 surface-blue px-4 py-2 text-white">
             <p className="text-sm font-bold uppercase tracking-[0.25em]">
               Balance Sheet{allBranches && <span className="ml-2 tracking-wider text-brand-300">· All branches</span>}
             </p>

@@ -95,7 +95,7 @@ function SidebarContent({ onNavigate }) {
   }
 
   return (
-    <div className="flex h-full flex-col bg-neutral-950 text-neutral-300">
+    <div className="flex h-full flex-col surface-blue text-neutral-300">
       <div className="flex items-center gap-3 px-5 pb-4 pt-5">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white p-1">
           <img src={logo} alt={BUSINESS.name} className="h-full w-full object-contain" />
@@ -121,13 +121,13 @@ function SidebarContent({ onNavigate }) {
                   onClick={onNavigate}
                   className={({ isActive }) =>
                     `group relative flex items-center gap-3 rounded-lg px-3 py-[7px] text-[13.5px] transition-colors ${
-                      isActive ? 'bg-white/[0.08] font-semibold text-white' : 'font-medium text-neutral-400 hover:bg-white/[0.04] hover:text-neutral-100'
+                      isActive ? 'bg-white/[0.55] font-semibold text-white' : 'font-medium text-neutral-400 hover:bg-white/[0.04] hover:text-neutral-100'
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      <span className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full ${isActive ? 'bg-brand-400' : 'bg-transparent'}`} />
+                      <span className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full ${isActive ? 'bg-brand-700' : 'bg-transparent'}`} />
                       <Icon className={`h-[17px] w-[17px] shrink-0 ${isActive ? 'text-brand-400' : 'text-neutral-500 group-hover:text-neutral-300'}`} />
                       <span className="truncate">{label}</span>
                     </>
@@ -171,7 +171,7 @@ function TopBar() {
   }, [user]);
   const where = inOverview(user) ? 'All branches' : branchName;
   return (
-    <div className="hidden items-center justify-between border-b border-white/[0.06] bg-neutral-950 px-8 py-2.5 md:flex no-print">
+    <div className="hidden items-center justify-between border-b border-white/[0.06] surface-blue px-8 py-2.5 md:flex no-print">
       <p className="flex items-center gap-2 text-[13px] text-neutral-400">
         {where && (
           <>
@@ -214,7 +214,7 @@ export default function AppLayout() {
             className="absolute inset-0 bg-neutral-900/40 transition-opacity"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute left-0 top-0 h-full w-64 bg-neutral-950 shadow-xl transition-transform duration-200">
+          <aside className="absolute left-0 top-0 h-full w-64 surface-blue shadow-xl transition-transform duration-200">
             <div className="flex items-center justify-end px-2.5 pt-2.5">
               <button
                 onClick={() => setMobileOpen(false)}

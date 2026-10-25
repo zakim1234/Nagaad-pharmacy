@@ -68,7 +68,7 @@ export default function CancelCustomerPaymentDialog({ customerId, payment, onClo
   return (
     <Modal open={!!payment} onClose={saving ? undefined : onClose} title={`Cancel payment ${payment.receiptNumber}`} size="sm">
       <div className="space-y-4">
-        <div className="rounded-xl bg-neutral-950 px-4 py-3 text-white">
+        <div className="rounded-xl surface-blue px-4 py-3 text-white">
           <p className="text-xs uppercase tracking-wide text-neutral-400">The customer will owe this again</p>
           <p className="text-2xl font-bold">{formatCurrency(payment.amount)}</p>
           {payment.allocations?.length > 0 && <p className="text-xs text-neutral-400">on {payment.allocations.map((a) => a.receiptNumber).join(', ')}</p>}

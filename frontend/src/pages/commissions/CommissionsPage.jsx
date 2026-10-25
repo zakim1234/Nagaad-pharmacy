@@ -185,7 +185,7 @@ function CommissionsForBranch() {
         </div>
         )}
         {preview && (
-          <div className={`rounded-xl px-5 py-3 ${base > 0 ? 'bg-neutral-950 text-white' : 'border border-neutral-200 bg-white text-neutral-700'}`}>
+          <div className={`rounded-xl px-5 py-3 ${base > 0 ? 'surface-blue text-white' : 'border border-neutral-200 bg-white text-neutral-700'}`}>
             <p className={`text-[11px] uppercase tracking-wider ${base > 0 ? 'text-white/70' : 'text-neutral-500'}`}>Profit before commission · {periodLabel(type, key)}</p>
             <p className="text-2xl font-bold figure">{formatCurrency(base)}</p>
           </div>

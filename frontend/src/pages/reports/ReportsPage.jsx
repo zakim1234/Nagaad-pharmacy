@@ -145,7 +145,7 @@ export default function ReportsPage() {
   return (
     <div className="space-y-5">
       {/* Hero: which report is open, for which period */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 p-6 text-white shadow-lg shadow-black/20 no-print">
+      <section className="relative overflow-hidden rounded-2xl surface-blue p-6 text-white shadow-lg shadow-black/20 no-print">
         <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-brand-400/25 blur-3xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">

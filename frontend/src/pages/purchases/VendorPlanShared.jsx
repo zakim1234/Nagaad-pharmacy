@@ -24,7 +24,7 @@ export function PlanPrintSheet({ rows, date, planNumber, paid }) {
       </div>
 
       <div className="mt-4 h-1 bg-brand-400" />
-      <div className="flex items-center justify-between bg-neutral-950 px-4 py-2 text-white">
+      <div className="flex items-center justify-between surface-blue px-4 py-2 text-white">
         <p className="text-sm font-bold uppercase tracking-[0.25em]">Vendor Balance Summary</p>
         <p className="text-[11px]">
           Date: <span className="font-semibold">{date}</span>
@@ -81,7 +81,7 @@ export function PlanPrintSheet({ rows, date, planNumber, paid }) {
           <p className="text-[10px] uppercase tracking-wider text-neutral-700">Total {paid ? 'paid' : 'allocated'}</p>
           <p className="mt-1 text-lg font-bold">{formatCurrency(printAllocated)}</p>
         </div>
-        <div className="rounded-lg bg-neutral-950 px-4 py-3 text-center text-white">
+        <div className="rounded-lg surface-blue px-4 py-3 text-center text-white">
           <p className="text-[10px] uppercase tracking-wider text-neutral-400">Remaining</p>
           <p className="mt-1 text-lg font-bold">{formatCurrency(round2(printOwed - printAllocated))}</p>
         </div>
@@ -101,7 +101,7 @@ export function PaidPlan({ plan }) {
   const owedBefore = round2(plan.rows.reduce((s, r) => s + r.owed, 0));
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200/80 bg-white">
-      <div className="bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 px-5 py-4 text-white">
+      <div className="surface-blue px-5 py-4 text-white">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-400 text-neutral-950">
@@ -149,7 +149,7 @@ export function PaidPlan({ plan }) {
           return (
             <li key={String(r.supplier)} className="flex flex-wrap items-center gap-4 px-5 py-3.5 hover:bg-neutral-50/60">
               <span className="w-5 text-sm text-neutral-400">{i + 1}</span>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full surface-blue text-xs font-bold">
                 {r.supplierName
                   .split(/\s+/)
                   .slice(0, 2)

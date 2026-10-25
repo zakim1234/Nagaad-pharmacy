@@ -401,7 +401,7 @@ function PayModal({ open, onClose, count, total, beforePay, onPaid }) {
       }
     >
       <div className="space-y-4">
-        <div className="rounded-xl bg-neutral-950 px-4 py-3 text-white">
+        <div className="rounded-xl surface-blue px-4 py-3 text-white">
           <p className="text-xs uppercase tracking-wide text-neutral-400">Paying {count} supplier{count === 1 ? '' : 's'}</p>
           <p className="text-2xl font-bold">{formatCurrency(total)}</p>
         </div>

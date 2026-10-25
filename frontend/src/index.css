@@ -116,3 +116,52 @@ h1, h2, h3 {
     break-inside: avoid;
   }
 }
+
+/* The two-blue surface (#CFE2FF -> #9EC5FE) that replaces every black panel:
+   sidebar, top bar, hero cards, totals boxes. Text written for a dark
+   background (white, light greys, light brand) is turned dark inside it, so
+   pages keep their markup. Unlayered on purpose: it wins over utilities. */
+.surface-blue {
+  background-color: #b6d3fe;
+  background-image: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%);
+  color: #0a0a0a;
+}
+.surface-blue [class~="text-white"],
+.surface-blue [class*=" text-white/"],
+.surface-blue [class^="text-white/"],
+.surface-blue [class~="text-neutral-100"],
+.surface-blue [class~="text-neutral-200"],
+.surface-blue [class*="hover:text-white"]:hover,
+.surface-blue [class*="hover:text-neutral-100"]:hover {
+  color: #0a0a0a;
+}
+.surface-blue [class~="text-neutral-300"],
+.surface-blue [class~="text-neutral-400"] {
+  color: #404040;
+}
+.surface-blue [class~="text-neutral-500"],
+.surface-blue [class~="text-neutral-600"],
+.surface-blue [class~="text-neutral-700"] {
+  color: #525252;
+}
+.surface-blue [class~="text-brand-300"],
+.surface-blue [class~="text-brand-400"],
+.surface-blue [class~="text-brand-500"] {
+  color: #24548f;
+}
+.surface-blue [class~="text-emerald-300"],
+.surface-blue [class~="text-emerald-400"] {
+  color: #047857;
+}
+.surface-blue [class*=" bg-white/"],
+.surface-blue [class^="bg-white/"] {
+  background-color: rgb(255 255 255 / 0.45);
+}
+.surface-blue [class*="hover:bg-white/"]:hover {
+  background-color: rgb(255 255 255 / 0.7);
+}
+.surface-blue [class*="border-white/"],
+.surface-blue [class*="ring-white/"] {
+  border-color: rgb(10 10 10 / 0.1);
+  --tw-ring-color: rgb(10 10 10 / 0.08);
+}
