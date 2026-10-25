@@ -10,6 +10,7 @@ import { Input } from '../../components/ui/Field.jsx';
 import SharePdfButton from '../../components/SharePdfButton.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import { BUSINESS } from '../../constants/business.js';
+import { useBranchNames } from '../../hooks/useBranchNames.js';
 import logo from '../../images/logo.png';
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -96,6 +97,7 @@ function Grand({ label, value }) {
 
 export default function BalanceSheetReport() {
   const allBranches = isAllBranchesView(useAuth().user);
+  const branchName = useBranchNames(allBranches);
   const toast = useToast();
   const [date, setDate] = useState(todayString());
   const [report, setReport] = useState(null);
@@ -227,9 +229,17 @@ export default function BalanceSheetReport() {
               </Group>
               <Group label="Equity">
                 <Line label="Partners' capital" value={report.equity.partnersCapital} />
-                {(report.equity.partners || []).map((p, i) => (
+                {/* All branches: each partner line names the branch the money is in,
+                    and one person's lines sit together. */}
+                {(allBranches
+                  ? [...(report.equity.partners || [])].sort((a, b) => a.name.localeCompare(b.name) || branchName(a.branch).localeCompare(branchName(b.branch)))
+                  : report.equity.partners || []
+                ).map((p, i) => (
                   <div key={i} className="flex items-center justify-between gap-3 py-0.5 pl-6 pr-2 text-xs text-neutral-500">
-                    <span>{p.name}</span>
+                    <span>
+                      {p.name}
+                      {allBranches && <span className="ml-2 rounded bg-brand-100 px-1.5 py-px text-[10.5px] font-semibold text-brand-800">{branchName(p.branch)}</span>}
+                    </span>
                     <span className="tabular-nums">
                       <Amount value={p.capital} />
                     </span>

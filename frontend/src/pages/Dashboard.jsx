@@ -119,7 +119,7 @@ export default function Dashboard() {
           <div className="relative grid gap-6 md:grid-cols-[1fr_1.1fr] md:items-end">
             <div>
               <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-neutral-400">Today</p>
-              <p className="figure mt-2 text-5xl font-extrabold sm:text-6xl">{formatCurrency(cards.todaySales)}</p>
+              <p className="figure mt-2 text-4xl font-extrabold sm:text-[42px]">{formatCurrency(cards.todaySales)}</p>
               <p className="mt-1 text-sm text-neutral-400">
                 {cards.todaySalesCount} sale{cards.todaySalesCount === 1 ? '' : 's'}
               </p>

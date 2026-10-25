@@ -84,7 +84,7 @@ export default function SuperDashboardPage() {
           <div className="relative grid gap-6 md:grid-cols-[1fr_1.1fr] md:items-end">
             <div>
               <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-neutral-400">Today · all branches</p>
-              <p className="figure mt-2 text-5xl font-extrabold sm:text-6xl">{formatCurrency(totals.todaySales)}</p>
+              <p className="figure mt-2 text-4xl font-extrabold sm:text-[42px]">{formatCurrency(totals.todaySales)}</p>
               <p className="mt-1 text-sm text-neutral-400">confirmed sales</p>
               <div className="mt-6 grid grid-cols-3 gap-4 border-t border-white/10 pt-4">
                 <HeroFigure label="Profit" value={formatCurrency(totals.todayProfit)} />
