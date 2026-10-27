@@ -63,22 +63,23 @@ test('CANCEL INVOICE REFUND -- wallet or cash from a chosen account, listed on t
     assert.equal(rb.data.cancelRefund.amount, 40);
     assert.equal((await Customer.findById(customer.id)).walletBalanceCents, 4000);
 
-    // The customer statement keeps both cancelled invoices, marked: the sale,
-    // its payments, the cancellation and the refund -- ending at 0 owed.
+    // The normal statement: both invoices cancelled, so neither they nor the
+    // payments made on them are on it.
     const st = await request(`/customers/${customer.id}/statement`, null, 'GET');
     assert.equal(st.status, 200, JSON.stringify(st));
-    const rowsOf = (rn) => st.data.ledger.filter((e) => e.reference === rn).map((e) => [e.type, e.debit, e.credit]);
-    assert.deepEqual(rowsOf(b.data.receiptNumber), [
-      ['SALE', 40, 0],
-      ['CANCELLED', 0, 40],
-      ['REFUND', 40, 0],
+    assert.deepEqual(st.data.ledger, []);
+    assert.equal(st.data.summary.totalPayments, 0);
+
+    // The separate Cancelled Invoices statement has them, with where the money went.
+    const cs = await request(`/customers/${customer.id}/cancelled-statement`, null, 'GET');
+    assert.equal(cs.status, 200, JSON.stringify(cs));
+    assert.deepEqual(cs.data.invoices.map((i) => [i.receiptNumber, i.total, i.paid, i.refund.to, i.refund.amount, i.refund.accountName, i.refund.reference]), [
+      [a.data.receiptNumber, 50, 50, 'ACCOUNT', 50, 'Salaam Bank', '615777888'],
+      [b.data.receiptNumber, 40, 40, 'WALLET', 40, '', ''],
     ]);
-    assert.ok(st.data.ledger.filter((e) => e.type === 'REFUND').some((e) => /Salaam Bank to 615777888/.test(e.description)));
-    assert.ok(st.data.ledger.every((e) => e.type.endsWith('PAYMENT') || e.cancelled));
-    assert.equal(st.data.ledger.at(-1).runningBalance, 0);
-    assert.equal(st.data.summary.totalPayments, 0, 'nothing paid on invoices still standing');
-    assert.equal(st.data.summary.cancelledInvoices, 2);
-    assert.equal(st.data.summary.totalCancelled, 90);
+    assert.deepEqual(cs.data.invoices[0].payments.map((p) => [p.kind, p.amount]), [['At the sale', 20], ['Debt payment', 30]]);
+    assert.equal(cs.data.invoices[0].reason, 'Wrong item');
+    assert.deepEqual(cs.data.totals, { count: 2, total: 90, paid: 90, toWallet: 40, cashBack: 50 });
 
     // The report: both, newest first, with totals; filters by kind and date.
     const rep = await request('/sales/refunds', null, 'GET');

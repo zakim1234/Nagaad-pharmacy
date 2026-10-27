@@ -760,7 +760,25 @@ export const getWalletHistory = asyncHandler(async (req, res) => {
 // ledger. Draft invoices are deliberately excluded from the finalized
 // totals/ledger and returned separately as "pendingToday" so they are never
 // mistaken for posted debt/revenue.
-const TYPE_ORDER = { SALE: 0, SALE_PAYMENT: 1, PAYMENT: 1, CANCELLED: 2, REFUND: 3 };
+// A customer's confirmed invoices that were cancelled later, and the money
+// paid on each one (at the sale and by debt payments) -- shared by the normal
+// statement (which leaves them out) and the Cancelled Invoices statement.
+async function cancelledPicture(customerId, payments, from, to) {
+  const range = from || to ? { createdAt: { ...(from ? { $gte: from } : {}), ...(to ? { $lte: to } : {}) } } : {};
+  const all = await Sale.find({ customer: customerId, status: 'CANCELLED', confirmedAt: { $ne: null }, ...range }).sort({ createdAt: 1 });
+  const ids = new Set(all.map((x) => String(x._id)));
+  const paidOn = new Map(); // saleId -> [{ payment, cents }]
+  const onCancelledCents = new Map(); // paymentId -> cents of it that paid cancelled invoices
+  for (const p of payments) {
+    const parts = p.type === 'sale' && p.relatedSale ? [[String(p.relatedSale), p.amountCents]] : (p.allocations || []).map((al) => [String(al.sale), al.amountCents]);
+    for (const [saleId, cents] of parts) {
+      if (!ids.has(saleId)) continue;
+      paidOn.set(saleId, [...(paidOn.get(saleId) || []), { payment: p, cents }]);
+      onCancelledCents.set(String(p._id), (onCancelledCents.get(String(p._id)) || 0) + cents);
+    }
+  }
+  return { sales: all, paidOn, onCancelledCents };
+}
 export const getCustomerStatement = asyncHandler(async (req, res) => {
   const customer = await Customer.findById(req.params.id);
   if (!customer) throw new ApiError(404, 'Customer not found.');
@@ -769,40 +787,21 @@ export const getCustomerStatement = asyncHandler(async (req, res) => {
   const to = req.query.to ? new Date(req.query.to) : new Date();
   if (req.query.to && req.query.to.length <= 10) to.setHours(23, 59, 59, 999);
 
-  const [sales, allPayments, todaysDrafts, cancelledSales] = await Promise.all([
+  const [sales, allPayments, todaysDrafts] = await Promise.all([
     Sale.find({ customer: customer._id, status: 'CONFIRMED', createdAt: { $gte: from, $lte: to } }).sort({ createdAt: 1 }),
     Payment.find({ customer: customer._id, status: { $ne: 'CANCELLED' }, createdAt: { $gte: from, $lte: to } }).sort({ createdAt: 1 }),
     Sale.find({ customer: customer._id, status: 'DRAFT' }).sort({ createdAt: -1 }),
-    // Confirmed invoices that were cancelled later (a cancelled Draft was never on the statement).
-    Sale.find({ customer: customer._id, status: 'CANCELLED', confirmedAt: { $ne: null }, createdAt: { $gte: from, $lte: to } }).sort({ createdAt: 1 }),
   ]);
-  const cancelled = new Map(cancelledSales.map((x) => [String(x._id), x]));
-
-  // Money paid on each cancelled invoice (at the sale and by debt payments).
-  // The summary's "paid" counts only money on invoices still standing.
-  const paidOnCancelled = new Map();
-  let paidOnStandingCents = 0;
-  for (const p of allPayments) {
-    let onCancelledCents = 0;
-    if (p.type === 'sale' && p.relatedSale && cancelled.has(String(p.relatedSale))) {
-      onCancelledCents = p.amountCents;
-      paidOnCancelled.set(String(p.relatedSale), (paidOnCancelled.get(String(p.relatedSale)) || 0) + p.amountCents);
-    } else {
-      for (const al of p.allocations || []) {
-        if (!cancelled.has(String(al.sale))) continue;
-        onCancelledCents += al.amountCents;
-        paidOnCancelled.set(String(al.sale), (paidOnCancelled.get(String(al.sale)) || 0) + al.amountCents);
-      }
-    }
-    paidOnStandingCents += Math.max(0, p.amountCents - onCancelledCents);
-  }
-  const payments = allPayments;
+  // Cancelled invoices have their own statement, so money paid on them is
+  // left out here too (it went to the wallet or was given back). A debt
+  // payment keeps only the part that paid invoices still standing.
+  const { onCancelledCents } = await cancelledPicture(customer._id, allPayments);
+  const payments = allPayments
+    .map((p) => ({ p, cents: p.amountCents - (onCancelledCents.get(String(p._id)) || 0) }))
+    .filter((x) => x.cents > 0);
 
   // Merge into one chronological, double-entry ledger: a confirmed sale is a
-  // debit (increases what the customer owes), a payment is a credit. A
-  // cancelled invoice stays on it, marked: its sale and payments, then the
-  // cancellation (takes the invoice off) and the refund of what was paid on
-  // it (to the wallet or as cash) -- together they come to nothing.
+  // debit (increases what the customer owes), a payment is a credit.
   const entries = [
     ...sales.map((x) => ({
       date: x.createdAt,
@@ -813,50 +812,16 @@ export const getCustomerStatement = asyncHandler(async (req, res) => {
       creditCents: 0,
       saleId: x._id,
     })),
-    ...cancelledSales.flatMap((x) => {
-      const paidBackCents = x.cancelRefund?.to ? x.cancelRefund.amountCents : paidOnCancelled.get(String(x._id)) || 0;
-      const when = x.cancelledAt || x.updatedAt;
-      const rows = [
-        { date: x.createdAt, reference: x.receiptNumber, type: 'SALE', cancelled: true, description: `Sale invoice ${x.receiptNumber} (cancelled)`, debitCents: x.totalCents, creditCents: 0, saleId: x._id },
-        {
-          date: when,
-          reference: x.receiptNumber,
-          type: 'CANCELLED',
-          cancelled: true,
-          description: `Invoice ${x.receiptNumber} cancelled${x.cancelledReason ? ` — ${x.cancelledReason}` : ''}`,
-          debitCents: 0,
-          creditCents: x.totalCents,
-          saleId: x._id,
-        },
-      ];
-      if (paidBackCents > 0) {
-        const r = x.cancelRefund || {};
-        rows.push({
-          date: when,
-          reference: x.receiptNumber,
-          type: 'REFUND',
-          cancelled: true,
-          description:
-            r.to === 'ACCOUNT'
-              ? `Money given back from ${r.accountName || 'the account'}${r.reference ? ` to ${r.reference}` : ''}`
-              : "Money paid on it moved to the customer's wallet",
-          debitCents: paidBackCents,
-          creditCents: 0,
-          saleId: x._id,
-        });
-      }
-      return rows;
-    }),
-    ...payments.map((p) => ({
+    ...payments.map(({ p, cents }) => ({
       date: p.createdAt,
       reference: p.receiptNumber,
       type: p.type === 'sale' ? 'SALE_PAYMENT' : 'PAYMENT',
       description: p.type === 'sale' ? `Payment received at sale (${p.receiptNumber})` : `Debt payment ${p.receiptNumber}`,
       debitCents: 0,
-      creditCents: p.amountCents,
+      creditCents: cents,
       paymentId: p._id,
     })),
-  ].sort((a, b) => new Date(a.date) - new Date(b.date) || TYPE_ORDER[a.type] - TYPE_ORDER[b.type]);
+  ].sort((a, b) => new Date(a.date) - new Date(b.date));
 
   let runningBalanceCents = customer.openingBalanceCents;
   const ledger = entries.map((e) => {
@@ -865,7 +830,6 @@ export const getCustomerStatement = asyncHandler(async (req, res) => {
       date: e.date,
       reference: e.reference,
       type: e.type,
-      cancelled: !!e.cancelled,
       description: e.description,
       debit: fromCents(e.debitCents),
       credit: fromCents(e.creditCents),
@@ -874,8 +838,7 @@ export const getCustomerStatement = asyncHandler(async (req, res) => {
   });
 
   const totalAmountPurchasedCents = sales.reduce((sum, s) => sum + s.totalCents, 0);
-  const totalPaymentsCents = paidOnStandingCents;
-  const totalCancelledCents = cancelledSales.reduce((sum, x) => sum + x.totalCents, 0);
+  const totalPaymentsCents = payments.reduce((sum, x) => sum + x.cents, 0);
   const totalCreditGeneratedCents = sales.reduce((sum, s) => sum + s.balanceAddedCents, 0);
 
   res.json({
@@ -888,8 +851,6 @@ export const getCustomerStatement = asyncHandler(async (req, res) => {
         totalConfirmedPurchases: sales.length,
         totalAmountPurchased: fromCents(totalAmountPurchasedCents),
         totalPayments: fromCents(totalPaymentsCents),
-        cancelledInvoices: cancelledSales.length,
-        totalCancelled: fromCents(totalCancelledCents),
         totalCreditGenerated: fromCents(totalCreditGeneratedCents),
         currentOutstandingBalance: fromCents(customer.balanceCents),
         numberOfFinalizedInvoices: sales.length,
@@ -1088,5 +1049,62 @@ export const listDebtors = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: { customers: rows, totalOwed: fromCents(customers.reduce((s, c) => s + c.balanceCents, 0)), count: rows.length, asOf: new Date() },
+  });
+});
+
+// GET /api/customers/:id/cancelled-statement?from&to -- the customer's
+// cancelled invoices on their own: what each was, what was paid on it, when
+// and why it was cancelled, and where the money went (wallet, or cash out of
+// an account to a number).
+export const getCancelledStatement = asyncHandler(async (req, res) => {
+  const customer = await Customer.findById(req.params.id);
+  if (!customer) throw new ApiError(404, 'Customer not found.');
+  const from = req.query.from ? new Date(req.query.from) : null;
+  const to = req.query.to ? new Date(req.query.to) : null;
+  if (to && req.query.to.length <= 10) to.setHours(23, 59, 59, 999);
+
+  const payments = await Payment.find({ customer: customer._id, status: { $ne: 'CANCELLED' } }).sort({ createdAt: 1 });
+  const { sales, paidOn } = await cancelledPicture(customer._id, payments, from, to);
+
+  const invoices = sales.map((x) => {
+    const paid = (paidOn.get(String(x._id)) || []).map(({ payment, cents }) => ({
+      receiptNumber: payment.receiptNumber,
+      date: payment.createdAt,
+      kind: payment.type === 'sale' ? 'At the sale' : 'Debt payment',
+      account: payment.paymentAccountName || '',
+      amount: fromCents(cents),
+    }));
+    const paidCents = (paidOn.get(String(x._id)) || []).reduce((t, y) => t + y.cents, 0);
+    const r = x.cancelRefund || {};
+    const refundCents = r.to ? r.amountCents : paidCents;
+    return {
+      id: x._id,
+      receiptNumber: x.receiptNumber,
+      date: x.createdAt,
+      items: x.items.map((i) => ({ name: i.itemName, quantity: i.quantity, unitPrice: fromCents(i.unitPriceCents), subtotal: fromCents(i.subtotalCents) })),
+      total: fromCents(x.totalCents),
+      payments: paid,
+      paid: fromCents(paidCents),
+      fromWallet: fromCents(x.walletAmountCents || 0),
+      cancelledAt: x.cancelledAt,
+      reason: x.cancelledReason || '',
+      refund: refundCents > 0 ? { to: r.to || 'WALLET', amount: fromCents(refundCents), accountName: r.accountName || '', reference: r.reference || '', byName: r.byName || '' } : null,
+    };
+  });
+  const sum = (fn) => fromCents(sales.reduce((t, x, i) => t + fn(x, invoices[i]), 0));
+  res.json({
+    success: true,
+    data: {
+      customer: { ...toDTO(customer), since: customer.createdAt },
+      range: { from, to },
+      invoices,
+      totals: {
+        count: invoices.length,
+        total: sum((x) => x.totalCents),
+        paid: sum((x, inv) => Math.round(inv.paid * 100)),
+        toWallet: sum((x, inv) => (inv.refund?.to === 'WALLET' ? Math.round(inv.refund.amount * 100) : 0)),
+        cashBack: sum((x, inv) => (inv.refund?.to === 'ACCOUNT' ? Math.round(inv.refund.amount * 100) : 0)),
+      },
+    },
   });
 });

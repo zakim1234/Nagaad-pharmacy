@@ -171,6 +171,11 @@ export default function CustomerDetailPage() {
               <FileText className="h-4 w-4" /> Customer Statement
             </Button>
           </Link>
+          <Link to={`/customers/${id}/cancelled-statement`}>
+            <Button variant="secondary">
+              <XCircle className="h-4 w-4" /> Cancelled Invoices
+            </Button>
+          </Link>
           <Button onClick={() => setPayOpen(true)} disabled={customer.balance <= 0}>
             <Wallet className="h-4 w-4" /> Pay Debt
           </Button>

@@ -26,6 +26,7 @@ import PurchaseDetailPage from './pages/purchases/PurchaseDetailPage.jsx';
 import CustomersPage from './pages/customers/CustomersPage.jsx';
 import CustomerDetailPage from './pages/customers/CustomerDetailPage.jsx';
 import CustomerStatementPage from './pages/customers/CustomerStatementPage.jsx';
+import CancelledStatementPage from './pages/customers/CancelledStatementPage.jsx';
 import SuppliersPage from './pages/suppliers/SuppliersPage.jsx';
 import SupplierDetailPage from './pages/suppliers/SupplierDetailPage.jsx';
 import SupplierInvoicesPage from './pages/suppliers/SupplierInvoicesPage.jsx';
@@ -116,6 +117,7 @@ export default function App() {
               <Route path="/customers/:id/items" element={<RequirePermission module="customers"><CustomerItemsPage /></RequirePermission>} />
               <Route path="/customers/:id/wallet-statement" element={<RequirePermission module="customers"><WalletStatementPage /></RequirePermission>} />
               <Route path="/customers/:id/statement" element={<RequirePermission module="customers"><CustomerStatementPage /></RequirePermission>} />
+              <Route path="/customers/:id/cancelled-statement" element={<RequirePermission module="customers"><CancelledStatementPage /></RequirePermission>} />
               <Route path="/suppliers" element={<RequirePermission module="suppliers"><SuppliersPage /></RequirePermission>} />
               <Route path="/suppliers/:id" element={<RequirePermission module="suppliers"><SupplierDetailPage /></RequirePermission>} />
               <Route path="/supplier-invoices" element={<RequirePermission module="supplierInvoices"><SupplierInvoicesPage /></RequirePermission>} />

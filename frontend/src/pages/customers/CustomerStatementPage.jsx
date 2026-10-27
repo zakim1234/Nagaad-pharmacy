@@ -12,7 +12,7 @@ import { FormField, Input } from '../../components/ui/Field.jsx';
 import SharePdfButton from '../../components/SharePdfButton.jsx';
 import DocHeader, { DocInfo, DocTotals, DocFooter, DOC_TH, DOC_THEAD_ROW } from '../../components/docs/DocHeader.jsx';
 
-const TYPE_LABEL = { SALE: 'Sale', SALE_PAYMENT: 'Payment', PAYMENT: 'Payment', CANCELLED: 'Invoice cancelled', REFUND: 'Refund' };
+const TYPE_LABEL = { SALE: 'Sale', SALE_PAYMENT: 'Payment', PAYMENT: 'Payment' };
 
 function toDateInput(d) {
   return new Date(d).toISOString().slice(0, 10);
@@ -140,18 +140,14 @@ export default function CustomerStatementPage() {
                   </td>
                 </tr>
               ) : (
-                ledger.map((e, i) => {
+                ledger.map((e) => {
                   const invoice = e.type === 'SALE' && invoices.find((inv) => inv.receiptNumber === e.reference);
                   const expanded = invoice && expandedInvoiceIds.has(invoice.id);
-                  return <Fragment key={i}>
-                  <tr className={`border-b border-neutral-200 ${e.cancelled ? 'bg-neutral-50/70 text-neutral-500' : ''}`}>
+                  return <Fragment key={`${e.type}-${e.reference}`}>
+                  <tr className="border-b border-neutral-200">
                     <td className="px-2 py-2 text-neutral-500">{formatDateTime(e.date)}</td>
                     <td className="px-2 py-2 font-medium">{invoice ? <button type="button" className="cursor-pointer text-brand-700 hover:underline focus-visible:outline-2" aria-expanded={!!expanded} aria-controls={`invoice-${invoice.id}`} onClick={() => toggleInvoice(invoice.id)}><span className="no-print">{expanded ? '▾' : '▸'} </span>{e.reference}</button> : e.reference}</td>
-                    <td className="px-2 py-2">
-                      {TYPE_LABEL[e.type] || e.type}
-                      {e.cancelled && e.type === 'SALE' && <span className="ml-1.5 rounded bg-brand-100 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-brand-800">Cancelled</span>}
-                      {(e.type === 'CANCELLED' || e.type === 'REFUND') && <span className="block text-[11px] text-neutral-500">{e.description}</span>}
-                    </td>
+                    <td className="px-2 py-2">{TYPE_LABEL[e.type] || e.type}</td>
                     <td className="px-2 py-2 text-right tabular-nums">{e.debit > 0 ? formatCurrency(e.debit) : '—'}</td>
                     <td className="px-2 py-2 text-right font-semibold tabular-nums text-brand-700">{e.credit > 0 ? formatCurrency(e.credit) : '—'}</td>
                     <td className="px-2 py-2 text-right font-semibold tabular-nums">{formatCurrency(e.runningBalance)}</td>
@@ -218,7 +214,6 @@ export default function CustomerStatementPage() {
           />
           <p className="mt-2 text-center text-[11px] text-neutral-500">
             {summary.numberOfFinalizedInvoices} finalized invoice(s) · credit generated {formatCurrency(summary.totalCreditGenerated)}
-            {summary.cancelledInvoices > 0 && ` · ${summary.cancelledInvoices} cancelled (${formatCurrency(summary.totalCancelled)})`}
           </p>
         </div>
 
