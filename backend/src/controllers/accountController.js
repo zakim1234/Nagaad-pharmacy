@@ -182,3 +182,60 @@ export const accountsReport = asyncHandler(async (req, res) => {
 });
 
 export { toDTO as accountToDTO };
+
+// GET /api/accounts/:id/statement?range|from&to -- one account's money in and
+// out over a period, oldest first: what each amount was (type), why (its
+// description: invoice, expense, refund and the number, reason...), who did
+// it, and the balance after -- opening and closing balance around it.
+export const getAccountStatement = asyncHandler(async (req, res) => {
+  const account = await Account.findById(req.params.id);
+  if (!account) throw new ApiError(404, 'Account not found.');
+  const { start, end } = resolveDateRange(req.query);
+
+  const [before] = await AccountTransaction.aggregate([
+    { $match: { account: account._id, status: 'POSTED', postedAt: { $lt: start } } },
+    { $group: { _id: null, cents: { $sum: { $cond: [{ $eq: ['$direction', 'IN'] }, '$amountCents', { $multiply: ['$amountCents', -1] }] } } } },
+  ]);
+  const openingCents = (account.openingBalanceCents || 0) + (before?.cents || 0);
+
+  const items = await AccountTransaction.find({ account: account._id, status: 'POSTED', postedAt: { $gte: start, $lte: end } })
+    .sort({ postedAt: 1, _id: 1 })
+    .limit(5000)
+    .populate('createdBy', 'name')
+    .lean();
+
+  let running = openingCents;
+  let inCents = 0;
+  let outCents = 0;
+  const rows = items.map((t) => {
+    const delta = t.direction === 'IN' ? t.amountCents : -t.amountCents;
+    running += delta;
+    if (t.direction === 'IN') inCents += t.amountCents;
+    else outCents += t.amountCents;
+    return {
+      id: t._id,
+      date: t.postedAt,
+      direction: t.direction,
+      type: t.type,
+      amount: fromCents(t.amountCents),
+      description: t.description || '',
+      referenceType: t.referenceType,
+      referenceId: t.referenceId,
+      byName: t.createdBy?.name || '',
+      balanceAfter: fromCents(running),
+    };
+  });
+
+  res.json({
+    success: true,
+    data: {
+      account: toDTO(account),
+      range: { from: start, to: end },
+      opening: fromCents(openingCents),
+      moneyIn: fromCents(inCents),
+      moneyOut: fromCents(outCents),
+      closing: fromCents(openingCents + inCents - outCents),
+      rows,
+    },
+  });
+});

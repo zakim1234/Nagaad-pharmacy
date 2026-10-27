@@ -6,6 +6,7 @@ import {
   createAccount,
   updateAccount,
   getAccountTransactions,
+  getAccountStatement,
   accountsReport,
 } from '../controllers/accountController.js';
 
@@ -24,5 +25,6 @@ router.post('/', requirePermission('accounts'), requireRole('admin', 'manager'),
 router.get('/:id', requirePermission('accounts'), getAccount);
 router.put('/:id', requirePermission('accounts'), requireRole('admin', 'manager'), updateAccount);
 router.get('/:id/transactions', requirePermission('accounts'), getAccountTransactions);
+router.get('/:id/statement', requirePermission('accounts'), getAccountStatement);
 
 export default router;

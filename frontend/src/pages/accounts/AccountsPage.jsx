@@ -24,6 +24,7 @@ import Badge from '../../components/ui/Badge.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import DateRangeFilter from '../../components/reports/DateRangeFilter.jsx';
+import AccountStatement from './AccountStatement.jsx';
 import AccountFormModal from './AccountFormModal.jsx';
 
 // A soft tint per account type -- just enough colour to tell them apart.
@@ -81,6 +82,7 @@ export default function AccountsPage() {
   const [reportFrom, setReportFrom] = useState('');
   const [reportTo, setReportTo] = useState('');
   const [report, setReport] = useState(null);
+  const [statementId, setStatementId] = useState(null); // account whose statement is open in the Report
 
   const load = useCallback(() => {
     setLoading(true);
@@ -361,6 +363,7 @@ export default function AccountsPage() {
                       <th className="px-4 py-3 text-right">Money In</th>
                       <th className="px-4 py-3 text-right">Money Out</th>
                       <th className="px-4 py-3 text-right">Current Balance</th>
+                      <th className="px-4 py-3 text-right">Statement</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100">
@@ -371,6 +374,14 @@ export default function AccountsPage() {
                         <td className="px-4 py-3 text-right tabular-nums text-emerald-600">{formatCurrency(a.moneyIn)}</td>
                         <td className="px-4 py-3 text-right tabular-nums text-brand-600">{formatCurrency(a.moneyOut)}</td>
                         <td className={`px-4 py-3 text-right font-semibold tabular-nums ${a.currentBalance < 0 ? 'text-brand-600' : 'text-neutral-900'}`}>{formatCurrency(a.currentBalance)}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => setStatementId(statementId === a.id ? null : a.id)}
+                            className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${statementId === a.id ? 'bg-brand-400 text-neutral-950' : 'border border-neutral-200 text-neutral-700 hover:bg-neutral-50'}`}
+                          >
+                            {statementId === a.id ? 'Showing' : 'Statement'}
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -382,6 +393,7 @@ export default function AccountsPage() {
                         <td className="px-4 py-3 text-right tabular-nums text-neutral-800">{formatCurrency(totals.in)}</td>
                         <td className="px-4 py-3 text-right tabular-nums text-neutral-800">{formatCurrency(totals.out)}</td>
                         <td className={`px-4 py-3 text-right tabular-nums ${totals.current < 0 ? 'text-brand-600' : 'text-neutral-900'}`}>{formatCurrency(totals.current)}</td>
+                        <td />
                       </tr>
                     </tfoot>
                   )}
@@ -391,6 +403,13 @@ export default function AccountsPage() {
                 <p className="mt-2 text-xs text-neutral-400">
                   {formatDate(report.range.from)} – {formatDate(report.range.to)}
                 </p>
+              )}
+              {statementId && (
+                <AccountStatement
+                  accountId={statementId}
+                  params={{ range: reportFrom || reportTo ? undefined : reportRange, from: reportFrom || undefined, to: reportTo || undefined }}
+                  onClose={() => setStatementId(null)}
+                />
               )}
             </>
           )}
