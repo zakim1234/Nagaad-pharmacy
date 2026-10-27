@@ -65,33 +65,15 @@ export async function openDay({ user } = {}) {
   return bd;
 }
 
-// Zeroes every active Account with a non-zero balance, posting one
-// auditable ADJUSTMENT transaction per account (never a silent overwrite)
-// so the ledger fully explains why the balance moved. Returns the
-// pre-reset balances for the DayClose snapshot to preserve permanently.
-async function resetOperationalAccounts(session, user) {
+// What every active Account holds at the moment of closing, kept on the
+// DayClose as a permanent snapshot. Accounts are NOT emptied: the money stays
+// in them for the admin; staff only see what came in since the last close
+// (see accountController).
+async function snapshotAccountBalances(session) {
   const accounts = await Account.find({ isActive: true }).session(session);
-  const before = [];
-  for (const account of accounts) {
-    if (account.currentBalanceCents === 0) continue;
-    before.push({ account: account._id, accountName: account.name, balanceBeforeResetCents: account.currentBalanceCents });
-    const direction = account.currentBalanceCents > 0 ? 'OUT' : 'IN';
-    const amountCents = Math.abs(account.currentBalanceCents);
-    await postImmediateTransaction(
-      {
-        account,
-        direction,
-        type: 'ADJUSTMENT',
-        amountCents,
-        referenceType: 'Manual',
-        referenceId: null,
-        description: `Close Day reset (${startOfDay().toDateString()})`,
-        createdBy: user,
-      },
-      session
-    );
-  }
-  return before;
+  return accounts
+    .filter((a) => a.currentBalanceCents !== 0)
+    .map((a) => ({ account: a._id, accountName: a.name, balanceBeforeResetCents: a.currentBalanceCents }));
 }
 
 // Read-only validation pass: every Draft must still reference a real
@@ -351,9 +333,8 @@ export async function closeDay({ user } = {}) {
       confirmedSales.push(sale);
     }
 
-    // 6. Reset every operational Account to $0 -- with a full audit trail,
-    // capturing what each one held immediately before the reset.
-    const accountBalancesBeforeReset = await resetOperationalAccounts(session, user);
+    // 6. Record what every account holds at closing (nothing is moved).
+    const accountBalancesBeforeReset = await snapshotAccountBalances(session);
 
     const paymentBreakdown = Array.from(paymentBreakdownMap.values());
     const cashierBreakdown = Array.from(cashierBreakdownMap.values()).map((c) => ({ ...c, byAccount: Array.from(c.byAccount.values()) }));
@@ -373,6 +354,7 @@ export async function closeDay({ user } = {}) {
           invoiceDiscountCents,
           cashierBreakdown,
           accountBalancesBeforeReset,
+          balancesKept: true,
           invoiceReferences,
           openedAt: bd?.openedAt || null,
           closedBy: user?._id || null,
@@ -455,8 +437,10 @@ export async function reopenDayClose({ dayCloseId, user, reason = '' }) {
     // from today's sales/accounts. The delta posted is
     // (target - whatever the account holds right now), so this is safe even
     // if something legitimately moved the account while the day was closed.
+    // Only closings from before accounts were kept (balancesKept false)
+    // emptied them, so only those have anything to put back.
     const restoredAccounts = [];
-    for (const entry of dayClose.accountBalancesBeforeReset) {
+    for (const entry of dayClose.balancesKept ? [] : dayClose.accountBalancesBeforeReset) {
       const account = await Account.findById(entry.account).session(session);
       if (!account) continue; // account deleted since close -- nothing to restore it onto
       const targetCents = entry.balanceBeforeResetCents;

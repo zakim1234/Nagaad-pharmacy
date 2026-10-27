@@ -9,6 +9,7 @@
     "seed": "node src/utils/seed.js",
     "seed:admin": "node src/utils/seedAdmin.js",
     "reset:admin": "node src/utils/resetAdminPassword.js",
+    "fix:close-day-resets": "node src/utils/restoreCloseDayResets.js",
     "migrate:inventory": "node src/utils/runMigrateInventory.js",
     "migrate:dayclose": "node src/utils/runMigrateDayClose.js",
     "migrate:supplierarchive": "node src/utils/runMigrateSupplierArchive.js",

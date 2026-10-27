@@ -1,5 +1,6 @@
 import Account from '../models/Account.js';
 import AccountTransaction from '../models/AccountTransaction.js';
+import DayClose from '../models/DayClose.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { toCents, fromCents } from '../utils/money.js';
@@ -17,6 +18,37 @@ function toDTO(a) {
     isActive: a.isActive,
     createdAt: a.createdAt,
   };
+}
+
+// Only the admin sees what the accounts really hold. Everyone else sees the
+// money that came in and went out since the last Close Day -- what they took
+// today -- which is back to 0 once the day is closed.
+const seesBalances = (user) => user?.role === 'admin' || !!user?.isSuperAdmin;
+
+async function lastCloseAt() {
+  const last = await DayClose.findOne({ reopened: { $ne: true } }).sort({ closedAt: -1 }).select('closedAt').lean();
+  return last?.closedAt || new Date(0);
+}
+
+// Net POSTED cents per account since `since`.
+async function postedSince(since, accountId = null) {
+  const match = { status: 'POSTED', postedAt: { $gte: since } };
+  if (accountId) match.account = accountId;
+  const rows = await AccountTransaction.aggregate([
+    { $match: match },
+    { $group: { _id: '$account', cents: { $sum: { $cond: [{ $eq: ['$direction', 'IN'] }, '$amountCents', { $multiply: ['$amountCents', -1] }] } } } },
+  ]);
+  return new Map(rows.map((r) => [String(r._id), r.cents]));
+}
+
+// The balance a user is shown for an account, and the opening they see.
+async function balancesFor(user, accounts) {
+  if (seesBalances(user)) {
+    return { scope: 'all', since: null, balanceOf: (a) => a.currentBalanceCents, openingOf: (a) => a.openingBalanceCents };
+  }
+  const since = await lastCloseAt();
+  const net = await postedSince(since);
+  return { scope: 'sinceClose', since, balanceOf: (a) => net.get(String(a._id)) || 0, openingOf: () => 0 };
 }
 
 // GET /api/accounts -- cards for the Accounts page: posted balance plus
@@ -39,19 +71,24 @@ export const listAccounts = asyncHandler(async (req, res) => {
     pendingByAccount.set(key, entry);
   }
 
-  const totalBalanceCents = accounts.reduce((sum, a) => sum + a.currentBalanceCents, 0);
+  const view = await balancesFor(req.user, accounts);
+  const totalBalanceCents = accounts.reduce((sum, a) => sum + view.balanceOf(a), 0);
 
   res.json({
     success: true,
     data: {
+      scope: view.scope,
+      since: view.since,
       totalBalance: fromCents(totalBalanceCents),
       accounts: accounts.map((a) => {
         const pending = pendingByAccount.get(String(a._id)) || { inCents: 0, outCents: 0 };
         const pendingNetCents = pending.inCents - pending.outCents;
         return {
           ...toDTO(a),
+          openingBalance: fromCents(view.openingOf(a)),
+          currentBalance: fromCents(view.balanceOf(a)),
           pendingToday: fromCents(pendingNetCents),
-          expectedAfterClose: fromCents(a.currentBalanceCents + pendingNetCents),
+          expectedAfterClose: fromCents(view.balanceOf(a) + pendingNetCents),
         };
       }),
     },
@@ -61,7 +98,8 @@ export const listAccounts = asyncHandler(async (req, res) => {
 export const getAccount = asyncHandler(async (req, res) => {
   const account = await Account.findById(req.params.id);
   if (!account) throw new ApiError(404, 'Account not found.');
-  res.json({ success: true, data: toDTO(account) });
+  const view = await balancesFor(req.user, [account]);
+  res.json({ success: true, data: { ...toDTO(account), openingBalance: fromCents(view.openingOf(account)), currentBalance: fromCents(view.balanceOf(account)), scope: view.scope } });
 });
 
 export const createAccount = asyncHandler(async (req, res) => {
@@ -109,6 +147,9 @@ export const getAccountTransactions = asyncHandler(async (req, res) => {
   const { page = 1, limit = 30, status } = req.query;
   const filter = { account: account._id };
   if (status) filter.status = status;
+  const staff = !seesBalances(req.user);
+  if (staff) filter.createdAt = { $gte: await lastCloseAt() };
+  const view = await balancesFor(req.user, [account]);
 
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
   const limitNum = Math.min(200, Math.max(1, parseInt(limit, 10) || 30));
@@ -124,7 +165,8 @@ export const getAccountTransactions = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: {
-      account: toDTO(account),
+      account: { ...toDTO(account), openingBalance: fromCents(view.openingOf(account)), currentBalance: fromCents(view.balanceOf(account)) },
+      scope: view.scope,
       transactions: items.map((t) => ({
         id: t._id,
         status: t.status,
@@ -134,8 +176,8 @@ export const getAccountTransactions = asyncHandler(async (req, res) => {
         referenceType: t.referenceType,
         referenceId: t.referenceId,
         description: t.description,
-        balanceBefore: t.balanceBeforeCents !== null ? fromCents(t.balanceBeforeCents) : null,
-        balanceAfter: t.balanceAfterCents !== null ? fromCents(t.balanceAfterCents) : null,
+        balanceBefore: !staff && t.balanceBeforeCents !== null ? fromCents(t.balanceBeforeCents) : null,
+        balanceAfter: !staff && t.balanceAfterCents !== null ? fromCents(t.balanceAfterCents) : null,
         createdAt: t.createdAt,
         postedAt: t.postedAt,
       })),
@@ -146,8 +188,12 @@ export const getAccountTransactions = asyncHandler(async (req, res) => {
 
 // GET /api/accounts/report -- money in/out by account for a date range
 export const accountsReport = asyncHandler(async (req, res) => {
-  const { start, end } = resolveDateRange(req.query);
+  const range = resolveDateRange(req.query);
   const accounts = await Account.find().sort({ createdAt: 1 });
+  const view = await balancesFor(req.user, accounts);
+  // Staff never see further back than the last Close Day.
+  const start = view.since && view.since > range.start ? view.since : range.start;
+  const end = range.end;
 
   const agg = await AccountTransaction.aggregate([
     { $match: { status: 'POSTED', postedAt: { $gte: start, $lte: end } } },
@@ -165,16 +211,18 @@ export const accountsReport = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: {
+      scope: view.scope,
+      since: view.since,
       range: { from: start, to: end },
       accounts: accounts.map((a) => {
         const entry = byAccount.get(String(a._id)) || { inCents: 0, outCents: 0 };
         return {
           id: a._id,
           name: a.name,
-          openingBalance: fromCents(a.openingBalanceCents),
+          openingBalance: fromCents(view.openingOf(a)),
           moneyIn: fromCents(entry.inCents),
           moneyOut: fromCents(entry.outCents),
-          currentBalance: fromCents(a.currentBalanceCents),
+          currentBalance: fromCents(view.balanceOf(a)),
         };
       }),
     },
@@ -190,13 +238,17 @@ export { toDTO as accountToDTO };
 export const getAccountStatement = asyncHandler(async (req, res) => {
   const account = await Account.findById(req.params.id);
   if (!account) throw new ApiError(404, 'Account not found.');
-  const { start, end } = resolveDateRange(req.query);
+  const range = resolveDateRange(req.query);
+  const staff = !seesBalances(req.user);
+  const since = staff ? await lastCloseAt() : null;
+  const start = since && since > range.start ? since : range.start;
+  const end = range.end;
 
-  const [before] = await AccountTransaction.aggregate([
+  const [before] = staff ? [null] : await AccountTransaction.aggregate([
     { $match: { account: account._id, status: 'POSTED', postedAt: { $lt: start } } },
     { $group: { _id: null, cents: { $sum: { $cond: [{ $eq: ['$direction', 'IN'] }, '$amountCents', { $multiply: ['$amountCents', -1] }] } } } },
   ]);
-  const openingCents = (account.openingBalanceCents || 0) + (before?.cents || 0);
+  const openingCents = staff ? 0 : (account.openingBalanceCents || 0) + (before?.cents || 0);
 
   const items = await AccountTransaction.find({ account: account._id, status: 'POSTED', postedAt: { $gte: start, $lte: end } })
     .sort({ postedAt: 1, _id: 1 })
@@ -229,7 +281,8 @@ export const getAccountStatement = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: {
-      account: toDTO(account),
+      account: { ...toDTO(account), openingBalance: staff ? 0 : fromCents(account.openingBalanceCents), currentBalance: staff ? null : fromCents(account.currentBalanceCents) },
+      scope: staff ? 'sinceClose' : 'all',
       range: { from: start, to: end },
       opening: fromCents(openingCents),
       moneyIn: fromCents(inCents),

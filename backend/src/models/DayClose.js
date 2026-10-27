@@ -68,11 +68,11 @@ const dayCloseSchema = new mongoose.Schema(
     itemsSold: { type: [itemSoldSchema], default: undefined },
     invoiceDiscountCents: { type: Number, default: 0 }, // whole-invoice discounts, not tied to one item
     cashierBreakdown: { type: [cashierBreakdownSchema], default: [] },
-    // The pre-reset balance of every account zeroed by this close, so a
-    // historical report can always show what each account actually held
-    // that day even though its live balance has since been reset to 0 and
-    // moved on. See dayCloseService.resetOperationalAccounts.
+    // What every account held at the moment of this close. Closings made
+    // before balancesKept emptied the accounts afterwards (a "Close Day
+    // reset" adjustment); since then the money stays in them.
     accountBalancesBeforeReset: { type: [accountResetSchema], default: [] },
+    balancesKept: { type: Boolean, default: false },
     invoiceReferences: { type: [String], default: [] }, // receiptNumbers confirmed by this close
     openedAt: { type: Date, default: null }, // when this business-day session began (Open Day / previous close)
     closedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

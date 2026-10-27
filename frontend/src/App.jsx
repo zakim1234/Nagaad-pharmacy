@@ -19,6 +19,7 @@ import POSPage from './pages/pos/POSPage.jsx';
 import DayItemsSoldPage from './pages/pos/DayItemsSoldPage.jsx';
 import ItemsSoldPage from './pages/reports/ItemsSoldPage.jsx';
 import RefundsPage from './pages/reports/RefundsPage.jsx';
+import StaffDailyPage from './pages/reports/StaffDailyPage.jsx';
 import CloseDayHistoryPage from './pages/pos/CloseDayHistoryPage.jsx';
 import PurchasesPage from './pages/purchases/PurchasesPage.jsx';
 import PurchaseDetailPage from './pages/purchases/PurchaseDetailPage.jsx';
@@ -88,6 +89,7 @@ export default function App() {
               <Route path="/pos/close-day/history" element={<Navigate to="/daily-closing" replace />} />
               <Route path="/daily-closing" element={<RequirePermission module="pos"><CloseDayHistoryPage /></RequirePermission>} />
               <Route path="/daily-closing/items" element={<RequirePermission module="pos"><DayItemsSoldPage /></RequirePermission>} />
+              <Route path="/staff-daily" element={<RequirePermission module="reports"><StaffDailyPage /></RequirePermission>} />
               <Route path="/refunds" element={<RequirePermission module="pos"><RefundsPage /></RequirePermission>} />
               <Route path="/items-sold" element={<RequirePermission module="reports"><ItemsSoldPage /></RequirePermission>} />
               <Route path="/items-sold/view" element={<RequirePermission module="reports"><DayItemsSoldPage /></RequirePermission>} />

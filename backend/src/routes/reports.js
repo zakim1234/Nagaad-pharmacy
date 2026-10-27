@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { itemsSoldReport, itemsSoldPeriods } from '../controllers/dayCloseController.js';
 import { quotationReport } from '../controllers/quotationController.js';
-import { requireAuth, requirePermission } from '../middleware/auth.js';
+import { requireAuth, requirePermission, requireRole } from '../middleware/auth.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { getStaffDaily } from '../services/staffDailyService.js';
 import {
   salesReport,
   profitReport,
@@ -34,6 +36,8 @@ router.use(requirePermission('reports'));
 router.get('/sales', salesReport);
 router.get('/items-sold', itemsSoldReport);
 router.get('/items-sold/periods', itemsSoldPeriods);
+// Admin only: each person's sales and money taken, day by day for a month.
+router.get('/staff-daily', requireRole('admin'), asyncHandler(async (req, res) => res.json({ success: true, data: await getStaffDaily({ month: req.query.month }) })));
 router.get('/quotations', quotationReport);
 router.get('/profit', profitReport);
 router.get('/profit/items/:itemId', profitByItemDrilldown);

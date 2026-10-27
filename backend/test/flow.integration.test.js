@@ -126,13 +126,9 @@ test('purchase, stock, reservations, close-day, expiry, rollback and concurrency
     // succeed -- overdraft is allowed -- and neither debit is lost to a race.
     const payments = await Promise.all([request('/purchases', { supplierId: supplier.id, amount: 500, purchaseAccountId: account.id }), request('/purchases', { supplierId: supplier.id, amount: 500, purchaseAccountId: account.id })]);
     assert.deepEqual(payments.map(p => p.status).sort(), [201, 201]);
-    // Not -110000: Close Day now resets every operational Account to $0
-    // (with an auditable ADJUSTMENT transaction) each time it runs, and it
-    // ran twice above -- so this account's balance is just these two -$500
-    // purchases made since the second reset (each fully paid, since
-    // amountPaid was omitted), not an accumulation all the way back to
-    // before either close.
-    assert.equal((await Account.findById(account.id)).currentBalanceCents, -100000);
+    // Close Day keeps the money in the accounts, so this is everything paid
+    // from it: the earlier purchases plus these two -$500 ones.
+    assert.equal((await Account.findById(account.id)).currentBalanceCents, -110000);
   } finally {
     await new Promise(resolve => server.close(resolve));
     await mongoose.disconnect();

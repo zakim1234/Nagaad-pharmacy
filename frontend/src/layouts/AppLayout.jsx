@@ -27,6 +27,7 @@ import {
   Globe2,
   Store,
   Undo2,
+  UserCheck,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { hasPermission } from '../constants/permissions.js';
@@ -37,7 +38,7 @@ import client, { getSelectedBranch } from '../api/client.js';
 
 // The Super Admin outside any branch sees only the company-wide pages; a
 // branch's own pages appear once they open a branch.
-const OVERVIEW_PATHS = ['/super-dashboard', '/all-branches', '/reports', '/items-sold', '/refunds', '/partners', '/commissions', '/zakat', '/users', '/branches'];
+const OVERVIEW_PATHS = ['/super-dashboard', '/all-branches', '/reports', '/items-sold', '/refunds', '/staff-daily', '/partners', '/commissions', '/zakat', '/users', '/branches'];
 const inOverviewPath = (path) => OVERVIEW_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 // Only on the Super Admin's own screen, never inside a branch.
 const SUPER_ONLY_PATHS = ['/all-branches', '/super-dashboard', '/zakat', '/commissions', '/partners/profit-sharing', '/branches'];
@@ -72,6 +73,7 @@ const navItems = [
   { to: '/reports', label: 'Reports', icon: BarChart3, module: 'reports', section: 'Reports' },
   { to: '/items-sold', label: 'Items Sold', icon: PackageCheck, module: 'reports', section: 'Reports' },
   { to: '/refunds', label: 'Refunds', icon: Undo2, module: 'pos', section: 'Reports' },
+  { to: '/staff-daily', label: 'Staff Daily', icon: UserCheck, module: null, roles: ['admin'], section: 'Reports' },
 ];
 
 function SidebarContent({ onNavigate }) {
