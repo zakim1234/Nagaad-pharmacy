@@ -63,6 +63,23 @@ test('CANCEL INVOICE REFUND -- wallet or cash from a chosen account, listed on t
     assert.equal(rb.data.cancelRefund.amount, 40);
     assert.equal((await Customer.findById(customer.id)).walletBalanceCents, 4000);
 
+    // The customer statement keeps both cancelled invoices, marked: the sale,
+    // its payments, the cancellation and the refund -- ending at 0 owed.
+    const st = await request(`/customers/${customer.id}/statement`, null, 'GET');
+    assert.equal(st.status, 200, JSON.stringify(st));
+    const rowsOf = (rn) => st.data.ledger.filter((e) => e.reference === rn).map((e) => [e.type, e.debit, e.credit]);
+    assert.deepEqual(rowsOf(b.data.receiptNumber), [
+      ['SALE', 40, 0],
+      ['CANCELLED', 0, 40],
+      ['REFUND', 40, 0],
+    ]);
+    assert.ok(st.data.ledger.filter((e) => e.type === 'REFUND').some((e) => /Salaam Bank to 615777888/.test(e.description)));
+    assert.ok(st.data.ledger.every((e) => e.type.endsWith('PAYMENT') || e.cancelled));
+    assert.equal(st.data.ledger.at(-1).runningBalance, 0);
+    assert.equal(st.data.summary.totalPayments, 0, 'nothing paid on invoices still standing');
+    assert.equal(st.data.summary.cancelledInvoices, 2);
+    assert.equal(st.data.summary.totalCancelled, 90);
+
     // The report: both, newest first, with totals; filters by kind and date.
     const rep = await request('/sales/refunds', null, 'GET');
     assert.equal(rep.status, 200, JSON.stringify(rep));

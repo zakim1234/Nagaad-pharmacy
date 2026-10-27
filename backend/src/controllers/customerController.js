@@ -760,6 +760,7 @@ export const getWalletHistory = asyncHandler(async (req, res) => {
 // ledger. Draft invoices are deliberately excluded from the finalized
 // totals/ledger and returned separately as "pendingToday" so they are never
 // mistaken for posted debt/revenue.
+const TYPE_ORDER = { SALE: 0, SALE_PAYMENT: 1, PAYMENT: 1, CANCELLED: 2, REFUND: 3 };
 export const getCustomerStatement = asyncHandler(async (req, res) => {
   const customer = await Customer.findById(req.params.id);
   if (!customer) throw new ApiError(404, 'Customer not found.');
@@ -768,24 +769,84 @@ export const getCustomerStatement = asyncHandler(async (req, res) => {
   const to = req.query.to ? new Date(req.query.to) : new Date();
   if (req.query.to && req.query.to.length <= 10) to.setHours(23, 59, 59, 999);
 
-  const [sales, payments, todaysDrafts] = await Promise.all([
+  const [sales, allPayments, todaysDrafts, cancelledSales] = await Promise.all([
     Sale.find({ customer: customer._id, status: 'CONFIRMED', createdAt: { $gte: from, $lte: to } }).sort({ createdAt: 1 }),
     Payment.find({ customer: customer._id, status: { $ne: 'CANCELLED' }, createdAt: { $gte: from, $lte: to } }).sort({ createdAt: 1 }),
     Sale.find({ customer: customer._id, status: 'DRAFT' }).sort({ createdAt: -1 }),
+    // Confirmed invoices that were cancelled later (a cancelled Draft was never on the statement).
+    Sale.find({ customer: customer._id, status: 'CANCELLED', confirmedAt: { $ne: null }, createdAt: { $gte: from, $lte: to } }).sort({ createdAt: 1 }),
   ]);
+  const cancelled = new Map(cancelledSales.map((x) => [String(x._id), x]));
+
+  // Money paid on each cancelled invoice (at the sale and by debt payments).
+  // The summary's "paid" counts only money on invoices still standing.
+  const paidOnCancelled = new Map();
+  let paidOnStandingCents = 0;
+  for (const p of allPayments) {
+    let onCancelledCents = 0;
+    if (p.type === 'sale' && p.relatedSale && cancelled.has(String(p.relatedSale))) {
+      onCancelledCents = p.amountCents;
+      paidOnCancelled.set(String(p.relatedSale), (paidOnCancelled.get(String(p.relatedSale)) || 0) + p.amountCents);
+    } else {
+      for (const al of p.allocations || []) {
+        if (!cancelled.has(String(al.sale))) continue;
+        onCancelledCents += al.amountCents;
+        paidOnCancelled.set(String(al.sale), (paidOnCancelled.get(String(al.sale)) || 0) + al.amountCents);
+      }
+    }
+    paidOnStandingCents += Math.max(0, p.amountCents - onCancelledCents);
+  }
+  const payments = allPayments;
 
   // Merge into one chronological, double-entry ledger: a confirmed sale is a
-  // debit (increases what the customer owes), a payment is a credit.
+  // debit (increases what the customer owes), a payment is a credit. A
+  // cancelled invoice stays on it, marked: its sale and payments, then the
+  // cancellation (takes the invoice off) and the refund of what was paid on
+  // it (to the wallet or as cash) -- together they come to nothing.
   const entries = [
-    ...sales.map((s) => ({
-      date: s.createdAt,
-      reference: s.receiptNumber,
+    ...sales.map((x) => ({
+      date: x.createdAt,
+      reference: x.receiptNumber,
       type: 'SALE',
-      description: `Sale invoice ${s.receiptNumber}`,
-      debitCents: s.totalCents,
+      description: `Sale invoice ${x.receiptNumber}`,
+      debitCents: x.totalCents,
       creditCents: 0,
-      saleId: s._id,
+      saleId: x._id,
     })),
+    ...cancelledSales.flatMap((x) => {
+      const paidBackCents = x.cancelRefund?.to ? x.cancelRefund.amountCents : paidOnCancelled.get(String(x._id)) || 0;
+      const when = x.cancelledAt || x.updatedAt;
+      const rows = [
+        { date: x.createdAt, reference: x.receiptNumber, type: 'SALE', cancelled: true, description: `Sale invoice ${x.receiptNumber} (cancelled)`, debitCents: x.totalCents, creditCents: 0, saleId: x._id },
+        {
+          date: when,
+          reference: x.receiptNumber,
+          type: 'CANCELLED',
+          cancelled: true,
+          description: `Invoice ${x.receiptNumber} cancelled${x.cancelledReason ? ` — ${x.cancelledReason}` : ''}`,
+          debitCents: 0,
+          creditCents: x.totalCents,
+          saleId: x._id,
+        },
+      ];
+      if (paidBackCents > 0) {
+        const r = x.cancelRefund || {};
+        rows.push({
+          date: when,
+          reference: x.receiptNumber,
+          type: 'REFUND',
+          cancelled: true,
+          description:
+            r.to === 'ACCOUNT'
+              ? `Money given back from ${r.accountName || 'the account'}${r.reference ? ` to ${r.reference}` : ''}`
+              : "Money paid on it moved to the customer's wallet",
+          debitCents: paidBackCents,
+          creditCents: 0,
+          saleId: x._id,
+        });
+      }
+      return rows;
+    }),
     ...payments.map((p) => ({
       date: p.createdAt,
       reference: p.receiptNumber,
@@ -795,7 +856,7 @@ export const getCustomerStatement = asyncHandler(async (req, res) => {
       creditCents: p.amountCents,
       paymentId: p._id,
     })),
-  ].sort((a, b) => new Date(a.date) - new Date(b.date));
+  ].sort((a, b) => new Date(a.date) - new Date(b.date) || TYPE_ORDER[a.type] - TYPE_ORDER[b.type]);
 
   let runningBalanceCents = customer.openingBalanceCents;
   const ledger = entries.map((e) => {
@@ -804,6 +865,7 @@ export const getCustomerStatement = asyncHandler(async (req, res) => {
       date: e.date,
       reference: e.reference,
       type: e.type,
+      cancelled: !!e.cancelled,
       description: e.description,
       debit: fromCents(e.debitCents),
       credit: fromCents(e.creditCents),
@@ -812,7 +874,8 @@ export const getCustomerStatement = asyncHandler(async (req, res) => {
   });
 
   const totalAmountPurchasedCents = sales.reduce((sum, s) => sum + s.totalCents, 0);
-  const totalPaymentsCents = payments.reduce((sum, p) => sum + p.amountCents, 0);
+  const totalPaymentsCents = paidOnStandingCents;
+  const totalCancelledCents = cancelledSales.reduce((sum, x) => sum + x.totalCents, 0);
   const totalCreditGeneratedCents = sales.reduce((sum, s) => sum + s.balanceAddedCents, 0);
 
   res.json({
@@ -825,6 +888,8 @@ export const getCustomerStatement = asyncHandler(async (req, res) => {
         totalConfirmedPurchases: sales.length,
         totalAmountPurchased: fromCents(totalAmountPurchasedCents),
         totalPayments: fromCents(totalPaymentsCents),
+        cancelledInvoices: cancelledSales.length,
+        totalCancelled: fromCents(totalCancelledCents),
         totalCreditGenerated: fromCents(totalCreditGeneratedCents),
         currentOutstandingBalance: fromCents(customer.balanceCents),
         numberOfFinalizedInvoices: sales.length,
