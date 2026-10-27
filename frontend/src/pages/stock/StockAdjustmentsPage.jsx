@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowDownCircle, ArrowUpCircle, ClipboardCheck, Plus, Search, SlidersHorizontal, Scale, PackageMinus, PackagePlus, X } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ChevronLeft, ChevronRight, ClipboardCheck, Plus, Search, SlidersHorizontal, Scale, PackageMinus, PackagePlus, X } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -28,6 +28,49 @@ const INCREASE_REASONS = ['COUNT_CORRECTION', 'FOUND', 'OTHER'];
 // and sales -- damaged/expired/lost goods written off, or a physical count
 // difference. Every adjustment is permanent; a mistake is fixed with an
 // opposite adjustment.
+// Quick periods for the date filter. A week runs Saturday to Friday.
+const PERIODS = [
+  { key: 'day', label: 'Day' },
+  { key: 'week', label: 'Week' },
+  { key: 'month', label: 'Month' },
+  { key: 'year', label: 'Year' },
+];
+const pad2 = (n) => String(n).padStart(2, '0');
+const ymd = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+// [from, to] (inclusive days) of the period `offset` steps back from today.
+function periodDates(type, offset) {
+  const now = new Date();
+  if (type === 'day') {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+    return [ymd(d), ymd(d)];
+  }
+  if (type === 'week') {
+    const back = (now.getDay() + 1) % 7; // days since Saturday
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - back + offset * 7);
+    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+    return [ymd(start), ymd(end)];
+  }
+  if (type === 'month') {
+    const start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    return [ymd(start), ymd(new Date(start.getFullYear(), start.getMonth() + 1, 0))];
+  }
+  const y = now.getFullYear() + offset;
+  return [`${y}-01-01`, `${y}-12-31`];
+}
+
+function periodLabel(type, offset, from, to) {
+  const d = new Date(`${from}T00:00:00`);
+  if (type === 'day') return offset === 0 ? 'Today' : offset === -1 ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  if (type === 'week') {
+    const e = new Date(`${to}T00:00:00`);
+    const range = `${d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} – ${e.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    return offset === 0 ? `This week · ${range}` : range;
+  }
+  if (type === 'month') return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  return String(d.getFullYear());
+}
+
 export default function StockAdjustmentsPage() {
   const { user } = useAuth();
   const toast = useToast();
@@ -42,6 +85,20 @@ export default function StockAdjustmentsPage() {
   const [reason, setReason] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+  const [period, setPeriod] = useState(null); // { type, offset } while a quick period is chosen
+  const choosePeriod = (type, offset = 0) => {
+    const [f, t] = periodDates(type, offset);
+    setPeriod({ type, offset });
+    setFrom(f);
+    setTo(t);
+    setPage(1);
+  };
+  const clearPeriod = () => {
+    setPeriod(null);
+    setFrom('');
+    setTo('');
+    setPage(1);
+  };
   const [modalOpen, setModalOpen] = useState(false);
   const [countOpen, setCountOpen] = useState(false);
 
@@ -123,11 +180,48 @@ export default function StockAdjustmentsPage() {
           </Select>
         </FormField>
         <FormField label="From">
-          <Input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} />
+          <Input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPeriod(null); setPage(1); }} />
         </FormField>
         <FormField label="To">
-          <Input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(1); }} />
+          <Input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPeriod(null); setPage(1); }} />
         </FormField>
+        <div className="flex w-full flex-wrap items-center gap-3 border-t border-neutral-100 pt-3">
+          <div className="inline-flex rounded-lg border border-neutral-200 bg-white p-0.5">
+            <button
+              onClick={clearPeriod}
+              className={`rounded-md px-3.5 py-1.5 text-sm font-semibold transition ${!period && !from && !to ? 'bg-brand-400 text-neutral-950' : 'text-neutral-600 hover:bg-neutral-50'}`}
+            >
+              All
+            </button>
+            {PERIODS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => choosePeriod(p.key)}
+                className={`rounded-md px-3.5 py-1.5 text-sm font-semibold transition ${period?.type === p.key ? 'bg-brand-400 text-neutral-950' : 'text-neutral-600 hover:bg-neutral-50'}`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          {period && (
+            <div className="inline-flex items-center gap-1">
+              <button
+                onClick={() => choosePeriod(period.type, period.offset - 1)}
+                className="inline-flex items-center gap-0.5 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+              >
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </button>
+              <span className="min-w-[10rem] px-2 text-center text-sm font-bold text-neutral-900">{periodLabel(period.type, period.offset, from, to)}</span>
+              <button
+                onClick={() => choosePeriod(period.type, period.offset + 1)}
+                disabled={period.offset >= 0}
+                className="inline-flex items-center gap-0.5 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <section className="overflow-hidden rounded-2xl border border-neutral-200/70 bg-white">
@@ -499,8 +593,8 @@ function NewAdjustmentModal({ open, onClose, onSaved }) {
 
 const TONES = {
   rose: 'from-brand-300 to-brand-400 text-neutral-950',
-  emerald: 'from-neutral-700 to-neutral-950 text-white',
-  amber: 'from-neutral-400 to-neutral-600 text-white',
+  emerald: 'from-brand-400 to-brand-500 text-neutral-950',
+  amber: 'from-brand-100 to-brand-300 text-brand-800',
   indigo: 'from-brand-300 to-brand-400 text-neutral-950',
 };
 

@@ -83,7 +83,7 @@ export default function TodayClosingPanel({ onChanged, refreshKey = 0 }) {
       {/* Status + actions */}
       <div className={`flex flex-wrap items-center justify-between gap-4 px-5 py-4 ${isOpen ? 'bg-emerald-50/60' : 'bg-brand-50/60'}`}>
         <div className="flex items-center gap-3">
-          <div className={`flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-md ${isOpen ? 'bg-gradient-to-br from-emerald-500 to-neutral-500' : 'bg-gradient-to-br from-brand-300 to-neutral-500'}`}>
+          <div className={`flex h-11 w-11 items-center justify-center rounded-xl shadow-md ${isOpen ? 'bg-emerald-500 text-white' : 'surface-blue'}`}>
             {isOpen ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </div>
           <div>
