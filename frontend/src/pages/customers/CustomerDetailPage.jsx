@@ -38,6 +38,7 @@ import ReturnItemsModal from './ReturnItemsModal.jsx';
 import CustomerQuotationsSection from './CustomerQuotationsSection.jsx';
 import CustomerWalletSection from './CustomerWalletSection.jsx';
 import CancelCustomerPaymentDialog from './CancelCustomerPaymentDialog.jsx';
+import CancelInvoiceDialog from './CancelInvoiceDialog.jsx';
 import SharePdfButton from '../../components/SharePdfButton.jsx';
 import DocHeader, { DocInfo } from '../../components/docs/DocHeader.jsx';
 
@@ -87,7 +88,6 @@ export default function CustomerDetailPage() {
   const [payOpen, setPayOpen] = useState(false);
   const [returnSale, setReturnSale] = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null); // { sale, mode: 'cancel' | 'reverse' }
-  const [cancelRefundTo, setCancelRefundTo] = useState('WALLET'); // where cash paid at the sale goes on reversal
   const [cancelling, setCancelling] = useState(false);
   const [tab, setTab] = useState('invoices');
   const [expanded, setExpanded] = useState(() => new Set());
@@ -112,17 +112,8 @@ export default function CustomerDetailPage() {
     if (!cancelTarget) return;
     setCancelling(true);
     try {
-      const path = cancelTarget.mode === 'reverse' ? `/sales/${cancelTarget.sale.id}/reverse` : `/sales/${cancelTarget.sale.id}/cancel`;
-      await client.post(path, { reason: cancelTarget.mode === 'reverse' ? 'Cancelled by customer' : 'Cancelled by seller', refundTo: cancelRefundTo });
-      const paidOnIt = cancelTarget.mode === 'reverse' ? Math.max(0, cancelTarget.sale.total - cancelTarget.sale.outstanding - (cancelTarget.sale.walletAmount || 0)) : 0;
-      toast.success(
-        cancelTarget.mode === 'reverse'
-          ? paidOnIt > 0
-            ? `Invoice cancelled — ${formatCurrency(paidOnIt)} ${cancelRefundTo === 'ACCOUNT' && cancelTarget.sale.paidAmount > 0 ? 'handled (cash given back / rest to the wallet)' : 'moved to the customer\'s wallet'}.`
-            : 'Invoice cancelled and reversed.'
-          : 'Draft invoice cancelled.'
-      );
-      setCancelRefundTo('WALLET');
+      await client.post(`/sales/${cancelTarget.sale.id}/cancel`, { reason: 'Cancelled by seller' });
+      toast.success('Draft invoice cancelled.');
       setCancelTarget(null);
       load();
     } catch (err) {
@@ -586,24 +577,20 @@ export default function CustomerDetailPage() {
       <PayDebtModal open={payOpen} onClose={() => setPayOpen(false)} customerId={id} onPaid={load} />
       <CancelCustomerPaymentDialog customerId={id} payment={cancelPayment} onClose={() => setCancelPayment(null)} onCancelled={load} />
       <ReturnItemsModal open={!!returnSale} onClose={() => setReturnSale(null)} sale={returnSale} onReturned={load} />
+      <CancelInvoiceDialog
+        sale={cancelTarget?.mode === 'reverse' ? cancelTarget.sale : null}
+        onClose={() => setCancelTarget(null)}
+        onCancelled={load}
+      />
       <ConfirmDialog
-        open={!!cancelTarget}
-        title={cancelTarget?.mode === 'reverse' ? 'Cancel Invoice' : 'Cancel Draft Invoice'}
-        message={
-          cancelTarget?.mode === 'reverse' ? (
-            <ReverseMessage sale={cancelTarget.sale} refundTo={cancelRefundTo} onRefundTo={setCancelRefundTo} />
-          ) : (
-            `Cancel draft invoice ${cancelTarget?.sale.receiptNumber}? Reserved stock and any pending payment will be released.`
-          )
-        }
-        confirmLabel={cancelTarget?.mode === 'reverse' ? 'Cancel Invoice' : 'Cancel Draft'}
+        open={cancelTarget?.mode === 'cancel'}
+        title="Cancel Draft Invoice"
+        message={`Cancel draft invoice ${cancelTarget?.sale.receiptNumber}? Reserved stock and any pending payment will be released.`}
+        confirmLabel="Cancel Draft"
         variant="danger"
         loading={cancelling}
         onConfirm={handleCancelConfirm}
-        onClose={() => {
-          setCancelTarget(null);
-          setCancelRefundTo('WALLET');
-        }}
+        onClose={() => setCancelTarget(null)}
       />
     </div>
   );
@@ -730,44 +717,3 @@ function PrintHeader({ customer, from, to, status }) {
   );
 }
 
-// What cancelling a confirmed invoice does with money already paid on it:
-// it goes to the customer's wallet; cash paid at the sale can instead be
-// handed back out of the account.
-function ReverseMessage({ sale, refundTo, onRefundTo }) {
-  const paidLater = Math.max(0, sale.balanceAdded - sale.outstanding);
-  const paidAtSale = sale.paidAmount || 0;
-  const paidOnIt = paidLater + paidAtSale;
-  const option = (value, title) => (
-    <span
-      role="radio"
-      aria-checked={refundTo === value}
-      tabIndex={0}
-      onClick={() => onRefundTo(value)}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onRefundTo(value)}
-      className={`mt-1.5 flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${refundTo === value ? 'border-brand-400 bg-brand-50/60 font-semibold text-neutral-900' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
-    >
-      <span className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${refundTo === value ? 'border-brand-400' : 'border-neutral-300'}`}>
-        {refundTo === value && <span className="h-2 w-2 rounded-full bg-brand-400" />}
-      </span>
-      {title}
-    </span>
-  );
-  return (
-    <span className="block">
-      Cancel invoice {sale.receiptNumber}? Stock is restored and whatever is still owed on it is removed. It is marked Cancelled (never deleted).
-      {paidOnIt > 0 && (
-        <span className="mt-3 block rounded-lg bg-neutral-50 px-3 py-2">
-          <span className="block font-semibold text-neutral-800">{formatCurrency(paidOnIt)} was already paid on this invoice.</span>
-          {paidLater > 0 && <span className="block text-xs text-neutral-500">{formatCurrency(paidLater)} paid later goes to the customer's wallet.</span>}
-          {paidAtSale > 0 && (
-            <>
-              <span className="mt-1 block text-xs text-neutral-500">{formatCurrency(paidAtSale)} paid at the sale:</span>
-              {option('WALLET', "Put it in the customer's wallet")}
-              {option('ACCOUNT', 'Give the cash back from the account')}
-            </>
-          )}
-        </span>
-      )}
-    </span>
-  );
-}

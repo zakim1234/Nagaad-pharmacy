@@ -109,6 +109,18 @@ const saleSchema = new mongoose.Schema(
     confirmedAt: { type: Date, default: null },
     cancelledAt: { type: Date, default: null },
     cancelledReason: { type: String, default: '' },
+    // Where the money paid on a confirmed invoice went when it was cancelled:
+    // the customer's wallet, or cash handed back out of an account (and the
+    // number it was sent to). Shown on the Refunds report.
+    cancelRefund: {
+      to: { type: String, enum: ['', 'WALLET', 'ACCOUNT'], default: '' },
+      amountCents: { type: Number, default: 0 },
+      account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', default: null },
+      accountName: { type: String, default: '' },
+      reference: { type: String, default: '', trim: true, maxlength: 100 },
+      by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+      byName: { type: String, default: '' },
+    },
     returns: { type: [saleReturnSchema], default: [] },
     notes: { type: String, default: '', trim: true, maxlength: 500 },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

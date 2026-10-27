@@ -4,6 +4,7 @@ import {
   createSale,
   updateSale,
   cancelSale,
+  listRefunds,
   listTodayDrafts,
   listSales,
   getSale,
@@ -17,6 +18,7 @@ router.use(requireAuth);
 router.use(requirePermission('pos'));
 
 router.get('/drafts/today', listTodayDrafts);
+router.get('/refunds', listRefunds);
 router.get('/', listSales);
 router.post('/', createSale);
 router.get('/:id', getSale);

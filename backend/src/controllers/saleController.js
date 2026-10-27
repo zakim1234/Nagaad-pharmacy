@@ -59,6 +59,15 @@ function toDTO(sale) {
     confirmedAt: sale.confirmedAt,
     cancelledAt: sale.cancelledAt,
     cancelledReason: sale.cancelledReason,
+    cancelRefund: sale.cancelRefund?.to
+      ? {
+          to: sale.cancelRefund.to,
+          amount: fromCents(sale.cancelRefund.amountCents),
+          accountName: sale.cancelRefund.accountName,
+          reference: sale.cancelRefund.reference,
+          byName: sale.cancelRefund.byName,
+        }
+      : null,
     createdAt: sale.createdAt,
     updatedAt: sale.updatedAt,
     quotation: sale.quotation || null,
@@ -276,6 +285,41 @@ export const cancelSale = asyncHandler(async (req, res) => {
   res.json({ success: true, data: toDTO(result) });
 });
 
+// GET /api/sales/refunds?from&to&refundTo -- every cancelled invoice whose
+// money was given back: to the customer's wallet or as cash out of an account
+// (with the number it was sent to), newest first, with totals.
+export const listRefunds = asyncHandler(async (req, res) => {
+  const filter = { status: 'CANCELLED', 'cancelRefund.amountCents': { $gt: 0 } };
+  if (req.query.from || req.query.to) {
+    filter.cancelledAt = {};
+    if (req.query.from) filter.cancelledAt.$gte = new Date(String(req.query.from).slice(0, 10) + 'T00:00:00');
+    if (req.query.to) filter.cancelledAt.$lte = new Date(String(req.query.to).slice(0, 10) + 'T23:59:59.999');
+  }
+  if (['WALLET', 'ACCOUNT'].includes(req.query.refundTo)) filter['cancelRefund.to'] = req.query.refundTo;
+  const sales = await Sale.find(filter).sort({ cancelledAt: -1 }).limit(1000).lean();
+  const rows = sales.map((s) => ({
+    id: s._id,
+    branch: s.branch || null,
+    receiptNumber: s.receiptNumber,
+    customer: s.customer || null,
+    customerName: s.customerName || 'Walk-in',
+    invoiceDate: s.createdAt,
+    cancelledAt: s.cancelledAt,
+    reason: s.cancelledReason || '',
+    total: fromCents(s.totalCents),
+    amount: fromCents(s.cancelRefund.amountCents),
+    to: s.cancelRefund.to,
+    accountName: s.cancelRefund.accountName || '',
+    reference: s.cancelRefund.reference || '',
+    byName: s.cancelRefund.byName || '',
+  }));
+  const sum = (to) => fromCents(sales.filter((s) => !to || s.cancelRefund.to === to).reduce((t, s) => t + s.cancelRefund.amountCents, 0));
+  res.json({
+    success: true,
+    data: { rows, totals: { count: rows.length, amount: sum(), wallet: sum('WALLET'), cash: sum('ACCOUNT') } },
+  });
+});
+
 // GET /api/sales/drafts/today -- convenient Seller access to today's pending invoices
 export const listTodayDrafts = asyncHandler(async (req, res) => {
   const { start, end } = resolveDateRange({ range: 'today' });
@@ -342,6 +386,7 @@ export const getReceipt = asyncHandler(async (req, res) => {
 // payment had already been posted for this sale.
 export const reverseSale = asyncHandler(async (req, res) => {
   const { reason = '' } = req.body;
+  const reference = String(req.body.reference || '').trim().slice(0, 100); // number the money was sent back to
 
   const result = await runInTransaction(async (session) => {
     const sale = await Sale.findById(req.params.id).session(session);
@@ -350,11 +395,19 @@ export const reverseSale = asyncHandler(async (req, res) => {
     if (sale.status === 'CANCELLED') throw new ApiError(409, 'This sale has already been cancelled/reversed.');
     // Money already received for this invoice: at the sale (paidAmount) and
     // by debt payments made on it later (the part of its credit no longer
-    // outstanding). For a customer it goes to their wallet unless
-    // refundTo: 'ACCOUNT' asks for the cash paid at the sale to be handed
-    // back; a walk-in sale (no customer) can only be refunded.
+    // outstanding). All of it goes to one place: the customer's wallet, or
+    // (refundTo: 'ACCOUNT') cash handed back out of the chosen account --
+    // accountId, defaulting to the one the sale was paid into -- with the
+    // number it was sent to. A walk-in sale (no customer) can only be refunded.
     const paidLaterCents = Math.max(0, sale.balanceAddedCents - sale.outstandingCents);
+    const paidBackCents = sale.paidAmountCents + paidLaterCents;
     const refundTo = !sale.customer ? 'ACCOUNT' : req.body.refundTo === 'ACCOUNT' ? 'ACCOUNT' : 'WALLET';
+    let refundAccount = null;
+    if (refundTo === 'ACCOUNT' && paidBackCents > 0) {
+      const accountId = req.body.accountId || sale.paymentAccount;
+      refundAccount = accountId ? await Account.findById(accountId).session(session) : null;
+      if (!refundAccount || !refundAccount.isActive) throw new ApiError(400, 'Choose the account the money is given back from.');
+    }
 
     // Only the portion not already restored by a prior partial return (see
     // returnSale) is restored here -- lotConsumption entries are decremented
@@ -418,9 +471,7 @@ export const reverseSale = asyncHandler(async (req, res) => {
       }
     }
 
-    // Money paid on it later always goes to the customer's wallet; cash paid
-    // at the sale goes there too unless it is handed back.
-    const toWalletCents = customer ? paidLaterCents + (refundTo === 'WALLET' ? sale.paidAmountCents : 0) : 0;
+    const toWalletCents = customer && refundTo === 'WALLET' ? paidBackCents : 0;
     if (toWalletCents > 0) {
       const walletBefore = customer.walletBalanceCents;
       customer.walletBalanceCents += toWalletCents;
@@ -442,25 +493,33 @@ export const reverseSale = asyncHandler(async (req, res) => {
       );
     }
 
-    // The original payment was already POSTED at Close Day -- refund it out
-    // of the same account rather than silently deleting that history.
-    if (refundTo === 'ACCOUNT' && sale.paymentAccount && sale.paidAmountCents > 0) {
-      const account = await Account.findById(sale.paymentAccount).session(session);
-      if (account) {
-        await postImmediateTransaction(
-          {
-            account,
-            direction: 'OUT',
-            type: 'REFUND',
-            amountCents: sale.paidAmountCents,
-            referenceType: 'Sale',
-            referenceId: sale._id,
-            description: `Refund for reversed sale ${sale.receiptNumber}${reason ? ` (${reason})` : ''}`,
-            createdBy: req.user,
-          },
-          session
-        );
-      }
+    // The payments were already POSTED -- the refund leaves the chosen
+    // account as its own transaction rather than deleting that history.
+    if (refundAccount) {
+      await postImmediateTransaction(
+        {
+          account: refundAccount,
+          direction: 'OUT',
+          type: 'REFUND',
+          amountCents: paidBackCents,
+          referenceType: 'Sale',
+          referenceId: sale._id,
+          description: `Refund for cancelled invoice ${sale.receiptNumber}${sale.customerName ? ` — ${sale.customerName}` : ''}${reference ? ` (sent to ${reference})` : ''}${reason ? ` (${reason})` : ''}`,
+          createdBy: req.user,
+        },
+        session
+      );
+    }
+    if (paidBackCents > 0) {
+      sale.cancelRefund = {
+        to: refundTo,
+        amountCents: paidBackCents,
+        account: refundAccount?._id || null,
+        accountName: refundAccount?.name || '',
+        reference: refundTo === 'ACCOUNT' ? reference : '',
+        by: req.user?._id || null,
+        byName: req.user?.name || '',
+      };
     }
 
     // The sale is being fully undone -- give back whatever wallet credit it
@@ -488,7 +547,7 @@ export const reverseSale = asyncHandler(async (req, res) => {
     action: 'sale.reverse',
     entityType: 'Sale',
     entityId: result._id,
-    details: { reason, refundTo: req.body.refundTo || 'WALLET' },
+    details: { reason, refundTo: result.cancelRefund?.to || 'WALLET', amount: fromCents(result.cancelRefund?.amountCents || 0), account: result.cancelRefund?.accountName || '', reference: result.cancelRefund?.reference || '' },
   });
 
   res.json({ success: true, data: toDTO(result) });
