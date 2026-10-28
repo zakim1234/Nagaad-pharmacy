@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Printer, ArrowLeft } from 'lucide-react';
 import client from '../../api/client.js';
 import { formatCurrency, formatDate, formatTime } from '../../utils/format.js';
@@ -17,6 +17,16 @@ import DocHeader, { DocInfo, DocSummary, DocFooter, DOC_TH, DOC_THEAD_ROW, docRo
 // is a durable reference to that specific return.
 export default function ReturnReceiptPage() {
   const { id, index } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  // Opened from its invoice: just go back. Opened from anywhere else (the
+  // customer page, right after the return): swap this page for the invoice,
+  // so the invoice's own Back returns to where the user started -- never
+  // round in a circle between the two.
+  const backToInvoice = () =>
+    location.state?.fromInvoice
+      ? navigate(-1)
+      : navigate(`/receipt/${id}`, { replace: true, state: location.state?.backLabel ? { backLabel: location.state.backLabel } : undefined });
   const [sale, setSale] = useState(null);
   const [error, setError] = useState('');
 
@@ -40,9 +50,9 @@ export default function ReturnReceiptPage() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between no-print">
-        <Link to={`/receipt/${id}`} className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
+        <button type="button" onClick={backToInvoice} className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700">
           <ArrowLeft className="h-4 w-4" /> Back to Invoice
-        </Link>
+        </button>
         <div className="flex gap-2">
           <SharePdfButton
             fileName={`Return-${returnReceiptNumber}`}
