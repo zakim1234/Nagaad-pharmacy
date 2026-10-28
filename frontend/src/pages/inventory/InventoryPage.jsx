@@ -15,17 +15,24 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import InventoryFormModal from './InventoryFormModal.jsx';
 import InventoryDetailsModal from './InventoryDetailsModal.jsx';
 
-// Selling price minus cost: per unit with its margin, and on the stock in hand.
-function ProfitCell({ item }) {
-  const per = Math.round((item.sellingPrice - item.costPrice) * 100) / 100;
-  const margin = item.sellingPrice > 0 ? Math.round((per / item.sellingPrice) * 100) : null;
-  const loss = per < 0;
+const num = (n) => Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const round2 = (n) => Math.round(n * 100) / 100;
+
+// Cost / sell per unit, the same for the whole stock in hand, and the profit
+// that stock makes when sold (total sell - total cost).
+function PriceCells({ item }) {
+  const totalCost = round2(item.quantity * item.costPrice);
+  const totalSell = round2(item.quantity * item.sellingPrice);
   return (
-    <Td className="whitespace-nowrap tabular-nums">
-      <span className={`font-semibold ${loss ? 'text-brand-700' : 'text-emerald-600'}`}>{formatCurrency(per)}</span>
-      {margin !== null && <span className="ml-1 text-xs text-neutral-400">{margin}%</span>}
-      {item.quantity > 0 && <span className="block text-[11px] text-neutral-400">on stock {formatCurrency(Math.round(per * item.quantity * 100) / 100)}</span>}
-    </Td>
+    <>
+      <Td className="whitespace-nowrap tabular-nums text-neutral-800">
+        {num(item.costPrice)} <span className="text-neutral-400">/</span> {num(item.sellingPrice)}
+      </Td>
+      <Td className="whitespace-nowrap text-right tabular-nums text-neutral-800">
+        {num(totalCost)} <span className="text-neutral-400">/</span> {num(totalSell)}
+      </Td>
+      <Td className="whitespace-nowrap text-right font-bold tabular-nums text-neutral-950">{formatCurrency(round2(totalSell - totalCost))}</Td>
+    </>
   );
 }
 
@@ -157,9 +164,9 @@ export default function InventoryPage() {
             <Th>Category</Th>
             <Th>Supplier</Th>
             <Th>Quantity</Th>
-            <Th>Avg Cost / Sell</Th>
-            <Th>Profit</Th>
-            <Th>Total Value</Th>
+            <Th>Cost / Sell</Th>
+            <Th className="text-right">Total Cost / Total Sell</Th>
+            <Th className="text-right">Profit</Th>
             <Th>Status</Th>
             <Th>Expiry</Th>
             <Th>Created</Th>
@@ -189,13 +196,7 @@ export default function InventoryPage() {
                   <Td className="tabular-nums">
                     {item.quantity} {item.unit}
                   </Td>
-                  <Td className="tabular-nums">
-                    <span className="text-neutral-500">{formatCurrency(item.costPrice)}</span>
-                    {' / '}
-                    <span className="font-medium">{formatCurrency(item.sellingPrice)}</span>
-                  </Td>
-                  <ProfitCell item={item} />
-                  <Td className="tabular-nums font-medium text-neutral-700">{formatCurrency(item.quantity * item.costPrice)}</Td>
+                  <PriceCells item={item} />
                   <Td>
                     <Badge color={stock.color}>{stock.label}</Badge>
                   </Td>
