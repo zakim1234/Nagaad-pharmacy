@@ -58,6 +58,7 @@ import CommissionDocPage from './pages/commissions/CommissionDocPage.jsx';
 import WalletStatementPage from './pages/customers/WalletStatementPage.jsx';
 import CustomerItemsPage from './pages/customers/CustomerItemsPage.jsx';
 import NotFound from './pages/NotFound.jsx';
+import BusyOverlay from './components/BusyOverlay.jsx';
 
 function POSWorkspace() { const location = useLocation(); return <POSPage key={location.search} />; }
 
@@ -65,6 +66,7 @@ export default function App() {
   return (
     <ToastProvider>
       <AuthProvider>
+        <BusyOverlay />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />

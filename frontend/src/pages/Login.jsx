@@ -5,6 +5,11 @@ import Button from '../components/ui/Button.jsx';
 import { Input, Label } from '../components/ui/Field.jsx';
 import { BUSINESS } from '../constants/business.js';
 import logo from '../images/logo.png';
+import Spinner from '../components/ui/Spinner.jsx';
+
+// How long the welcome screen stays after a successful sign-in.
+const WELCOME_MS = 1800;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export default function Login() {
   const { login } = useAuth();
@@ -14,6 +19,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [welcome, setWelcome] = useState(false); // the full-screen loading after Sign In
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,16 +29,38 @@ export default function Login() {
       return;
     }
     setLoading(true);
+    setWelcome(true);
+    const started = Date.now();
     try {
       await login(username.trim(), password);
+      await sleep(Math.max(0, WELCOME_MS - (Date.now() - started)));
       const redirectTo = location.state?.from || '/dashboard';
       navigate(redirectTo, { replace: true });
     } catch (err) {
+      setWelcome(false);
       setError(err.friendlyMessage || 'Incorrect username or password.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (welcome) {
+    return (
+      <div className="busy-fade surface-blue fixed inset-0 z-[95] flex flex-col items-center justify-center gap-6 px-6 text-center" role="status" aria-live="polite">
+        <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white p-2.5 shadow-lg">
+          <img src={logo} alt={BUSINESS.name} className="h-full w-full object-contain" />
+        </span>
+        <div>
+          <p className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            {BUSINESS.name}
+          </p>
+          <p className="mt-1 text-[10.5px] font-semibold uppercase tracking-[0.2em] text-neutral-600">Inventory &amp; POS</p>
+        </div>
+        <Spinner className="h-16 w-16" />
+        <p className="text-sm font-semibold text-neutral-700">Opening {BUSINESS.name}…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid min-h-screen bg-[#f6f6f4] lg:grid-cols-[1.05fr_1fr]">

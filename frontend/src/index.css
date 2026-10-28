@@ -181,3 +181,13 @@ h1, h2, h3 {
     animation-duration: 3s;
   }
 }
+
+/* The Saving overlay and the sign-in welcome screen fade in. */
+@keyframes busy-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+.busy-fade {
+  animation: busy-fade-in 0.18s ease-out;
+}
