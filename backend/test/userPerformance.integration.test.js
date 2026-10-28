@@ -92,10 +92,11 @@ test('user performance report: per-user totals, account breakdown, and cancelled
     assert.equal(reportB.data.cashCollected, 10);
     assert.equal(reportB.data.creditExtended, 20);
 
-    // A cashier with only 'pos'+'reports' permission (no 'users') can still
-    // list reportable users and run the report -- this is intentionally NOT
-    // gated behind the admin-only Users administration endpoint.
-    const listedUsers = await request('/reports/users', null, 'GET', cashierA);
+    // Reports on the whole business -- other people included -- are for the
+    // admin. A cashier, even with the 'reports' permission, sees only their
+    // own work (My Report, /sales/my-day).
+    assert.equal((await request('/reports/users', null, 'GET', cashierA)).status, 403);
+    const listedUsers = await request('/reports/users', null, 'GET', admin);
     assert.equal(listedUsers.status, 200, JSON.stringify(listedUsers));
     assert.ok(listedUsers.data.some((u) => u.id === cashierB.id));
 

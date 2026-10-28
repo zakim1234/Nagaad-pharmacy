@@ -37,13 +37,19 @@ test('ACCOUNTS AFTER CLOSE DAY -- money kept for the admin, staff see only since
     // Day 1: the cashier sells $30, all paid into EVC.
     const s1 = await request('/sales', { customerId: customer.id, items: [{ itemId: item.id, quantity: 3 }], paidAmount: 30, paymentAccountId: evc.id }, 'POST', cashier);
     assert.equal(s1.status, 201, JSON.stringify(s1));
+    assert.equal((await balance(cashier, 'EVC Plus')).currentBalance, 30, 'cashier sees the money they took today');
+    const before = await request('/sales/my-day', null, 'GET', cashier);
+    assert.equal(before.data.totals.invoices, 1);
+    assert.equal(before.data.totals.sales, 30);
+    assert.deepEqual(before.data.items.map((i) => [i.name, i.quantity, i.total]), [['Zinc', 3, 30]]);
     await closeDay({ user: admin });
     assert.equal((await Account.findById(evc.id)).currentBalanceCents, 3000, 'Close Day keeps the money');
 
     // After the close: the admin sees $30, the cashier sees 0.
     assert.equal((await balance(admin, 'EVC Plus')).currentBalance, 30);
     const staffView = await request('/accounts', null, 'GET', cashier);
-    assert.equal(staffView.data.scope, 'sinceClose');
+    assert.equal(staffView.data.scope, 'own');
+    assert.equal((await request('/sales/my-day', null, 'GET', cashier)).data.totals.invoices, 0, 'My Report starts again after Close Day');
     assert.equal(staffView.data.accounts[0].currentBalance, 0);
     assert.equal(staffView.data.totalBalance, 0);
     assert.equal((await request(`/accounts/${evc.id}/transactions`, null, 'GET', cashier)).data.transactions.length, 0, 'nothing before the close');
@@ -61,7 +67,18 @@ test('ACCOUNTS AFTER CLOSE DAY -- money kept for the admin, staff see only since
     await openDay({ user: admin });
     assert.equal((await request(`/customers/${customer.id}/payments`, { amount: 20, paymentAccountId: evc.id }, 'POST', cashier)).status, 201);
     assert.equal((await balance(cashier, 'EVC Plus')).currentBalance, 20, 'cashier: since the last close');
-    assert.equal((await balance(admin, 'EVC Plus')).currentBalance, 50, 'admin: everything');
+    // Money the admin takes is not the cashier's.
+    assert.equal((await request(`/customers/${customer.id}/wallet/deposit`, { amount: 100, paymentAccountId: evc.id }, 'POST', admin)).status, 201);
+    assert.equal((await balance(cashier, 'EVC Plus')).currentBalance, 20, 'only their own money');
+    const myDay = await request('/sales/my-day', null, 'GET', cashier);
+    assert.equal(myDay.data.totals.debtCollected, 20);
+    assert.equal(myDay.data.totals.received, 20);
+    assert.deepEqual(myDay.data.accounts.map((a) => [a.accountName, a.net]), [['EVC Plus', 20]]);
+    // The business as a whole is for the admin only.
+    assert.equal((await request('/reports/sales?range=today', null, 'GET', cashier)).status, 403);
+    assert.equal((await request('/sales/refunds', null, 'GET', cashier)).status, 403);
+    assert.equal((await request('/dashboard', null, 'GET', cashier)).status, 403);
+    assert.equal((await balance(admin, 'EVC Plus')).currentBalance, 150, 'admin: all money together');
 
     // The admin's month: by day and by person.
     const now = new Date();

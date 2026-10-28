@@ -7,10 +7,12 @@ router.use(requireAuth);
 router.use(requirePermission('pos'));
 
 router.get('/status', getStatus);
-router.get('/preview', getPreview);
-router.get('/history', listHistory);
-router.get('/daily', listDaily);
-router.get('/daily/items', listDayItems);
+// The whole day's figures: for those who close the day.
+const closers = requireRole('admin', 'manager');
+router.get('/preview', closers, getPreview);
+router.get('/history', closers, listHistory);
+router.get('/daily', closers, listDaily);
+router.get('/daily/items', closers, listDayItems);
 // Closing/opening the business day is a critical, irreversible financial
 // operation -- restricted to admin/manager the same way voiding a
 // sale/purchase already is. Open Day is admin-only per spec.

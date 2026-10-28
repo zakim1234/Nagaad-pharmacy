@@ -12,6 +12,8 @@ import AppLayout from './layouts/AppLayout.jsx';
 
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import MyReportPage from './pages/reports/MyReportPage.jsx';
+import { useAuth } from './context/AuthContext.jsx';
 import InventoryPage from './pages/inventory/InventoryPage.jsx';
 import InventoryPrintPage from './pages/inventory/InventoryPrintPage.jsx';
 import CategoriesPage from './pages/categories/CategoriesPage.jsx';
@@ -60,6 +62,18 @@ import CustomerItemsPage from './pages/customers/CustomerItemsPage.jsx';
 import NotFound from './pages/NotFound.jsx';
 import BusyOverlay from './components/BusyOverlay.jsx';
 
+// The admin's dashboard is the whole business; everyone else's is My Report.
+function Home() {
+  const { user } = useAuth();
+  return user?.role === 'admin' || user?.isSuperAdmin ? <Dashboard /> : <MyReportPage />;
+}
+
+// Pages about the whole business: the admin only; anyone else goes to My Report.
+function RequireAdmin({ children }) {
+  const { user } = useAuth();
+  return user?.role === 'admin' || user?.isSuperAdmin ? children : <Navigate to="/my-report" replace />;
+}
+
 function POSWorkspace() { const location = useLocation(); return <POSPage key={location.search} />; }
 
 export default function App() {
@@ -78,7 +92,8 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Home />} />
+              <Route path="/my-report" element={<MyReportPage />} />
               <Route path="/inventory" element={<RequirePermission module="inventory"><InventoryPage /></RequirePermission>} />
               <Route path="/inventory/:id/print" element={<RequirePermission module="inventory"><InventoryPrintPage /></RequirePermission>} />
               <Route path="/categories" element={<RequirePermission module="categories"><CategoriesPage /></RequirePermission>} />
@@ -92,9 +107,9 @@ export default function App() {
               <Route path="/pos/close-day/history" element={<Navigate to="/daily-closing" replace />} />
               <Route path="/daily-closing" element={<RequirePermission module="pos"><CloseDayHistoryPage /></RequirePermission>} />
               <Route path="/daily-closing/items" element={<RequirePermission module="pos"><DayItemsSoldPage /></RequirePermission>} />
-              <Route path="/staff-daily" element={<RequirePermission module="reports"><StaffDailyPage /></RequirePermission>} />
-              <Route path="/refunds" element={<RequirePermission module="pos"><RefundsPage /></RequirePermission>} />
-              <Route path="/items-sold" element={<RequirePermission module="reports"><ItemsSoldPage /></RequirePermission>} />
+              <Route path="/staff-daily" element={<RequireAdmin><StaffDailyPage /></RequireAdmin>} />
+              <Route path="/refunds" element={<RequireAdmin><RefundsPage /></RequireAdmin>} />
+              <Route path="/items-sold" element={<RequireAdmin><ItemsSoldPage /></RequireAdmin>} />
               <Route path="/items-sold/view" element={<RequirePermission module="reports"><DayItemsSoldPage /></RequirePermission>} />
               <Route path="/stock" element={<RequirePermission module="stock"><StockPage /></RequirePermission>} />
               <Route path="/stock-adjustments" element={<RequirePermission module="stock"><StockAdjustmentsPage /></RequirePermission>} />
@@ -130,7 +145,7 @@ export default function App() {
               <Route path="/partners/profit-sharing/:id" element={<RequirePermission module="partners"><ProfitDistributionPage /></RequirePermission>} />
               <Route path="/fixed-assets" element={<RequirePermission module="fixedAssets"><FixedAssetsPage /></RequirePermission>} />
               <Route path="/zakat" element={<RequirePermission superAdmin><ZakatPage /></RequirePermission>} />
-              <Route path="/reports" element={<RequirePermission module="reports"><ReportsPage /></RequirePermission>} />
+              <Route path="/reports" element={<RequireAdmin><ReportsPage /></RequireAdmin>} />
               <Route path="/receipt/:id" element={<RequirePermission module="pos"><ReceiptPage /></RequirePermission>} />
               <Route path="/receipt/:id/return/:index" element={<RequirePermission module="pos"><ReturnReceiptPage /></RequirePermission>} />
               <Route path="/payment-receipt/:id" element={<RequirePermission module="customers"><PaymentReceiptPage /></RequirePermission>} />

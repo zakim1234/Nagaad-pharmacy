@@ -32,6 +32,9 @@ import { getCustomerHistory } from '../controllers/customerController.js';
 const router = Router();
 router.use(requireAuth);
 router.use(requirePermission('reports'));
+// The business as a whole is for the admin. Everyone else has My Report
+// (GET /api/sales/my-day): only their own work since the last Close Day.
+router.use(requireRole('admin'));
 
 router.get('/sales', salesReport);
 router.get('/items-sold', itemsSoldReport);

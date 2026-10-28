@@ -1,6 +1,6 @@
 import Account from '../models/Account.js';
 import AccountTransaction from '../models/AccountTransaction.js';
-import DayClose from '../models/DayClose.js';
+import { seesEverything as seesBalances, lastCloseAt } from '../services/staffScope.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { toCents, fromCents } from '../utils/money.js';
@@ -20,22 +20,17 @@ function toDTO(a) {
   };
 }
 
-// Only the admin sees what the accounts really hold. Everyone else sees the
-// money that came in and went out since the last Close Day -- what they took
-// today -- which is back to 0 once the day is closed.
-const seesBalances = (user) => user?.role === 'admin' || !!user?.isSuperAdmin;
+// Only the admin sees what the accounts really hold -- everyone's money
+// together. Everyone else sees only their OWN money since the last Close Day
+// (sales they took, payments they received, money they paid out), back to 0
+// once the day is closed. See services/staffScope.js.
+const ownSince = (user, since) => ({ createdBy: user._id, status: { $ne: 'REVERSED' }, createdAt: { $gte: since } });
 
-async function lastCloseAt() {
-  const last = await DayClose.findOne({ reopened: { $ne: true } }).sort({ closedAt: -1 }).select('closedAt').lean();
-  return last?.closedAt || new Date(0);
-}
-
-// Net POSTED cents per account since `since`.
-async function postedSince(since, accountId = null) {
-  const match = { status: 'POSTED', postedAt: { $gte: since } };
-  if (accountId) match.account = accountId;
+// Net cents per account of a user's own transactions since `since`
+// (pending Draft sale payments included -- they are theirs today).
+async function ownNet(user, since) {
   const rows = await AccountTransaction.aggregate([
-    { $match: match },
+    { $match: ownSince(user, since) },
     { $group: { _id: '$account', cents: { $sum: { $cond: [{ $eq: ['$direction', 'IN'] }, '$amountCents', { $multiply: ['$amountCents', -1] }] } } } },
   ]);
   return new Map(rows.map((r) => [String(r._id), r.cents]));
@@ -47,8 +42,8 @@ async function balancesFor(user, accounts) {
     return { scope: 'all', since: null, balanceOf: (a) => a.currentBalanceCents, openingOf: (a) => a.openingBalanceCents };
   }
   const since = await lastCloseAt();
-  const net = await postedSince(since);
-  return { scope: 'sinceClose', since, balanceOf: (a) => net.get(String(a._id)) || 0, openingOf: () => 0 };
+  const net = await ownNet(user, since);
+  return { scope: 'own', since, balanceOf: (a) => net.get(String(a._id)) || 0, openingOf: () => 0 };
 }
 
 // GET /api/accounts -- cards for the Accounts page: posted balance plus
@@ -81,7 +76,7 @@ export const listAccounts = asyncHandler(async (req, res) => {
       since: view.since,
       totalBalance: fromCents(totalBalanceCents),
       accounts: accounts.map((a) => {
-        const pending = pendingByAccount.get(String(a._id)) || { inCents: 0, outCents: 0 };
+        const pending = (view.scope === 'all' && pendingByAccount.get(String(a._id))) || { inCents: 0, outCents: 0 };
         const pendingNetCents = pending.inCents - pending.outCents;
         return {
           ...toDTO(a),
@@ -148,7 +143,7 @@ export const getAccountTransactions = asyncHandler(async (req, res) => {
   const filter = { account: account._id };
   if (status) filter.status = status;
   const staff = !seesBalances(req.user);
-  if (staff) filter.createdAt = { $gte: await lastCloseAt() };
+  if (staff) Object.assign(filter, ownSince(req.user, await lastCloseAt()));
   const view = await balancesFor(req.user, [account]);
 
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
@@ -195,8 +190,12 @@ export const accountsReport = asyncHandler(async (req, res) => {
   const start = view.since && view.since > range.start ? view.since : range.start;
   const end = range.end;
 
+  const match =
+    view.scope === 'all'
+      ? { status: 'POSTED', postedAt: { $gte: start, $lte: end } }
+      : { ...ownSince(req.user, start), createdAt: { $gte: start, $lte: end } };
   const agg = await AccountTransaction.aggregate([
-    { $match: { status: 'POSTED', postedAt: { $gte: start, $lte: end } } },
+    { $match: match },
     { $group: { _id: { account: '$account', direction: '$direction' }, amount: { $sum: '$amountCents' } } },
   ]);
   const byAccount = new Map();
@@ -250,8 +249,12 @@ export const getAccountStatement = asyncHandler(async (req, res) => {
   ]);
   const openingCents = staff ? 0 : (account.openingBalanceCents || 0) + (before?.cents || 0);
 
-  const items = await AccountTransaction.find({ account: account._id, status: 'POSTED', postedAt: { $gte: start, $lte: end } })
-    .sort({ postedAt: 1, _id: 1 })
+  // Staff: only their own money (pending sale payments included) since the last close.
+  const filter = staff
+    ? { account: account._id, ...ownSince(req.user, start), createdAt: { $gte: start, $lte: end } }
+    : { account: account._id, status: 'POSTED', postedAt: { $gte: start, $lte: end } };
+  const items = await AccountTransaction.find(filter)
+    .sort({ [staff ? 'createdAt' : 'postedAt']: 1, _id: 1 })
     .limit(5000)
     .populate('createdBy', 'name')
     .lean();
@@ -266,7 +269,7 @@ export const getAccountStatement = asyncHandler(async (req, res) => {
     else outCents += t.amountCents;
     return {
       id: t._id,
-      date: t.postedAt,
+      date: t.postedAt || t.createdAt,
       direction: t.direction,
       type: t.type,
       amount: fromCents(t.amountCents),
@@ -282,7 +285,7 @@ export const getAccountStatement = asyncHandler(async (req, res) => {
     success: true,
     data: {
       account: { ...toDTO(account), openingBalance: staff ? 0 : fromCents(account.openingBalanceCents), currentBalance: staff ? null : fromCents(account.currentBalanceCents) },
-      scope: staff ? 'sinceClose' : 'all',
+      scope: staff ? 'own' : 'all',
       range: { from: start, to: end },
       opening: fromCents(openingCents),
       moneyIn: fromCents(inCents),

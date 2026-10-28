@@ -154,8 +154,8 @@ export default function AccountsPage() {
         <div>
           <h1 className="text-xl font-bold text-neutral-900">Accounts</h1>
           <p className="mt-0.5 text-sm text-neutral-500">
-            {data?.scope === 'sinceClose'
-              ? 'Money you took in since the last Close Day — back to 0 once the day is closed.'
+            {data?.scope === 'own'
+              ? 'Your own money since the last Close Day — back to 0 once the day is closed.'
               : 'Where money is received and paid across the business'}
           </p>
         </div>
@@ -173,7 +173,7 @@ export default function AccountsPage() {
 
       {/* Summary strip */}
       <div className="grid grid-cols-2 divide-neutral-100 rounded-2xl border border-neutral-200/70 bg-white lg:grid-cols-4 lg:divide-x">
-        <Summary label={data.scope === 'sinceClose' ? 'Since last Close Day' : 'Total balance'} value={formatCurrency(data.totalBalance)} valueClass={data.totalBalance < 0 ? 'text-brand-600' : 'text-neutral-900'} icon={Wallet} tint="bg-brand-50 text-brand-600" />
+        <Summary label={data.scope === 'own' ? 'My money today' : 'Total balance'} value={formatCurrency(data.totalBalance)} valueClass={data.totalBalance < 0 ? 'text-brand-600' : 'text-neutral-900'} icon={Wallet} tint="bg-brand-50 text-brand-600" />
         <Summary label="Accounts" value={`${activeCount} active`} hint={data.accounts.length > activeCount ? `${data.accounts.length - activeCount} inactive` : null} icon={Landmark} tint="surface-blue" />
         <Summary label="Money in" value={totals ? formatCurrency(totals.in) : '—'} hint={periodLabel} icon={ArrowDownLeft} tint="bg-emerald-50 text-emerald-600" />
         <Summary label="Money out" value={totals ? formatCurrency(totals.out) : '—'} hint={periodLabel} icon={ArrowUpRight} tint="bg-brand-50 text-brand-600" />

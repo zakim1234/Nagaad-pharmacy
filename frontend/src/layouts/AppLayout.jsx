@@ -53,7 +53,7 @@ const navItems = [
   { to: '/all-branches', label: 'All Branches', icon: Globe2, module: null, superAdmin: true, section: 'Overview' },
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, module: null, section: 'Overview' },
   { to: '/pos', label: 'Seller / POS', icon: ShoppingCart, module: 'pos', section: 'Sales' },
-  { to: '/daily-closing', label: 'Daily Closing', icon: CalendarCheck, module: 'pos', section: 'Sales' },
+  { to: '/daily-closing', label: 'Daily Closing', icon: CalendarCheck, module: null, roles: ['admin', 'manager'], section: 'Sales' },
   { to: '/quotations', label: 'Quotation', icon: FileText, module: 'quotations', section: 'Sales' },
   { to: '/customers', label: 'Customers', icon: Users, module: 'customers', section: 'Sales' },
   { to: '/stock', label: 'Stock', icon: Boxes, module: 'stock', section: 'Stock' },
@@ -70,9 +70,10 @@ const navItems = [
   { to: '/partners', label: 'Partners / Investors', icon: Handshake, module: 'partners', section: 'Money' },
   { to: '/fixed-assets', label: 'Fixed Assets', icon: Archive, module: 'fixedAssets', section: 'Money' },
   { to: '/zakat', label: 'Zakat', icon: Percent, module: 'zakat', superAdmin: true, section: 'Money' },
-  { to: '/reports', label: 'Reports', icon: BarChart3, module: 'reports', section: 'Reports' },
-  { to: '/items-sold', label: 'Items Sold', icon: PackageCheck, module: 'reports', section: 'Reports' },
-  { to: '/refunds', label: 'Refunds', icon: Undo2, module: 'pos', section: 'Reports' },
+  { to: '/my-report', label: 'My Report', icon: BarChart3, module: null, staffOnly: true, section: 'Reports' },
+  { to: '/reports', label: 'Reports', icon: BarChart3, module: null, roles: ['admin'], section: 'Reports' },
+  { to: '/items-sold', label: 'Items Sold', icon: PackageCheck, module: null, roles: ['admin'], section: 'Reports' },
+  { to: '/refunds', label: 'Refunds', icon: Undo2, module: null, roles: ['admin'], section: 'Reports' },
   { to: '/staff-daily', label: 'Staff Daily', icon: UserCheck, module: null, roles: ['admin'], section: 'Reports' },
 ];
 
@@ -86,7 +87,9 @@ function SidebarContent({ onNavigate }) {
   };
 
   const items = navItems
-    .filter(({ module, roles, superAdmin }) => (superAdmin ? !!user?.isSuperAdmin : roles ? roles.includes(user?.role) : module === null || hasPermission(user, module)))
+    .filter(({ module, roles, superAdmin, staffOnly }) =>
+      superAdmin ? !!user?.isSuperAdmin : staffOnly ? user?.role !== 'admin' && !user?.isSuperAdmin : roles ? roles.includes(user?.role) : module === null || hasPermission(user, module)
+    )
     .concat(user?.role === 'admin' ? [{ to: '/users', label: 'Users', icon: UserCog, module: null, section: 'Admin' }] : [])
     .concat(user?.isSuperAdmin ? [{ to: '/branches', label: 'Branches', icon: Store, module: null, section: 'Admin' }] : [])
     .filter(({ to }) => (inOverview(user) ? OVERVIEW_PATHS.includes(to) : !SUPER_ONLY_PATHS.includes(to)));
