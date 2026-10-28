@@ -195,8 +195,7 @@ export default function UsersPage() {
             <Th>Role</Th>
             {showBranch && <Th>Branch</Th>}
             <Th>Permissions</Th>
-            <Th>Cancel invoices</Th>
-            <Th>Edit invoices</Th>
+            <Th>Allowed to change</Th>
             <Th>Status</Th>
             <Th>Created</Th>
             <Th className="text-right">Actions</Th>
@@ -204,9 +203,9 @@ export default function UsersPage() {
         </THead>
         <TBody>
           {loading ? (
-            <TableLoading colSpan={showBranch ? 10 : 9} />
+            <TableLoading colSpan={showBranch ? 9 : 8} />
           ) : users.length === 0 ? (
-            <TableEmpty colSpan={showBranch ? 10 : 9} message="No users found." />
+            <TableEmpty colSpan={showBranch ? 9 : 8} message="No users found." />
           ) : (
             users.map((u) => (
               <tr key={u.id} className="hover:bg-neutral-50">
@@ -223,24 +222,35 @@ export default function UsersPage() {
                     <span className="text-xs text-neutral-500">{u.permissions.length} module{u.permissions.length > 1 ? 's' : ''}</span>
                   )}
                 </Td>
-                {[
-                  ['cancelInvoices', 'cancel invoices'],
-                  ['editInvoices', 'edit invoices'],
-                ].map(([key, what]) => (
-                  <Td key={key}>
-                    {u.role === 'admin' ? (
-                      <span className="text-xs text-neutral-400">Always</span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => togglePerm(u, key, what)}
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${u.permissions.includes(key) ? 'bg-brand-400 text-neutral-950 hover:bg-brand-300' : 'border border-neutral-200 text-neutral-500 hover:bg-neutral-50'}`}
-                      >
-                        {u.permissions.includes(key) ? 'On — click to turn off' : 'Off — click to allow'}
-                      </button>
-                    )}
-                  </Td>
-                ))}
+                <Td>
+                  {u.role === 'admin' ? (
+                    <span className="text-xs text-neutral-400">Everything, always</span>
+                  ) : (
+                    <div className="flex max-w-[22rem] flex-wrap gap-1">
+                      {[
+                        ['editRecords', 'Edit', 'edit customers, items, suppliers and other records'],
+                        ['deleteRecords', 'Delete / cancel', 'delete, cancel or reverse records'],
+                        ['customerMoney', 'Customer money', 'take debt payments, wallet deposits and withdrawals, and returns'],
+                        ['editInvoices', 'Edit invoices', 'edit invoices'],
+                        ['cancelInvoices', 'Cancel invoices', 'cancel invoices'],
+                      ].map(([key, label, what]) => {
+                        const on = u.permissions.includes(key);
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => togglePerm(u, key, what)}
+                            title={on ? 'On — click to turn off' : 'Off — click to allow'}
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${on ? 'bg-brand-400 text-neutral-950 hover:bg-brand-300' : 'border border-neutral-200 text-neutral-400 line-through hover:bg-neutral-50'}`}
+                          >
+                            {on ? '✓ ' : ''}
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Td>
                 <Td><Badge color={u.active ? 'green' : 'red'}>{u.active ? 'Active' : 'Deactivated'}</Badge></Td>
                 <Td className="text-xs text-neutral-400">{formatDate(u.createdAt)}</Td>
                 <Td>

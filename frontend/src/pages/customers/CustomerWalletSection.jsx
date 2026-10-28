@@ -267,7 +267,7 @@ function PayFromWalletModal({ open, onClose, customerId, walletBalance, customer
   );
 }
 
-export default function CustomerWalletSection({ customerId, customerName, walletBalance, customerDebt = 0, walletAutoPay = false, onChanged }) {
+export default function CustomerWalletSection({ customerId, customerName, walletBalance, customerDebt = 0, walletAutoPay = false, onChanged, canMoney = false, canEdit = false }) {
   const toast = useToast();
   const [depositOpen, setDepositOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
@@ -315,7 +315,7 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
             {customerDebt > 0 && <p className="text-xs font-medium text-brand-600">Debt: {formatCurrency(customerDebt)}</p>}
           </div>
           <div className="flex flex-wrap gap-2">
-            {canPayFromWallet && (
+            {canMoney && canPayFromWallet && (
               <Button variant="secondary" onClick={() => setPayOpen(true)}>
                 <HandCoins className="h-4 w-4" /> Pay debt from wallet
               </Button>
@@ -326,14 +326,16 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
             >
               <FileText className="h-4 w-4" /> Wallet statement
             </Link>
-            {walletBalance > 0 && (
+            {canMoney && walletBalance > 0 && (
               <Button variant="secondary" onClick={() => setWithdrawOpen(true)}>
                 <ArrowUpRight className="h-4 w-4" /> Withdraw
               </Button>
             )}
-            <Button onClick={() => setDepositOpen(true)}>
-              <PiggyBank className="h-4 w-4" /> Add Deposit
-            </Button>
+            {canMoney && (
+              <Button onClick={() => setDepositOpen(true)}>
+                <PiggyBank className="h-4 w-4" /> Add Deposit
+              </Button>
+            )}
           </div>
         </div>
         <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-neutral-200 px-3 py-2.5">
@@ -343,13 +345,14 @@ export default function CustomerWalletSection({ customerId, customerName, wallet
               {walletAutoPay
                 ? 'On: deposits and wallet money go to the debt by themselves.'
                 : 'Off: wallet money stays in the wallet; use "Pay debt from wallet" when the customer agrees.'}
+              {!canEdit && ' Only an admin can change this.'}
             </span>
           </span>
           <button
             type="button"
             role="switch"
             aria-checked={walletAutoPay}
-            disabled={togglingAuto}
+            disabled={togglingAuto || !canEdit}
             onClick={toggleAuto}
             className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-60 ${walletAutoPay ? 'bg-brand-400' : 'bg-neutral-300'}`}
           >

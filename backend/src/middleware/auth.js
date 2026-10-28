@@ -23,6 +23,8 @@ export async function requireAuth(req, res, next) {
     }
 
     req.user = user;
+    const denied = changeNotAllowed(req, user);
+    if (denied) throw new ApiError(403, denied);
     // Every request runs in one branch: the user's own, or for the Super
     // Admin the branch they switched to (X-Branch-Id), else the first one.
     // With no branches at all, nothing is filtered (single-shop mode).
@@ -52,6 +54,34 @@ export async function requireAuth(req, res, next) {
   } catch (err) {
     next(err);
   }
+}
+
+// Only the admin and the Super Admin change or remove what is already saved.
+// Anyone else needs the admin to switch it on for them: 'editRecords' for any
+// edit (PUT/PATCH), 'deleteRecords' for any delete and for undoing a record
+// (cancel, reverse, void, remove). Invoices keep their own switches:
+// 'editInvoices' and 'cancelInvoices'. Returns the refusal message, or null.
+export function changeNotAllowed(req, user) {
+  if (user.role === 'admin' || user.isSuperAdmin) return null;
+  const path = String(req.originalUrl || '').split('?')[0];
+  const method = req.method;
+  const has = (p) => (user.permissions || []).includes(p);
+  const isSale = path.startsWith('/api/sales/');
+  if (method === 'PUT' || method === 'PATCH') {
+    if (isSale) return null; // the sales route checks 'editInvoices' itself
+    // Working sheets saved as drafts (paid or confirmed later by an admin),
+    // not edits of a saved record.
+    if (path === '/api/purchases/payment-plan' || path === '/api/salaries/sheet') return null;
+    return has('editRecords') ? null : 'You are not allowed to edit this. Ask an admin to give you permission to edit.';
+  }
+  if (method === 'DELETE') {
+    return has('deleteRecords') ? null : 'You are not allowed to delete this. Ask an admin to give you permission to delete.';
+  }
+  if (method === 'POST' && /\/(cancel|reverse|void|remove)$/.test(path)) {
+    if (isSale) return null; // the sales route checks 'cancelInvoices' itself
+    return has('deleteRecords') ? null : 'You are not allowed to cancel or remove this. Ask an admin to give you permission to delete.';
+  }
+  return null;
 }
 
 // The Super Admin's "all branches" view covers reading reports only (and the

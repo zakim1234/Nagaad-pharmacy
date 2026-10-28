@@ -1,3 +1,5 @@
+import { canEditRecords, canDeleteRecords } from '../../constants/permissions.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Pencil, Trash2, ScrollText } from 'lucide-react';
@@ -14,6 +16,9 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import CustomerFormModal from './CustomerFormModal.jsx';
 
 export default function CustomersPage() {
+  const { user: me } = useAuth();
+  const canEdit = canEditRecords(me); // the server checks this too
+  const canDelete = canDeleteRecords(me);
   const toast = useToast();
   const [items, setItems] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, limit: 20 });
@@ -114,19 +119,23 @@ export default function CustomersPage() {
                 </Td>
                 <Td>
                   <div className="flex justify-end gap-1">
-                    <button
+                    {canEdit && (
+<button
                       onClick={() => {
                         setEditItem(c);
                         setFormOpen(true);
                       }}
-                      className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-brand-600"
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-neutral-600 hover:bg-neutral-100 hover:text-brand-700"
                       title="Edit"
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="h-3.5 w-3.5" /> Edit
                     </button>
-                    <button onClick={() => setDeleteItem(c)} className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-brand-600" title="Delete">
-                      <Trash2 className="h-4 w-4" />
+)}
+                    {canDelete && (
+<button onClick={() => setDeleteItem(c)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-neutral-600 hover:bg-neutral-100 hover:text-brand-700" title="Delete">
+                      <Trash2 className="h-3.5 w-3.5" /> Delete
                     </button>
+)}
                   </div>
                 </Td>
               </tr>

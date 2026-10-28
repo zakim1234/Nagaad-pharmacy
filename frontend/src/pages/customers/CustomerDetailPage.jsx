@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { hasPermission } from '../../constants/permissions.js';
+import { hasPermission, canCustomerMoney, canEditRecords, canDeleteRecords } from '../../constants/permissions.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatCurrency, formatDate, formatDateTime } from '../../utils/format.js';
 import { printReport } from '../../utils/printReport.js';
@@ -78,6 +78,10 @@ export default function CustomerDetailPage() {
   const { user } = useAuth();
   const canManage = user?.role === 'admin' || user?.role === 'manager';
   const canCancelInvoices = hasPermission(user, 'cancelInvoices');
+  // Nothing on this page changes without the admin's say-so (the server checks too).
+  const canMoney = canCustomerMoney(user);
+  const canEdit = canEditRecords(user);
+  const canDelete = canDeleteRecords(user);
   const [cancelPayment, setCancelPayment] = useState(null);
   const [data, setData] = useState(null);
   const [debt, setDebt] = useState(null);
@@ -176,9 +180,11 @@ export default function CustomerDetailPage() {
               <XCircle className="h-4 w-4" /> Cancelled Invoices
             </Button>
           </Link>
-          <Button onClick={() => setPayOpen(true)} disabled={customer.balance <= 0}>
-            <Wallet className="h-4 w-4" /> Pay Debt
-          </Button>
+          {canMoney && (
+            <Button onClick={() => setPayOpen(true)} disabled={customer.balance <= 0}>
+              <Wallet className="h-4 w-4" /> Pay Debt
+            </Button>
+          )}
         </div>
       </div>
 
@@ -285,7 +291,7 @@ export default function CustomerDetailPage() {
 
       {tab === 'quotations' && <CustomerQuotationsSection customerId={id} customer={customer} />}
       {tab === 'wallet' && (
-        <CustomerWalletSection customerId={id} customerName={customer.name} walletBalance={customer.walletBalance} customerDebt={customer.balance} walletAutoPay={customer.walletAutoPay} onChanged={load} />
+        <CustomerWalletSection customerId={id} customerName={customer.name} walletBalance={customer.walletBalance} customerDebt={customer.balance} walletAutoPay={customer.walletAutoPay} onChanged={load} canMoney={canMoney} canEdit={canEdit} />
       )}
 
       {tab === 'invoices' && (
@@ -389,7 +395,7 @@ export default function CustomerDetailPage() {
                                       {canCancelInvoices && <IconAction label="Cancel" title="Cancel draft" danger onClick={() => setCancelTarget({ sale: s, mode: 'cancel' })} icon={XCircle} />}
                                     </>
                                   )}
-                                  {s.status === 'CONFIRMED' && canManage && <IconAction label="Return" title="Return items" onClick={() => setReturnSale(s)} icon={Undo2} />}
+                                  {s.status === 'CONFIRMED' && canManage && canMoney && <IconAction label="Return" title="Return items" onClick={() => setReturnSale(s)} icon={Undo2} />}
                                   {s.status === 'CONFIRMED' && canCancelInvoices && (
                                     <IconAction label="Cancel" title="Cancel invoice" danger onClick={() => setCancelTarget({ sale: s, mode: 'reverse' })} icon={XCircle} />
                                   )}
@@ -559,7 +565,7 @@ export default function CustomerDetailPage() {
                           const p = paymentsById.get(String(t.payment));
                           if (!p) return null;
                           if (p.status === 'CANCELLED') return <span className="mt-1 inline-block"><Badge color="red">Cancelled</Badge></span>;
-                          return canManage && p.type === 'debt_payment' ? (
+                          return canManage && canDelete && p.type === 'debt_payment' ? (
                             <button
                               type="button"
                               onClick={() => setCancelPayment(p)}

@@ -42,11 +42,13 @@ router.get('/:id/statement', requirePermission('customers'), getCustomerStatemen
 router.get('/:id/cancelled-statement', requirePermission('customers'), getCancelledStatement);
 router.get('/:id/items', requirePermission('customers'), getCustomerItemsReport);
 router.get('/:id/debt', requirePermission('customers'), getCustomerDebt);
-router.post('/:id/payments', requirePermission('customers'), payCustomerDebt);
+// Money on a customer (debt payments, wallet in/out, returns): admins always;
+// anyone else only with 'customerMoney' switched on by an admin.
+router.post('/:id/payments', requirePermission('customers'), requirePermission('customerMoney'), payCustomerDebt);
 router.post('/:id/payments/:paymentId/cancel', requirePermission('customers'), requireRole('admin', 'manager'), cancelCustomerPayment);
-router.post('/:id/wallet/deposit', requirePermission('customers'), depositToWallet);
-router.post('/:id/wallet/withdraw', requirePermission('customers'), withdrawFromWallet);
-router.post('/:id/wallet/pay-debt', requirePermission('customers'), payDebtFromWallet);
+router.post('/:id/wallet/deposit', requirePermission('customers'), requirePermission('customerMoney'), depositToWallet);
+router.post('/:id/wallet/withdraw', requirePermission('customers'), requirePermission('customerMoney'), withdrawFromWallet);
+router.post('/:id/wallet/pay-debt', requirePermission('customers'), requirePermission('customerMoney'), payDebtFromWallet);
 router.put('/:id/wallet/auto-pay', requirePermission('customers'), setWalletAutoPay);
 router.get('/:id/wallet/history', requirePermission('customers'), getWalletHistory);
 

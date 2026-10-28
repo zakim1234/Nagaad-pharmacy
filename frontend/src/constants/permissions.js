@@ -15,12 +15,21 @@ export const PERMISSION_MODULES = [
   { key: 'createItems', label: 'Can create items (POS quick-create)' },
   { key: 'cancelInvoices', label: 'Can cancel invoices' },
   { key: 'editInvoices', label: 'Can edit invoices' },
+  { key: 'editRecords', label: 'Can edit records (customers, items, suppliers...)' },
+  { key: 'deleteRecords', label: 'Can delete, cancel or reverse records' },
+  { key: 'customerMoney', label: 'Customer money (pay debt, wallet deposit/withdraw, returns)' },
   { key: 'partners', label: 'Partners / Investors' },
   { key: 'fixedAssets', label: 'Fixed Assets' },
   { key: 'zakat', label: 'Zakat Calculator' },
 ];
 
 export const ROLES = ['admin', 'manager', 'cashier', 'custom'];
+
+// Changing or removing saved records: admins always; anyone else only when an
+// admin switches it on (the server checks this too).
+export const canEditRecords = (user) => user?.role === 'admin' || !!user?.isSuperAdmin || (user?.permissions || []).includes('editRecords');
+export const canCustomerMoney = (user) => user?.role === 'admin' || !!user?.isSuperAdmin || (user?.permissions || []).includes('customerMoney');
+export const canDeleteRecords = (user) => user?.role === 'admin' || !!user?.isSuperAdmin || (user?.permissions || []).includes('deleteRecords');
 
 export function hasPermission(user, moduleKey) {
   if (!user) return false;

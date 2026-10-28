@@ -17,7 +17,7 @@ test('ACCOUNTS AFTER CLOSE DAY -- money kept for the admin, staff see only since
   process.env.JWT_SECRET = 'isolated-accounts-after-close-secret';
   await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
   const admin = await User.create({ username: 'admin', name: 'Admin', passwordHash: 'unused' });
-  const cashier = await User.create({ username: 'cumar', name: 'Cumar', passwordHash: 'unused', role: 'cashier', permissions: ['pos', 'accounts', 'reports', 'customers'] });
+  const cashier = await User.create({ username: 'cumar', name: 'Cumar', passwordHash: 'unused', role: 'cashier', permissions: ['pos', 'accounts', 'reports', 'customers', 'customerMoney'] });
   const server = app.listen(0, '127.0.0.1');
   await new Promise((resolve) => server.once('listening', resolve));
   const request = async (path, body, method = 'POST', as = admin) => {

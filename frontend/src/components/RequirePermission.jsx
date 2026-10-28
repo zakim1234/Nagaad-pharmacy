@@ -1,3 +1,4 @@
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { hasPermission } from '../constants/permissions.js';
 
@@ -10,14 +11,8 @@ export default function RequirePermission({ module, adminOnly, roles, superAdmin
   const { user } = useAuth();
 
   const allowed = superAdmin ? !!user?.isSuperAdmin : roles ? roles.includes(user?.role) : adminOnly ? user?.role === 'admin' : hasPermission(user, module);
-  if (!allowed) {
-    return (
-      <div className="flex h-[60vh] flex-col items-center justify-center text-center">
-        <p className="text-lg font-semibold text-brand-600">Ma lihi ogolaansho aad u gasho boggan.</p>
-        <p className="mt-1 text-sm text-neutral-400">You do not have permission to access this page.</p>
-      </div>
-    );
-  }
+  // No permission: back to their own home (My Report for anyone not admin).
+  if (!allowed) return <Navigate to="/dashboard" replace />;
 
   return children;
 }

@@ -23,6 +23,13 @@ export const PERMISSION_MODULES = [
   // Edit an invoice. Admins always can; anyone else only when an admin
   // switches it on for them.
   'editInvoices',
+  // Edit / delete (or cancel, reverse, void) any saved record -- customers,
+  // items, suppliers, payments... Admins always can; anyone else only when an
+  // admin switches it on for them (see middleware/auth.js changeNotAllowed).
+  'editRecords',
+  'deleteRecords',
+  // Money on a customer: debt payments, wallet deposit/withdraw, returns.
+  'customerMoney',
   'partners',
   'fixedAssets',
   'zakat',
