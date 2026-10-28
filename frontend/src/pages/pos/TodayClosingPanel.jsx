@@ -27,6 +27,24 @@ export default function TodayClosingPanel({ onChanged, refreshKey = 0 }) {
   const [closing, setClosing] = useState(false);
   const [opening, setOpening] = useState(false);
   const [result, setResult] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
+
+  // A pending invoice that cannot be closed (e.g. its customer was deleted)
+  // can be cancelled right here: its stock and pending payment are released.
+  const cancelProblem = async (p) => {
+    if (!window.confirm(`Cancel ${p.receiptNumber}? Its stock comes back and its pending payment is released.`)) return;
+    setCancellingId(p.saleId);
+    try {
+      await client.post(`/sales/${p.saleId}/cancel`, { reason: `Cancelled at Daily Closing: ${p.issues.join(' ')}` });
+      toast.success(`${p.receiptNumber} cancelled. You can close the day now.`);
+      load();
+      onChanged?.();
+    } catch (err) {
+      toast.error(err.friendlyMessage || 'Could not cancel this invoice.');
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   const load = useCallback(() => {
     client
@@ -126,8 +144,18 @@ export default function TodayClosingPanel({ onChanged, refreshKey = 0 }) {
                 <p className="font-semibold text-brand-700">Some draft invoices need attention before the day can be closed</p>
                 <ul className="mt-2 space-y-1 text-sm text-brand-600">
                   {preview.problems.map((p) => (
-                    <li key={p.saleId}>
-                      <strong>{p.receiptNumber}</strong>: {p.issues.join(' ')}
+                    <li key={p.saleId} className="flex flex-wrap items-center gap-2">
+                      <span>
+                        <strong>{p.receiptNumber}</strong>: {p.issues.join(' ')}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={cancellingId === p.saleId}
+                        onClick={() => cancelProblem(p)}
+                        className="rounded-lg border border-brand-300 bg-white px-2.5 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-100 disabled:opacity-50"
+                      >
+                        Cancel invoice
+                      </button>
                     </li>
                   ))}
                 </ul>

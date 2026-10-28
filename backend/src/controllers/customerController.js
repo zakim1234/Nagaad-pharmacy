@@ -165,6 +165,15 @@ export const deleteCustomer = asyncHandler(async (req, res) => {
       'This customer has sales history and cannot be deleted. Consider editing their details instead.'
     );
   }
+  // A pending (Draft) invoice still needs its customer at Close Day --
+  // deleting them would leave the day impossible to close.
+  const pending = await Sale.find({ customer: customer._id, status: 'DRAFT' }).select('receiptNumber').lean();
+  if (pending.length) {
+    throw new ApiError(409, `This customer has pending invoice(s) ${pending.map((s) => s.receiptNumber).join(', ')} -- close the day or cancel them first.`);
+  }
+  if (customer.walletBalanceCents > 0 || customer.balanceCents > 0) {
+    throw new ApiError(409, 'This customer still has wallet money or debt and cannot be deleted.');
+  }
 
   await customer.deleteOne();
 

@@ -55,7 +55,19 @@ test('EDIT / DELETE PERMISSION -- a cashier cannot edit or delete until the admi
     assert.equal((await request(`/customers/${c.id}`, null, 'DELETE', cashier)).status, 403, 'edit does not allow delete');
     cashier.permissions.push('deleteRecords');
     await cashier.save();
+    const withMoney = await request(`/customers/${c.id}`, null, 'DELETE', cashier);
+    assert.equal(withMoney.status, 409, 'wallet money left: not deleted');
+    await Customer.updateOne({ _id: c._id }, { walletBalanceCents: 0 });
     assert.equal((await request(`/customers/${c.id}`, null, 'DELETE', cashier)).status, 200);
+
+    // A customer with a pending (Draft) invoice cannot be deleted -- Close Day needs them.
+    const InventoryItem = (await import('../src/models/InventoryItem.js')).default;
+    const item = await InventoryItem.create({ name: 'Zinc', itemCode: 'ZN-1', quantity: 10, costPriceCents: 100, sellingPriceCents: 400 });
+    const c3 = await Customer.create({ name: 'Cumar', phone: '444' });
+    assert.equal((await request('/sales', { customerId: c3.id, items: [{ itemId: item.id, quantity: 1 }], paidAmount: 0 }, 'POST', admin)).status, 201);
+    const pendingDel = await request(`/customers/${c3.id}`, null, 'DELETE', admin);
+    assert.equal(pendingDel.status, 409);
+    assert.match(pendingDel.message, /pending invoice/);
 
     // The admin never needs them.
     const c2 = await Customer.create({ name: 'Faadumo', phone: '333' });
