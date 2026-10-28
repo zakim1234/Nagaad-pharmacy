@@ -166,14 +166,14 @@ h1, h2, h3 {
   --tw-ring-color: rgb(10 10 10 / 0.08);
 }
 
-/* Loading dots (components/ui/Spinner.jsx): one full turn in 12 steps. */
+/* Loading dots (components/ui/Spinner.jsx): a smooth, steady turn. */
 @keyframes dot-spinner-turn {
   to {
     transform: rotate(360deg);
   }
 }
 .dot-spinner {
-  animation: dot-spinner-turn 1s steps(12) infinite;
+  animation: dot-spinner-turn 1.1s linear infinite;
   transform-origin: 50% 50%;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -190,4 +190,36 @@ h1, h2, h3 {
 }
 .busy-fade {
   animation: busy-fade-in 0.18s ease-out;
+}
+
+/* Sign-in welcome screen: the logo breathes, the bar fills over the wait. */
+@keyframes welcome-breathe {
+  50% {
+    transform: scale(1.05);
+  }
+}
+.welcome-breathe {
+  animation: welcome-breathe 1.6s ease-in-out infinite;
+}
+@keyframes welcome-progress {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+.welcome-progress {
+  animation: welcome-progress 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* The Saving card rises in softly. */
+@keyframes busy-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+}
+.busy-pop {
+  animation: busy-pop-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }

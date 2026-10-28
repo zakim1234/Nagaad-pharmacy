@@ -32,10 +32,10 @@ export default function BusyOverlay() {
 
   if (!state.visible) return null;
   return (
-    <div className="busy-fade fixed inset-0 z-[90] flex items-center justify-center bg-white/45 backdrop-blur-[3px] no-print" role="status" aria-live="polite">
-      <div className="flex min-w-[13rem] flex-col items-center gap-3 rounded-3xl border border-neutral-200/80 bg-white px-10 py-7 shadow-xl">
-        <Spinner className="h-16 w-16" />
-        <p className="text-sm font-semibold text-neutral-700">{state.label}</p>
+    <div className="busy-fade fixed inset-0 z-[90] flex items-center justify-center bg-neutral-950/10 backdrop-blur-[4px] no-print" role="status" aria-live="polite">
+      <div className="busy-pop flex min-w-[14rem] flex-col items-center gap-4 rounded-[28px] bg-white/80 px-10 py-8 shadow-[0_24px_60px_-20px_rgba(11,62,168,0.35)] ring-1 ring-white/70 backdrop-blur-xl">
+        <Spinner className="h-14 w-14" />
+        <p className="text-sm font-semibold tracking-tight text-neutral-800">{state.label}</p>
       </div>
     </div>
   );

@@ -46,18 +46,19 @@ export default function Login() {
 
   if (welcome) {
     return (
-      <div className="busy-fade surface-blue fixed inset-0 z-[95] flex flex-col items-center justify-center gap-6 px-6 text-center" role="status" aria-live="polite">
-        <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white p-2.5 shadow-lg">
+      <div className="busy-fade fixed inset-0 z-[95] flex flex-col items-center justify-center bg-white px-6 text-center" role="status" aria-live="polite">
+        <span className="welcome-breathe flex h-24 w-24 items-center justify-center rounded-[28px] bg-white p-3 shadow-[0_12px_40px_-12px_rgba(47,107,189,0.35)] ring-1 ring-neutral-100">
           <img src={logo} alt={BUSINESS.name} className="h-full w-full object-contain" />
         </span>
-        <div>
-          <p className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-            {BUSINESS.name}
-          </p>
-          <p className="mt-1 text-[10.5px] font-semibold uppercase tracking-[0.2em] text-neutral-600">Inventory &amp; POS</p>
+        <p className="mt-6 text-[26px] font-extrabold tracking-tight text-neutral-950" style={{ fontFamily: 'var(--font-display)' }}>
+          {BUSINESS.name}
+        </p>
+        <p className="mt-1 text-[10.5px] font-semibold uppercase tracking-[0.24em] text-neutral-400">Inventory &amp; POS</p>
+        <Spinner className="mt-10 h-14 w-14" />
+        <p className="mt-5 text-sm font-medium text-neutral-500">Opening {BUSINESS.name}…</p>
+        <div className="mt-4 h-1 w-44 overflow-hidden rounded-full bg-brand-100">
+          <div className="welcome-progress h-full rounded-full bg-gradient-to-r from-brand-400 to-brand-600" style={{ animationDuration: `${WELCOME_MS}ms` }} />
         </div>
-        <Spinner className="h-16 w-16" />
-        <p className="text-sm font-semibold text-neutral-700">Opening {BUSINESS.name}…</p>
       </div>
     );
   }
