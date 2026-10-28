@@ -105,8 +105,8 @@ export default function App() {
               {/* Close Day now lives inside Daily Closing; old links redirect there. */}
               <Route path="/pos/close-day" element={<Navigate to="/daily-closing" replace />} />
               <Route path="/pos/close-day/history" element={<Navigate to="/daily-closing" replace />} />
-              <Route path="/daily-closing" element={<RequirePermission module="pos"><CloseDayHistoryPage /></RequirePermission>} />
-              <Route path="/daily-closing/items" element={<RequirePermission module="pos"><DayItemsSoldPage /></RequirePermission>} />
+              <Route path="/daily-closing" element={<RequirePermission roles={["admin", "manager"]}><CloseDayHistoryPage /></RequirePermission>} />
+              <Route path="/daily-closing/items" element={<RequirePermission roles={["admin", "manager"]}><DayItemsSoldPage /></RequirePermission>} />
               <Route path="/staff-daily" element={<RequireAdmin><StaffDailyPage /></RequireAdmin>} />
               <Route path="/refunds" element={<RequireAdmin><RefundsPage /></RequireAdmin>} />
               <Route path="/items-sold" element={<RequireAdmin><ItemsSoldPage /></RequireAdmin>} />

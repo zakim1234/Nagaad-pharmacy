@@ -33,8 +33,8 @@ export default function InventoryFormModal({ open, onClose, item, onSaved }) {
 
   useEffect(() => {
     if (!open) return;
-    client.get('/categories').then((res) => setCategories(res.data.data));
-    client.get('/suppliers?limit=100').then((res) => setSuppliers(res.data.data));
+    client.get('/categories').then((res) => setCategories(res.data.data)).catch(() => setCategories([])); // no Categories permission: no filter
+    client.get('/suppliers?limit=100').then((res) => setSuppliers(res.data.data)).catch(() => setSuppliers([]));
   }, [open]);
 
   useEffect(() => {

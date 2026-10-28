@@ -15,6 +15,20 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import InventoryFormModal from './InventoryFormModal.jsx';
 import InventoryDetailsModal from './InventoryDetailsModal.jsx';
 
+// Selling price minus cost: per unit with its margin, and on the stock in hand.
+function ProfitCell({ item }) {
+  const per = Math.round((item.sellingPrice - item.costPrice) * 100) / 100;
+  const margin = item.sellingPrice > 0 ? Math.round((per / item.sellingPrice) * 100) : null;
+  const loss = per < 0;
+  return (
+    <Td className="whitespace-nowrap tabular-nums">
+      <span className={`font-semibold ${loss ? 'text-brand-700' : 'text-emerald-600'}`}>{formatCurrency(per)}</span>
+      {margin !== null && <span className="ml-1 text-xs text-neutral-400">{margin}%</span>}
+      {item.quantity > 0 && <span className="block text-[11px] text-neutral-400">on stock {formatCurrency(Math.round(per * item.quantity * 100) / 100)}</span>}
+    </Td>
+  );
+}
+
 export default function InventoryPage() {
   const { user: me } = useAuth();
   const canEdit = canEditRecords(me); // the server checks this too
@@ -41,8 +55,8 @@ export default function InventoryPage() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    client.get('/categories').then((res) => setCategories(res.data.data));
-    client.get('/suppliers?limit=100').then((res) => setSuppliers(res.data.data));
+    client.get('/categories').then((res) => setCategories(res.data.data)).catch(() => setCategories([])); // no Categories permission: no filter
+    client.get('/suppliers?limit=100').then((res) => setSuppliers(res.data.data)).catch(() => setSuppliers([]));
   }, []);
 
   const load = useCallback(() => {
@@ -144,6 +158,7 @@ export default function InventoryPage() {
             <Th>Supplier</Th>
             <Th>Quantity</Th>
             <Th>Avg Cost / Sell</Th>
+            <Th>Profit</Th>
             <Th>Total Value</Th>
             <Th>Status</Th>
             <Th>Expiry</Th>
@@ -153,9 +168,9 @@ export default function InventoryPage() {
         </THead>
         <TBody>
           {loading ? (
-            <TableLoading colSpan={12} />
+            <TableLoading colSpan={13} />
           ) : items.length === 0 ? (
-            <TableEmpty colSpan={12} message="No inventory items found. Try adjusting your filters or add a new item." />
+            <TableEmpty colSpan={13} message="No inventory items found. Try adjusting your filters or add a new item." />
           ) : (
             items.map((item) => {
               const stock = stockStatusBadge(item.stockStatus);
@@ -179,6 +194,7 @@ export default function InventoryPage() {
                     {' / '}
                     <span className="font-medium">{formatCurrency(item.sellingPrice)}</span>
                   </Td>
+                  <ProfitCell item={item} />
                   <Td className="tabular-nums font-medium text-neutral-700">{formatCurrency(item.quantity * item.costPrice)}</Td>
                   <Td>
                     <Badge color={stock.color}>{stock.label}</Badge>
