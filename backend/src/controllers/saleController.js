@@ -79,6 +79,9 @@ function toDTO(sale) {
       debtReduced: fromCents(r.debtReducedCents),
       refund: fromCents(r.refundCents),
       walletRefund: fromCents(r.walletRefundCents || 0),
+      refundTo: r.refundTo || (r.refundCents > 0 ? 'ACCOUNT' : ''),
+      refundAccountName: r.refundAccountName || '',
+      refundReference: r.refundReference || '',
       reason: r.reason,
       invoiceBalanceAfter: r.invoiceBalanceAfterCents != null ? fromCents(r.invoiceBalanceAfterCents) : null,
       customerBalanceAfter: r.customerBalanceAfterCents != null ? fromCents(r.customerBalanceAfterCents) : null,
@@ -561,21 +564,20 @@ export const reverseSale = asyncHandler(async (req, res) => {
 // and historical cost -- never today's cost), reduces this invoice's
 // subtotal/discount/total by the returned value, and reconciles the
 // difference by first relieving this invoice's still-unpaid balance, then
-// refunding any remainder that was already paid out of the account the sale
-// was paid into. Blocked if a debt payment has already been allocated
-// against this invoice, same as reverseSale, since that would make the
-// refund destination ambiguous.
+// giving back what was already paid -- at the sale or by debt payments later:
+// wallet credit back to the wallet, the rest to the customer's wallet
+// (refundTo: 'WALLET') or as cash out of an account (refundTo: 'ACCOUNT',
+// accountId -- default the account the sale was paid into -- and the number
+// it was sent to).
 export const returnSale = asyncHandler(async (req, res) => {
   const { items: returnItems, reason = '' } = req.body;
+  const reference = String(req.body.reference || '').trim().slice(0, 100);
   if (!Array.isArray(returnItems) || !returnItems.length) throw new ApiError(400, 'Select at least one item to return.');
 
   const result = await runInTransaction(async (session) => {
     const sale = await Sale.findById(req.params.id).session(session);
     if (!sale) throw new ApiError(404, 'Sale not found.');
     if (sale.status !== 'CONFIRMED') throw new ApiError(409, 'Only confirmed invoices can have items returned. Cancel a Draft instead.');
-    if (sale.balanceAddedCents > 0 && sale.outstandingCents !== sale.balanceAddedCents) {
-      throw new ApiError(409, 'Cannot return items: a debt payment has already been applied to this invoice. Reverse or reallocate that payment first.');
-    }
 
     const indexByItem = new Map(sale.items.map((line, index) => [String(line.item), index]));
     const seen = new Set();
@@ -607,15 +609,18 @@ export const returnSale = asyncHandler(async (req, res) => {
     const walletRefundCents = Math.min(paidBackCents, sale.walletAmountCents || 0);
     const refundCents = paidBackCents - walletRefundCents;
 
-    // Validated before any lot/stock mutation: an invoice with no payment
-    // account on file cannot refund an already-paid cash portion.
-    if (refundCents > 0 && !sale.paymentAccount) {
-      throw new ApiError(409, 'This invoice has no payment account on file to refund the already-paid portion. Contact an administrator.');
-    }
+    // Paid at the sale first, then what debt payments paid on it later.
+    const refundFromSaleCents = Math.min(refundCents, sale.paidAmountCents);
+    const refundFromLaterCents = refundCents - refundFromSaleCents;
+    // Where that money goes. A walk-in sale has no wallet: cash only.
+    const wanted = req.body.refundTo === 'WALLET' || req.body.refundTo === 'ACCOUNT' ? req.body.refundTo : null;
+    const refundTo = refundCents <= 0 ? '' : !sale.customer ? 'ACCOUNT' : wanted || (sale.paymentAccount ? 'ACCOUNT' : 'WALLET');
+    // Validated before any lot/stock mutation.
     let account = null;
-    if (refundCents > 0) {
-      account = await Account.findById(sale.paymentAccount).session(session);
-      if (!account) throw new ApiError(409, 'The payment account for this invoice no longer exists. Contact an administrator.');
+    if (refundTo === 'ACCOUNT') {
+      const accountId = req.body.accountId || sale.paymentAccount;
+      account = accountId ? await Account.findById(accountId).session(session) : null;
+      if (!account || !account.isActive) throw new ApiError(400, 'Choose the account the money is given back from.');
     }
 
     // Restore stock into the exact lots each line consumed, most-recently
@@ -673,9 +678,9 @@ export const returnSale = asyncHandler(async (req, res) => {
     sale.totalCents = newTotalCents;
     sale.costOfGoodsCents -= deltaCogsCents;
     sale.profitCents = sale.totalCents - sale.costOfGoodsCents;
-    sale.balanceAddedCents -= reduceFromOutstanding;
+    sale.balanceAddedCents -= reduceFromOutstanding + refundFromLaterCents;
     sale.outstandingCents -= reduceFromOutstanding;
-    sale.paidAmountCents -= refundCents;
+    sale.paidAmountCents -= refundFromSaleCents;
     sale.walletAmountCents -= walletRefundCents;
 
     // Resolved before the return entry is pushed so the Return Receipt can
@@ -690,6 +695,9 @@ export const returnSale = asyncHandler(async (req, res) => {
       debtReducedCents: reduceFromOutstanding,
       refundCents,
       walletRefundCents,
+      refundTo,
+      refundAccountName: account?.name || '',
+      refundReference: refundTo === 'ACCOUNT' ? reference : '',
       reason,
       invoiceBalanceAfterCents: sale.outstandingCents,
       customerBalanceAfterCents,
@@ -722,14 +730,36 @@ export const returnSale = asyncHandler(async (req, res) => {
         );
       }
 
-      if (walletRefundCents > 0) {
-        await restoreWallet(customer, walletRefundCents, sale, session, req.user);
+      // Paid money handed back to the wallet instead of as cash.
+      if (refundTo === 'WALLET' && refundCents > 0) {
+        const walletBefore = customer.walletBalanceCents;
+        customer.walletBalanceCents += refundCents;
+        await customer.save({ session });
+        await CustomerWalletTransaction.create(
+          [
+            {
+              customer: customer._id,
+              type: 'REFUND',
+              amountCents: refundCents,
+              sale: sale._id,
+              note: `Items returned on ${sale.receiptNumber} -- money paid for them moved to the wallet${reason ? `: ${reason}` : ''}`,
+              balanceBeforeCents: walletBefore,
+              balanceAfterCents: customer.walletBalanceCents,
+              createdBy: req.user?._id,
+            },
+          ],
+          { session }
+        );
+      }
+
+      if (walletRefundCents > 0 || (refundTo === 'WALLET' && refundCents > 0)) {
+        if (walletRefundCents > 0) await restoreWallet(customer, walletRefundCents, sale, session, req.user);
         // Credit given back to the wallet pays any other debt the customer owes.
         await applyWalletToDebt(customer, session, req.user);
       }
     }
 
-    if (account && refundCents > 0) {
+    if (refundTo === 'ACCOUNT' && account && refundCents > 0) {
       await postImmediateTransaction(
         {
           account,
@@ -738,7 +768,7 @@ export const returnSale = asyncHandler(async (req, res) => {
           amountCents: refundCents,
           referenceType: 'Sale',
           referenceId: sale._id,
-          description: `Refund for return on sale ${sale.receiptNumber}${reason ? ` (${reason})` : ''}`,
+          description: `Refund for return on sale ${sale.receiptNumber}${sale.customerName ? ` — ${sale.customerName}` : ''}${reference ? ` (sent to ${reference})` : ''}${reason ? ` (${reason})` : ''}`,
           createdBy: req.user,
         },
         session

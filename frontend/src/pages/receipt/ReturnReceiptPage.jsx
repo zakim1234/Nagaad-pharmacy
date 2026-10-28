@@ -103,7 +103,10 @@ export default function ReturnReceiptPage() {
           lines={[
             ret.debtReduced > 0 && ['Applied against debt', formatCurrency(ret.debtReduced)],
             ret.walletRefund > 0 && ['Returned to wallet', formatCurrency(ret.walletRefund)],
-            ret.refund > 0 && ['Refunded', formatCurrency(ret.refund)],
+            ret.refund > 0 &&
+              (ret.refundTo === 'WALLET'
+                ? ['Put in the wallet', formatCurrency(ret.refund)]
+                : [`Given back${ret.refundAccountName ? ` from ${ret.refundAccountName}` : ''}${ret.refundReference ? ` to ${ret.refundReference}` : ''}`, formatCurrency(ret.refund)]),
             ret.reason && ['Reason', ret.reason],
           ]}
           grand={['Return value', formatCurrency(ret.amount)]}

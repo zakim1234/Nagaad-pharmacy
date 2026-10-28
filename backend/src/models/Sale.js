@@ -66,6 +66,11 @@ const saleReturnSchema = new mongoose.Schema(
     debtReducedCents: { type: Number, required: true, default: 0 }, // portion applied against still-unpaid balance
     refundCents: { type: Number, required: true, default: 0 }, // portion refunded out of the payment account (already paid)
     walletRefundCents: { type: Number, default: 0 }, // already-paid portion that came from wallet credit, given back to the wallet
+    // Where the rest of the paid money went: the customer's wallet, or cash out
+    // of an account (and the number it was sent to).
+    refundTo: { type: String, enum: ['', 'WALLET', 'ACCOUNT'], default: '' },
+    refundAccountName: { type: String, default: '' },
+    refundReference: { type: String, default: '', trim: true, maxlength: 100 },
     reason: { type: String, default: '' },
     // Snapshots taken immediately after this specific return was applied --
     // for the Return Receipt to show the balances as they stood at that
