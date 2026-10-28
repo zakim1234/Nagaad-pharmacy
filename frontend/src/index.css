@@ -165,3 +165,19 @@ h1, h2, h3 {
   border-color: rgb(10 10 10 / 0.1);
   --tw-ring-color: rgb(10 10 10 / 0.08);
 }
+
+/* Loading dots (components/ui/Spinner.jsx): one full turn in 12 steps. */
+@keyframes dot-spinner-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.dot-spinner {
+  animation: dot-spinner-turn 1s steps(12) infinite;
+  transform-origin: 50% 50%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dot-spinner {
+    animation-duration: 3s;
+  }
+}
