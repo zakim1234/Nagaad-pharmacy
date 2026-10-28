@@ -1,4 +1,4 @@
-import { createSaleDraft, normalizeSaleNotes, validateSaleItems, resolveLinePricing, debitWallet, restoreWallet, assertBusinessDayOpen } from '../services/saleService.js';
+import { createSaleDraft, assertWithinCreditLimit, normalizeSaleNotes, validateSaleItems, resolveLinePricing, debitWallet, restoreWallet, assertBusinessDayOpen } from '../services/saleService.js';
 import Sale from '../models/Sale.js';
 import Customer from '../models/Customer.js';
 import InventoryItem from '../models/InventoryItem.js';
@@ -192,6 +192,7 @@ export const updateSale = asyncHandler(async (req, res) => {
     if (customer && walletAmountCents > customer.walletBalanceCents) {
       throw new ApiError(400, `Wallet balance (${(customer.walletBalanceCents / 100).toFixed(2)}) is less than the requested wallet payment.`);
     }
+    if (customer) await assertWithinCreditLimit(customer, totalCents - paidAmountCents - walletAmountCents, session, sale._id);
 
     sale.items = saleItems;
     if (notes !== undefined) sale.notes = notes;

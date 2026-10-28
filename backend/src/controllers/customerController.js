@@ -25,6 +25,7 @@ function toDTO(c) {
     notes: c.notes,
     balance: fromCents(c.balanceCents),
     walletBalance: fromCents(c.walletBalanceCents),
+    creditLimit: c.creditLimitCents == null ? null : fromCents(c.creditLimitCents),
     walletAutoPay: !!c.walletAutoPay,
     totalPurchased: fromCents(c.totalPurchasedCents),
     totalPaid: fromCents(c.totalPaidCents),
@@ -151,6 +152,31 @@ export const updateCustomer = asyncHandler(async (req, res) => {
     details: req.body,
   });
 
+  res.json({ success: true, data: toDTO(customer) });
+});
+
+// PUT /api/customers/:id/credit-limit { limit } -- admin only. limit null or
+// '' removes it; 0 means nothing on credit at all.
+export const setCreditLimit = asyncHandler(async (req, res) => {
+  const customer = await Customer.findById(req.params.id);
+  if (!customer) throw new ApiError(404, 'Customer not found.');
+  const raw = req.body.limit;
+  let cents = null;
+  if (raw !== null && raw !== undefined && raw !== '') {
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 0 || !Number.isSafeInteger(toCents(n))) throw new ApiError(400, 'Enter a valid credit limit.');
+    cents = toCents(n);
+  }
+  const before = customer.creditLimitCents;
+  customer.creditLimitCents = cents;
+  await customer.save();
+  await logAudit({
+    user: req.user,
+    action: 'customer.credit_limit',
+    entityType: 'Customer',
+    entityId: customer._id,
+    details: { before: before == null ? null : fromCents(before), after: cents == null ? null : fromCents(cents) },
+  });
   res.json({ success: true, data: toDTO(customer) });
 });
 

@@ -39,6 +39,7 @@ import CustomerQuotationsSection from './CustomerQuotationsSection.jsx';
 import CustomerWalletSection from './CustomerWalletSection.jsx';
 import CancelCustomerPaymentDialog from './CancelCustomerPaymentDialog.jsx';
 import CancelInvoiceDialog from './CancelInvoiceDialog.jsx';
+import CreditLimitCard from './CreditLimitCard.jsx';
 import SharePdfButton from '../../components/SharePdfButton.jsx';
 import DocHeader, { DocInfo } from '../../components/docs/DocHeader.jsx';
 
@@ -229,6 +230,7 @@ export default function CustomerDetailPage() {
           />
           <StatTile icon={PiggyBank} tone="indigo" label="Wallet Balance" value={formatCurrency(customer.walletBalance)} valueClass="text-brand-600" />
         </div>
+        <CreditLimitCard customer={customer} isAdmin={user?.role === 'admin' || !!user?.isSuperAdmin} onChanged={load} />
       </section>
 
       {/* Where the debt came from */}

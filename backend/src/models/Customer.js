@@ -18,6 +18,8 @@ const customerSchema = new mongoose.Schema(
     // Increases on Add Deposit, decreases when applied to a sale. Never
     // negative.
     walletBalanceCents: { type: Number, default: 0, min: 0 },
+    // The most this customer may owe (set by an admin); null = no limit.
+    creditLimitCents: { type: Number, default: null, min: 0 },
     // When true, wallet money pays this customer's debt automatically (on
     // deposit, at Close Day, after a reversal). Off by default: the money
     // stays in the wallet until someone chooses to use it on the debt.

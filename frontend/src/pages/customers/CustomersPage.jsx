@@ -94,14 +94,15 @@ export default function CustomersPage() {
             <Th>Phone</Th>
             <Th>Total Purchased</Th>
             <Th>Balance</Th>
+            <Th>Credit limit</Th>
             <Th className="text-right">Actions</Th>
           </tr>
         </THead>
         <TBody>
           {loading ? (
-            <TableLoading colSpan={5} />
+            <TableLoading colSpan={6} />
           ) : items.length === 0 ? (
-            <TableEmpty colSpan={5} message="No customers found." />
+            <TableEmpty colSpan={6} message="No customers found." />
           ) : (
             items.map((c) => (
               <tr key={c.id} className="hover:bg-neutral-50">
@@ -117,6 +118,7 @@ export default function CustomersPage() {
                     {formatCurrency(c.balance)}
                   </span>
                 </Td>
+                <Td className="tabular-nums text-neutral-700">{c.creditLimit == null ? <span className="text-neutral-300">No limit</span> : formatCurrency(c.creditLimit)}</Td>
                 <Td>
                   <div className="flex justify-end gap-1">
                     {canEdit && (

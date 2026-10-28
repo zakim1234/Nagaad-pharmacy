@@ -80,6 +80,25 @@ export async function assertBusinessDayOpen() {
 }
 
 // Authoritative draft creation, shared by POS and quotation conversion.
+// A customer with a credit limit may owe at most that much: what they owe
+// now, plus credit on their other pending (Draft) invoices, plus this sale's
+// credit. Paying in full is always fine. `excludeSaleId` is the invoice
+// being edited, so its old credit is not counted twice.
+export async function assertWithinCreditLimit(customer, newCreditCents, session, excludeSaleId = null) {
+  if (customer?.creditLimitCents == null || newCreditCents <= 0) return;
+  const filter = { customer: customer._id, status: 'DRAFT' };
+  if (excludeSaleId) filter._id = { $ne: excludeSaleId };
+  const drafts = await Sale.find(filter).select('balanceAddedCents').session(session).lean();
+  const owedCents = Math.max(0, customer.balanceCents) + drafts.reduce((t, d) => t + (d.balanceAddedCents || 0), 0);
+  if (owedCents + newCreditCents <= customer.creditLimitCents) return;
+  const room = Math.max(0, customer.creditLimitCents - owedCents);
+  const money = (c) => (c / 100).toFixed(2);
+  throw new ApiError(
+    400,
+    `${customer.name}'s credit limit is ${money(customer.creditLimitCents)}. They already owe ${money(owedCents)}, so only ${money(room)} more can go on credit -- this sale would add ${money(newCreditCents)}. Take at least ${money(newCreditCents - room)} more in payment.`
+  );
+}
+
 export async function createSaleDraft(payload, user, session, { quotedPrices, quotationId } = {}) {
   await assertBusinessDayOpen();
 
@@ -148,6 +167,8 @@ export async function createSaleDraft(payload, user, session, { quotedPrices, qu
     if (walletAmountCents > customer.walletBalanceCents) {
       throw new ApiError(400, `Wallet balance (${(customer.walletBalanceCents / 100).toFixed(2)}) is less than the requested wallet payment.`);
     }
+
+    await assertWithinCreditLimit(customer, totalCents - paidAmountCents - walletAmountCents, session);
 
     const receiptNumber = await generateReceiptNumber(session);
 

@@ -7,6 +7,7 @@ import {
   createCustomer,
   updateCustomer,
   deleteCustomer,
+  setCreditLimit,
   getCustomerHistory,
   getCustomerDebt,
   payCustomerDebt,
@@ -37,6 +38,8 @@ router.get('/:id', getCustomer);
 router.get('/', requirePermission('customers'), listCustomers);
 router.put('/:id', requirePermission('customers'), updateCustomer);
 router.delete('/:id', requirePermission('customers'), deleteCustomer);
+// The most a customer may owe: set by an admin only.
+router.put('/:id/credit-limit', requireRole('admin'), setCreditLimit);
 router.get('/:id/history', requirePermission('customers'), getCustomerHistory);
 router.get('/:id/statement', requirePermission('customers'), getCustomerStatement);
 router.get('/:id/cancelled-statement', requirePermission('customers'), getCancelledStatement);
