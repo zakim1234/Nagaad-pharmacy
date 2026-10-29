@@ -8,6 +8,7 @@ import { runInTransaction } from '../utils/transaction.js';
 import { resolveDateRange } from '../utils/dateRange.js';
 import { fromCents } from '../utils/money.js';
 import { createSaleDraft } from '../services/saleService.js';
+import { getBusinessDayStatus } from '../services/dayCloseService.js';
 import { saleToDTO } from './saleController.js';
 import { effectiveStatus, quotationDTO, quotationStatuses, validateQuotation, money } from '../services/quotationService.js';
 
@@ -66,7 +67,13 @@ export const updateQuotation = asyncHandler(async (req, res) => {
   });
   res.json({ success: true, data: quotationDTO(q) });
 });
+// Accepting turns the quotation toward an invoice, so the business day must
+// be open (a quotation can still be written or rejected any time).
 export const setQuotationStatus = asyncHandler(async (req, res) => {
+  if (req.body.status === 'Accepted') {
+    const day = await getBusinessDayStatus();
+    if (day.status === 'CLOSED') throw new ApiError(409, 'Maalintu waa xiran tahay -- marka hore Open Day samee, kadib Accept. (The day is closed: do Open Day first, then accept.)');
+  }
   const q = await runInTransaction(async session => {
     const q = await findQuotation(req.params.id, session);
     const status = effectiveStatus(q);

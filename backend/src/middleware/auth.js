@@ -72,6 +72,9 @@ export function changeNotAllowed(req, user) {
     // Working sheets saved as drafts (paid or confirmed later by an admin),
     // not edits of a saved record.
     if (path === '/api/purchases/payment-plan' || path === '/api/salaries/sheet') return null;
+    // Quotations are part of selling: editing one, accepting or rejecting it
+    // needs only the Quotations permission (the route checks it).
+    if (path.startsWith('/api/quotations/')) return null;
     return has('editRecords') ? null : 'You are not allowed to edit this. Ask an admin to give you permission to edit.';
   }
   if (method === 'DELETE') {

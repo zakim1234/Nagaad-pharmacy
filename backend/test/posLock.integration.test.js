@@ -56,13 +56,16 @@ test('POS LOCK -- after Close Day nobody, not even an admin, can sell until the 
     // Converting an accepted quotation into an invoice is selling too.
     const quote = await request('/quotations', { customerId: customer.id, date: localDay(), expiryDate: '2034-12-31', items: [{ itemId: item.id, quantity: 1, unitPrice: 4, discount: 0 }], discount: 0, grandTotal: 0 });
     assert.equal(quote.status, 201, JSON.stringify(quote));
-    assert.equal((await request(`/quotations/${quote.data.id}/status`, { status: 'Accepted' }, 'PATCH')).status, 200);
-    assert.equal((await request(`/quotations/${quote.data.id}/convert`, {})).status, 403);
+    // The quotation can be written while closed, but Accept waits for Open Day.
+    assert.equal((await request(`/quotations/${quote.data.id}/status`, { status: 'Accepted' }, 'PATCH')).status, 409);
     assert.equal(await Sale.countDocuments({ status: 'DRAFT' }), 0, 'nothing new was created');
 
-    // Open the Day: selling works again.
+    // Open the Day: selling works again, and the quotation is accepted and converted.
     assert.equal((await request('/day-close/open', {})).status, 200);
     assert.equal((await request('/sales', sale())).status, 201);
+    assert.equal((await request(`/quotations/${quote.data.id}/status`, { status: 'Accepted' }, 'PATCH')).status, 200);
+    const converted = await request(`/quotations/${quote.data.id}/convert`, {});
+    assert.ok([200, 201].includes(converted.status), JSON.stringify(converted));
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await mongoose.connection.dropDatabase();

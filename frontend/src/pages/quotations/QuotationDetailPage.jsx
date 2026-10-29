@@ -30,6 +30,11 @@ export default function QuotationDetailPage() {
   const [discount, setDiscount] = useState('0');
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
+  // Accept needs the business day open; until Open Day it waits.
+  const [dayOpen, setDayOpen] = useState(true);
+  useEffect(() => {
+    client.get('/day-close/status').then((r) => setDayOpen(r.data.data.status !== 'CLOSED')).catch(() => setDayOpen(true));
+  }, []);
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState('');
   const fill = q => { setQuotation(q); setCustomer({ id: q.customer, name: q.customerName, phone: q.customerPhone, balance: 0 }); setItems(q.items); setDate(q.date.slice(0, 10)); setExpiryDate(q.expiryDate.slice(0, 10)); setDiscount(String(q.discount)); setNotes(q.notes); };
@@ -74,7 +79,8 @@ export default function QuotationDetailPage() {
     <div className="no-print"><PageHeader title={id ? quotation?.quotationNumber : 'New Quotation'} actions={<div className="flex flex-wrap gap-2">
       {editing ? <><Button onClick={save} loading={busy}>Save Quotation</Button>{id && <Button variant="secondary" disabled={busy} onClick={() => { fill(quotation); setEditing(false); }}>Cancel Edit</Button>}</> : <>
         <SharePdfButton fileName={`Quotation-${quotation?.quotationNumber}`} phone={quotation?.customerPhone} message={`${BUSINESS.name} — Quotation ${quotation?.quotationNumber}: ${formatCurrency(quotation?.grandTotal || 0)}`} /><Button variant="secondary" onClick={() => printReport('portrait')}>Print</Button>
-        {quotation?.status === 'Pending' && <><Button variant="secondary" disabled={busy} onClick={() => setEditing(true)}>Edit</Button><Button disabled={busy} onClick={() => changeStatus('Accepted')}>Accept</Button></>}
+        {quotation?.status === 'Pending' && <><Button variant="secondary" disabled={busy} onClick={() => setEditing(true)}>Edit</Button><Button disabled={busy || !dayOpen} title={dayOpen ? undefined : 'Open Day first'} onClick={() => changeStatus('Accepted')}>Accept</Button></>}
+        {quotation?.status === 'Pending' && !dayOpen && <span className="self-center rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700">Day closed — Accept after Open Day</span>}
         {['Pending', 'Accepted'].includes(quotation?.status) && <Button variant="secondary" disabled={busy} onClick={() => changeStatus('Rejected')}>Reject</Button>}
         {quotation?.status === 'Accepted' && <Link to={`/pos/new?quotation=${id}`}><Button>Convert to Invoice</Button></Link>}
         {['admin', 'manager'].includes(user?.role) && ['Pending', 'Rejected', 'Expired'].includes(quotation?.status) && <Button variant="secondary" disabled={busy} onClick={remove}>Delete</Button>}
