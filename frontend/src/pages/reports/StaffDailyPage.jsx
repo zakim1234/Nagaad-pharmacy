@@ -92,17 +92,26 @@ export default function StaffDailyPage() {
   const allBranches = isAllBranchesView(useAuth().user);
   const [month, setMonth] = useState(() => monthKey(new Date()));
   const [data, setData] = useState(null);
+  const [people, setPeople] = useState([]);
+  const [person, setPerson] = useState(''); // one person, or '' for everyone
+
+  useEffect(() => {
+    client
+      .get('/reports/users')
+      .then((r) => setPeople(r.data.data))
+      .catch(() => setPeople([]));
+  }, []);
 
   useEffect(() => {
     setData(null);
     client
-      .get('/reports/staff-daily', { params: { month } })
+      .get('/reports/staff-daily', { params: { month, userId: person || undefined } })
       .then((r) => setData(r.data.data))
       .catch((err) => {
         toast.error(err.friendlyMessage || 'Could not load the report.');
         setData({ days: [], people: [], totals: null });
       });
-  }, [month]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [month, person]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isThisMonth = month === monthKey(new Date());
 
@@ -118,7 +127,7 @@ export default function StaffDailyPage() {
         }
       />
 
-      <div className="no-print mb-4 inline-flex items-center gap-1 rounded-2xl border border-neutral-200/70 bg-white p-2">
+      <div className="no-print mb-4 inline-flex flex-wrap items-center gap-1 rounded-2xl border border-neutral-200/70 bg-white p-2">
         <button
           onClick={() => setMonth(shiftMonth(month, -1))}
           className="inline-flex items-center gap-0.5 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
@@ -133,6 +142,22 @@ export default function StaffDailyPage() {
         >
           Next <ChevronRight className="h-4 w-4" />
         </button>
+        <span className="mx-1 h-6 w-px bg-neutral-200" />
+        <label className="flex items-center gap-2 px-1 text-xs font-semibold text-neutral-500">
+          Person
+          <select
+            value={person}
+            onChange={(e) => setPerson(e.target.value)}
+            className="rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-sm font-semibold text-neutral-900"
+          >
+            <option value="">Everyone</option>
+            {people.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {!data ? (

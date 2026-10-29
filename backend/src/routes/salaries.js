@@ -8,6 +8,9 @@ import {
   getSalarySheetById,
   cancelSalarySheet,
   getSalaryStatement,
+  listWorkers,
+  createWorker,
+  updateWorker,
 } from '../controllers/salaryController.js';
 
 // Salaries are admin/manager only.
@@ -15,6 +18,9 @@ const router = Router();
 router.use(requireAuth);
 router.use(requireRole('admin', 'manager'));
 
+router.get('/workers', listWorkers);
+router.post('/workers', createWorker);
+router.put('/workers/:id', updateWorker);
 router.get('/sheet', getSalarySheet);
 router.put('/sheet', saveSalarySheet);
 router.post('/sheet/pay', paySalarySheet);

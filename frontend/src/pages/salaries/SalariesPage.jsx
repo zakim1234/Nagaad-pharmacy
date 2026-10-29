@@ -1,3 +1,4 @@
+import WorkersPanel from './WorkersPanel.jsx';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Banknote, CheckCircle2, Eye, History, Printer, Save, Undo2, Wallet, Copy, ScrollText } from 'lucide-react';
@@ -329,7 +330,10 @@ function SalarySheetEditor() {
                     <td className="px-4 py-2">
                       <p className="font-medium text-neutral-800">{r.name}</p>
                       <p className="text-xs text-neutral-400">
-                        @{r.username} ·{' '}
+                        {r.kind === 'worker' ? (
+                          <span className="mr-1 rounded bg-brand-100 px-1.5 py-px text-[10px] font-semibold text-brand-800">Worker</span>
+                        ) : null}
+                        {r.kind === 'worker' ? r.phone || 'no login' : `@${r.username}`} ·{' '}
                         <Link to={`/salaries/statement?user=${r.userId}`} className="font-semibold text-brand-600 hover:underline">
                           Statement
                         </Link>
@@ -367,6 +371,8 @@ function SalarySheetEditor() {
             </table>
           </div>
         </div>
+
+        <WorkersPanel onChanged={load} />
 
         <SavedSheets history={history} />
       </div>

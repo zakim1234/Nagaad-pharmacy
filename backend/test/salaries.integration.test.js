@@ -107,3 +107,33 @@ test('SALARY STATEMENT -- everyone or one person; cancelled sheets left out', { 
     await teardown(server);
   }
 });
+
+test('SALARIES -- workers with no login are registered and paid on the same sheet', { timeout: 90000 }, async () => {
+  const { server, cashier, request } = await setup('salaries_workers');
+  try {
+    const evc = await Account.create({ name: 'EVC Plus' });
+    assert.equal((await request('/salaries/workers', { name: '' })).status, 400);
+    const xamaal = await request('/salaries/workers', { name: 'Faarax', job: 'Porter', phone: '615111222' });
+    assert.equal(xamaal.status, 201, JSON.stringify(xamaal));
+
+    const sheet = await request('/salaries/sheet');
+    const faarax = sheet.data.people.find((p) => p.name === 'Faarax');
+    assert.deepEqual([faarax.kind, faarax.role], ['worker', 'Porter']);
+
+    const saved = await request('/salaries/sheet', { period: '2026-10', rows: [{ userId: cashier.id, amount: 300 }, { userId: faarax.userId, amount: 150 }] }, 'PUT');
+    assert.equal(saved.status, 200, JSON.stringify(saved));
+    assert.deepEqual(saved.data.rows.map((r) => [r.name, r.kind, r.amount]), [['Cashier Ali', 'user', 300], ['Faarax', 'worker', 150]]);
+    assert.equal((await request('/salaries/sheet/pay', { paymentAccountId: evc.id })).status, 200);
+    assert.equal((await Account.findById(evc.id)).currentBalanceCents, -45000);
+
+    const statement = await request(`/salaries/statement?userId=${faarax.userId}`);
+    assert.deepEqual(statement.data.lines.map((l) => [l.name, l.amount]), [['Faarax', 150]]);
+
+    // Deactivated workers leave the sheet; their history stays.
+    assert.equal((await request(`/salaries/workers/${faarax.userId}`, { active: false }, 'PUT')).data.active, false);
+    assert.ok(!(await request('/salaries/sheet')).data.people.some((p) => p.name === 'Faarax'));
+    assert.equal((await request(`/salaries/statement?userId=${faarax.userId}`)).data.lines.length, 1);
+  } finally {
+    await teardown(server);
+  }
+});

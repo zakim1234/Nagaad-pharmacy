@@ -5,7 +5,9 @@ import { branchScoped } from '../services/branchContext.js';
 // expense that paid it.
 const rowSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    // A system user, or a worker with no login (models/Worker.js) -- one of the two.
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    worker: { type: mongoose.Schema.Types.ObjectId, ref: 'Worker', default: null },
     name: { type: String, required: true },
     role: { type: String, default: '' },
     amountCents: { type: Number, required: true, min: 0 },

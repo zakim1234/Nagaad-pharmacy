@@ -40,7 +40,7 @@ router.get('/sales', salesReport);
 router.get('/items-sold', itemsSoldReport);
 router.get('/items-sold/periods', itemsSoldPeriods);
 // Admin only: each person's sales and money taken, day by day for a month.
-router.get('/staff-daily', requireRole('admin'), asyncHandler(async (req, res) => res.json({ success: true, data: await getStaffDaily({ month: req.query.month }) })));
+router.get('/staff-daily', requireRole('admin'), asyncHandler(async (req, res) => res.json({ success: true, data: await getStaffDaily({ month: req.query.month, userId: req.query.userId || undefined }) })));
 router.get('/quotations', quotationReport);
 router.get('/profit', profitReport);
 router.get('/profit/items/:itemId', profitByItemDrilldown);

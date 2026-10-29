@@ -95,6 +95,12 @@ test('ACCOUNTS AFTER CLOSE DAY -- money kept for the admin, staff see only since
     assert.equal(cumar.credit, 20);
     assert.deepEqual(cumar.byAccount, [{ accountName: 'EVC Plus', amount: 50 }]);
     assert.equal(rep.data.totals.sales, 50);
+    // One person only.
+    const onlyAdmin = await request(`/reports/staff-daily?month=${month}&userId=${admin.id}`, null, 'GET', admin);
+    assert.ok(!onlyAdmin.data.people.some((p) => p.userName === 'Cumar'));
+    const onlyCumar = await request(`/reports/staff-daily?month=${month}&userId=${cashier.id}`, null, 'GET', admin);
+    assert.deepEqual(onlyCumar.data.people.map((p) => p.userName), ['Cumar']);
+    assert.equal(onlyCumar.data.totals.sales, 50);
     assert.ok(rep.data.days.length >= 1);
   } finally {
     await new Promise((resolve) => server.close(resolve));

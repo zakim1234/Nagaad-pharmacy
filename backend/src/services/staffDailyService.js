@@ -9,17 +9,20 @@ import { periodKey } from './itemsSoldService.js';
 // For the admin, one month day by day: what each person sold (confirmed
 // invoices) and the money they took in -- paid at the sale and debt payments
 // collected -- split by account, plus what they sold on credit.
-export async function getStaffDaily({ month }) {
+// `userId` narrows it to one person.
+export async function getStaffDaily({ month, userId }) {
   const m = /^(\d{4})-(\d{2})$/.exec(String(month || ''));
   if (!m) throw new ApiError(400, 'Choose a month (YYYY-MM).');
   const start = new Date(Number(m[1]), Number(m[2]) - 1, 1);
   const end = new Date(Number(m[1]), Number(m[2]), 1);
+  if (userId && !/^[0-9a-f]{24}$/i.test(String(userId))) throw new ApiError(400, 'Unknown person.');
+  const who = userId ? { createdBy: userId } : {};
 
   const [sales, payments, accounts] = await Promise.all([
-    Sale.find({ status: 'CONFIRMED', createdAt: { $gte: start, $lt: end } })
+    Sale.find({ ...who, status: 'CONFIRMED', createdAt: { $gte: start, $lt: end } })
       .select('createdBy createdAt totalCents paidAmountCents paymentAccount balanceAddedCents walletAmountCents')
       .lean(),
-    Payment.find({ type: 'debt_payment', status: { $ne: 'CANCELLED' }, createdAt: { $gte: start, $lt: end } })
+    Payment.find({ ...who, type: 'debt_payment', status: { $ne: 'CANCELLED' }, createdAt: { $gte: start, $lt: end } })
       .select('createdBy createdAt amountCents paymentAccount paymentAccountName')
       .lean(),
     Account.find().select('name').lean(),
