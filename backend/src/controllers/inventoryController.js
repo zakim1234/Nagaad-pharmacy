@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import InventoryLot from '../models/InventoryLot.js';
 import { batchSummary } from '../services/batchService.js';
 import InventoryItem from '../models/InventoryItem.js';
@@ -97,7 +98,9 @@ export const listInventory = asyncHandler(async (req, res) => {
   const limitNum = Math.min(200, Math.max(1, parseInt(limit, 10) || 20));
   const sort = { [sortBy]: sortDir === 'asc' ? 1 : -1 };
 
-  const [items, total] = await Promise.all([
+  // Totals over every item matching the filters (not just this page): units,
+  // and their value at cost and at selling price.
+  const [items, total, [sums]] = await Promise.all([
     InventoryItem.find(filter)
       .populate('supplier', 'name')
       .populate('category', 'name')
@@ -105,9 +108,28 @@ export const listInventory = asyncHandler(async (req, res) => {
       .skip((pageNum - 1) * limitNum)
       .limit(limitNum),
     InventoryItem.countDocuments(filter),
+    InventoryItem.aggregate([
+      // Aggregation does not cast ids the way find() does.
+      { $match: { ...filter, ...(filter.category ? { category: new mongoose.Types.ObjectId(String(filter.category)) } : {}), ...(filter.supplier ? { supplier: new mongoose.Types.ObjectId(String(filter.supplier)) } : {}) } },
+      {
+        $group: {
+          _id: null,
+          units: { $sum: '$quantity' },
+          costCents: { $sum: { $multiply: ['$quantity', '$costPriceCents'] } },
+          sellCents: { $sum: { $multiply: ['$quantity', '$sellingPriceCents'] } },
+        },
+      },
+    ]),
   ]);
 
   res.json({
+    summary: {
+      items: total,
+      units: sums?.units || 0,
+      totalCost: fromCents(sums?.costCents || 0),
+      totalSell: fromCents(sums?.sellCents || 0),
+      profit: fromCents((sums?.sellCents || 0) - (sums?.costCents || 0)),
+    },
     success: true,
     data: await Promise.all(items.map(async item => ({ ...toDTO(item), ...await batchSummary(item, false) }))),
     pagination: { page: pageNum, limit: limitNum, total, pages: Math.ceil(total / limitNum) },
