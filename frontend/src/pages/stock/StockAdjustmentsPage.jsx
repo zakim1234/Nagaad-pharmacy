@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowDownCircle, ArrowUpCircle, ClipboardCheck, FileText, Plus, Search, SlidersHorizontal, Scale, PackageMinus, PackagePlus, X } from 'lucide-react';
 import client from '../../api/client.js';
@@ -53,11 +53,12 @@ export default function StockAdjustmentsPage() {
   };
   const [modalOpen, setModalOpen] = useState(false);
   const [countOpen, setCountOpen] = useState(false);
+  const navigate = useNavigate();
 
   const load = useCallback(() => {
     setLoading(true);
     client
-      .get('/stock-adjustments', { params: { q: q || undefined, direction: direction || undefined, reason: reason || undefined, from: from || undefined, to: to || undefined, page } })
+      .get('/stock-adjustments', { params: { q: q || undefined, direction: direction || undefined, reason: reason || undefined, from: from || undefined, to: to || undefined, page, group: 'save' } })
       .then((res) => {
         setRows(res.data.data);
         setSummary(res.data.summary);
@@ -154,70 +155,65 @@ export default function StockAdjustmentsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
+            {/* One line per save: everything adjusted together is one line;
+                open it to see every item in its statement. */}
             <table className="w-full text-sm">
               <thead className="bg-neutral-50/80">
                 <tr className="text-left text-xs uppercase tracking-wide text-neutral-400">
                   <th className="px-4 py-3 font-medium">Adjustment</th>
-                  <th className="px-4 py-3 font-medium">Item</th>
-                  <th className="px-4 py-3 text-right font-medium">Change</th>
-                  <th className="px-4 py-3 font-medium">Stock</th>
+                  <th className="px-4 py-3 font-medium">Items</th>
                   <th className="px-4 py-3 font-medium">Reason</th>
-                  <th className="px-4 py-3 text-right font-medium">Value</th>
-                  <th className="px-4 py-3 font-medium">Batches</th>
+                  <th className="px-4 py-3 text-right font-medium">Written off</th>
+                  <th className="px-4 py-3 text-right font-medium">Added back</th>
+                  <th className="px-4 py-3 text-right font-medium">Net</th>
                   <th className="px-4 py-3 font-medium">By</th>
+                  <th className="px-4 py-3 text-right font-medium">Statement</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {rows.map((a) => {
-                  const down = a.direction === 'DECREASE';
+                {rows.map((s) => {
+                  const to = `/stock-adjustments/statement/${encodeURIComponent(s.number)}`;
+                  const shown = s.itemNames.slice(0, 3);
+                  const more = s.itemNames.length - shown.length;
+                  const gain = s.netLoss < 0;
                   return (
-                    <tr key={a.id} className="align-top hover:bg-neutral-50/70">
+                    <tr key={s.number} onClick={() => navigate(to)} className="cursor-pointer align-top hover:bg-neutral-50/70">
                       <td className="px-4 py-3">
-                        <p className="font-semibold text-neutral-800">{a.adjustmentNumber}</p>
-                        <p className="text-xs text-neutral-400">{formatDateTime(a.createdAt)}</p>
-                        {a.countNumber && (
-                          <button type="button" onClick={() => { setQ(a.countNumber); setPage(1); }} className="mt-0.5 text-[11px] font-medium text-brand-600 hover:underline">
-                            Stock count {a.countNumber}
-                          </button>
-                        )}
+                        <p className="font-semibold text-neutral-900">{s.number}</p>
+                        <p className="text-xs text-neutral-400">{formatDateTime(s.date)}</p>
+                        {s.note && <p className="mt-0.5 max-w-[220px] text-xs text-neutral-500">{s.note}</p>}
                       </td>
                       <td className="px-4 py-3">
-                        <p className="font-medium text-neutral-800">{a.itemName}</p>
-                        <p className="text-xs text-neutral-400">{a.itemCode}</p>
+                        <p className="font-semibold text-neutral-900">
+                          {s.items} item{s.items === 1 ? '' : 's'}
+                        </p>
+                        <p className="max-w-[260px] text-xs text-neutral-500">
+                          {shown.join(', ')}
+                          {more > 0 ? ` +${more} more` : ''}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {s.reasons.map((r) => (
+                            <Badge key={r} color={REASONS[r]?.color || 'slate'}>{REASONS[r]?.label || r}</Badge>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums text-brand-600">{s.writtenOff ? `−${formatCurrency(s.writtenOff)}` : '—'}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums text-emerald-600">{s.addedBack ? `+${formatCurrency(s.addedBack)}` : '—'}</td>
+                      <td className={`whitespace-nowrap px-4 py-3 text-right font-bold tabular-nums ${gain ? 'text-emerald-600' : 'text-neutral-950'}`}>
+                        {gain ? `+${formatCurrency(-s.netLoss)}` : `−${formatCurrency(s.netLoss)}`}
+                      </td>
+                      <td className="px-4 py-3 text-neutral-500">{s.by || '—'}</td>
+                      <td className="px-4 py-3 text-right">
                         <Link
-                          to={`/stock-adjustments/statement/${encodeURIComponent(a.countNumber || a.adjustmentNumber)}`}
-                          className="mt-1 inline-flex items-center gap-1 rounded-md border border-neutral-200 px-1.5 py-0.5 text-[11px] font-semibold text-neutral-600 hover:bg-neutral-50"
+                          to={to}
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-2.5 py-1 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
                         >
-                          <FileText className="h-3 w-3" /> Statement
+                          <FileText className="h-3.5 w-3.5" /> Open statement
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className={`inline-flex items-center gap-1 font-semibold tabular-nums ${down ? 'text-brand-600' : 'text-emerald-600'}`}>
-                          {down ? <ArrowDownCircle className="h-4 w-4" /> : <ArrowUpCircle className="h-4 w-4" />}
-                          {down ? '−' : '+'}
-                          {a.quantity} {a.unit}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 tabular-nums text-neutral-500">
-                        {a.quantityBefore} → <span className="font-semibold text-neutral-800">{a.quantityAfter}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge color={REASONS[a.reason]?.color || 'slate'}>{REASONS[a.reason]?.label || a.reason}</Badge>
-                        {a.note && <p className="mt-1 max-w-[220px] text-xs text-neutral-500">{a.note}</p>}
-                      </td>
-                      <td className={`px-4 py-3 text-right font-semibold tabular-nums ${down ? 'text-brand-600' : 'text-emerald-600'}`}>
-                        {down ? '−' : '+'}
-                        {formatCurrency(a.value)}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-neutral-500">
-                        {a.lots.map((l) => (
-                          <p key={String(l.lot)}>
-                            {l.stockSerial || 'Batch'}
-                            {l.expiryDate ? ` · exp ${formatDate(l.expiryDate)}` : ''} ({l.quantity > 0 ? '+' : ''}{l.quantity})
-                          </p>
-                        ))}
-                      </td>
-                      <td className="px-4 py-3 text-neutral-500">{a.createdByName || '—'}</td>
                     </tr>
                   );
                 })}

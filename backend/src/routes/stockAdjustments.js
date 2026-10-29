@@ -76,6 +76,64 @@ router.get('/', asyncHandler(async (req, res) => {
   }
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = 50;
+  const sumsFor = () => StockAdjustment.aggregate([{ $match: filter }, { $group: { _id: '$direction', cents: { $sum: '$valueCents' }, count: { $sum: 1 } } }]);
+  const summaryOf = (sums) => {
+    const sum = (dir) => sums.find((s) => s._id === dir) || { cents: 0, count: 0 };
+    return {
+      decreaseValue: fromCents(sum('DECREASE').cents),
+      decreaseCount: sum('DECREASE').count,
+      increaseValue: fromCents(sum('INCREASE').cents),
+      increaseCount: sum('INCREASE').count,
+      netLoss: fromCents(sum('DECREASE').cents - sum('INCREASE').cents),
+    };
+  };
+
+  // ?group=save -- one line per save: everything adjusted together (a stock
+  // count, one BADJ number) is one line; a single adjustment is its own line.
+  // A save shows if any of its lines matches the filters; its totals are the
+  // whole save.
+  if (req.query.group === 'save') {
+    const saveKey = { $cond: [{ $gt: [{ $strLenCP: { $ifNull: ['$countNumber', ''] } }, 0] }, '$countNumber', '$adjustmentNumber'] };
+    const [[keysPage], sums] = await Promise.all([
+      StockAdjustment.aggregate([
+        { $match: filter },
+        { $group: { _id: saveKey, last: { $max: '$createdAt' } } },
+        { $sort: { last: -1, _id: -1 } },
+        { $facet: { keys: [{ $skip: (page - 1) * limit }, { $limit: limit }], total: [{ $count: 'n' }] } },
+      ]),
+      sumsFor(),
+    ]);
+    const keys = keysPage.keys.map((k) => k._id);
+    const total = keysPage.total[0]?.n || 0;
+    const rows = keys.length
+      ? await StockAdjustment.find({ $or: [{ countNumber: { $in: keys } }, { adjustmentNumber: { $in: keys } }] }).sort({ createdAt: 1, _id: 1 })
+      : [];
+    const byKey = new Map(keys.map((k) => [k, []]));
+    for (const r of rows) {
+      const k = r.countNumber && byKey.has(r.countNumber) ? r.countNumber : r.adjustmentNumber;
+      if (byKey.has(k)) byKey.get(k).push(r);
+    }
+    const saves = keys.map((k) => {
+      const list = byKey.get(k) || [];
+      const cents = (dir) => list.filter((r) => r.direction === dir).reduce((t, r) => t + r.valueCents, 0);
+      const first = list[0] || {};
+      return {
+        number: k,
+        isCount: !!first.countNumber && first.countNumber === k,
+        date: first.createdAt,
+        by: first.createdByName || '',
+        note: first.note || '',
+        items: list.length,
+        itemNames: list.map((r) => r.itemName),
+        reasons: [...new Set(list.map((r) => r.reason))],
+        writtenOff: fromCents(cents('DECREASE')),
+        addedBack: fromCents(cents('INCREASE')),
+        netLoss: fromCents(cents('DECREASE') - cents('INCREASE')),
+      };
+    });
+    return res.json({ success: true, data: saves, summary: summaryOf(sums), pagination: { page, limit, total, pages: Math.ceil(total / limit) } });
+  }
+
   const [items, total, sums] = await Promise.all([
     StockAdjustment.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
     StockAdjustment.countDocuments(filter),

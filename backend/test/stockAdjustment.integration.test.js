@@ -202,6 +202,16 @@ test('STOCK COUNT -- many items in one go, unchanged skipped, all-or-nothing, on
     assert.equal(single.status, 200);
     assert.equal((await request('/stock-adjustments/document/NOPE-1')).status, 404);
 
+    // The list by save: the whole count is ONE line, with both items in it.
+    const saves = await request('/stock-adjustments?group=save');
+    assert.equal(saves.status, 200, JSON.stringify(saves));
+    const line = saves.data.find((x) => x.number === res.data.countNumber);
+    assert.deepEqual([line.isCount, line.items, line.writtenOff, line.addedBack, line.netLoss], [true, 2, 7, 1, 6]);
+    assert.equal(saves.data.filter((x) => x.number === res.data.countNumber).length, 1);
+    // Searching an item finds the save it is in.
+    const found = await request(`/stock-adjustments?group=save&q=${encodeURIComponent(b.name)}`);
+    assert.ok(found.data.some((x) => x.number === res.data.countNumber));
+
     // One impossible row (below units held by a pending invoice) -> nothing is saved.
     const customer = await Customer.create({ name: 'Cumar', phone: '1' });
     assert.equal((await request('/sales', { customerId: customer.id, items: [{ itemId: b.id, quantity: 5 }], paidAmount: 0 })).status, 201);
