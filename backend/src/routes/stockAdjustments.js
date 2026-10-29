@@ -38,6 +38,30 @@ function toDTO(a) {
   };
 }
 
+// GET /api/stock-adjustments/document/:number -- one save as a statement:
+// every item adjusted together in it (a stock count / Adjust All Items
+// save, BADJ-...), or the single adjustment (ADJ-...), with the totals.
+router.get('/document/:number', asyncHandler(async (req, res) => {
+  const number = String(req.params.number || '').trim().slice(0, 40);
+  let rows = await StockAdjustment.find({ countNumber: number }).sort({ createdAt: 1, _id: 1 });
+  if (!rows.length) rows = await StockAdjustment.find({ adjustmentNumber: number });
+  if (!rows.length) throw new ApiError(404, 'Adjustment not found.');
+  const sum = (dir) => rows.filter((r) => r.direction === dir).reduce((t, r) => t + r.valueCents, 0);
+  res.json({
+    success: true,
+    data: {
+      number,
+      isCount: !!rows[0].countNumber && rows[0].countNumber === number,
+      date: rows[0].createdAt,
+      by: rows[0].createdByName || '',
+      note: rows[0].note || '',
+      rows: rows.map(toDTO),
+      totals: { items: rows.length, writtenOff: fromCents(sum('DECREASE')), addedBack: fromCents(sum('INCREASE')), netLoss: fromCents(sum('DECREASE') - sum('INCREASE')) },
+    },
+  });
+}));
+
+
 // GET /api/stock-adjustments?q=&direction=&reason=&from=&to=&page=
 router.get('/', asyncHandler(async (req, res) => {
   const filter = {};

@@ -1,5 +1,6 @@
+import { Link } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowDownCircle, ArrowUpCircle, ClipboardCheck, Plus, Search, SlidersHorizontal, Scale, PackageMinus, PackagePlus, X } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ClipboardCheck, FileText, Plus, Search, SlidersHorizontal, Scale, PackageMinus, PackagePlus, X } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -82,16 +83,18 @@ export default function StockAdjustmentsPage() {
           </h1>
           <p className="mt-1 text-sm text-neutral-500">Correct stock for damaged, expired or lost goods, or after a physical count.</p>
         </div>
+        <div className="flex flex-wrap gap-2">
         {canAdjust && (
-          <div className="flex flex-wrap gap-2">
+          <>
             <Button variant="secondary" onClick={() => setCountOpen(true)}>
               <ClipboardCheck className="h-4 w-4" /> Adjust All Items
             </Button>
             <Button onClick={() => setModalOpen(true)}>
               <Plus className="h-4 w-4" /> New Adjustment
             </Button>
-          </div>
+          </>
         )}
+        </div>
       </div>
 
       {summary && (
@@ -181,6 +184,12 @@ export default function StockAdjustmentsPage() {
                       <td className="px-4 py-3">
                         <p className="font-medium text-neutral-800">{a.itemName}</p>
                         <p className="text-xs text-neutral-400">{a.itemCode}</p>
+                        <Link
+                          to={`/stock-adjustments/statement/${encodeURIComponent(a.countNumber || a.adjustmentNumber)}`}
+                          className="mt-1 inline-flex items-center gap-1 rounded-md border border-neutral-200 px-1.5 py-0.5 text-[11px] font-semibold text-neutral-600 hover:bg-neutral-50"
+                        >
+                          <FileText className="h-3 w-3" /> Statement
+                        </Link>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className={`inline-flex items-center gap-1 font-semibold tabular-nums ${down ? 'text-brand-600' : 'text-emerald-600'}`}>

@@ -1,5 +1,6 @@
 import StockPage from './pages/stock/StockPage.jsx';
 import StockAdjustmentsPage from './pages/stock/StockAdjustmentsPage.jsx';
+import StockAdjustmentStatementPage from './pages/stock/StockAdjustmentStatementPage.jsx';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import SalesInvoicePage from './pages/pos/SalesInvoicePage.jsx';
 import QuotationsPage from './pages/quotations/QuotationsPage.jsx';
@@ -113,6 +114,7 @@ export default function App() {
               <Route path="/items-sold/view" element={<RequirePermission module="reports"><DayItemsSoldPage /></RequirePermission>} />
               <Route path="/stock" element={<RequirePermission module="stock"><StockPage /></RequirePermission>} />
               <Route path="/stock-adjustments" element={<RequirePermission module="stock"><StockAdjustmentsPage /></RequirePermission>} />
+              <Route path="/stock-adjustments/statement/:number" element={<RequirePermission module="stock"><StockAdjustmentStatementPage /></RequirePermission>} />
               <Route path="/purchases" element={<RequirePermission module="purchases"><PurchasesPage /></RequirePermission>} />
               <Route path="/purchases/vendor-balances" element={<RequirePermission module="purchases"><VendorBalancesPage /></RequirePermission>} />
               <Route path="/super-dashboard" element={<RequirePermission superAdmin><SuperDashboardPage /></RequirePermission>} />

@@ -190,6 +190,18 @@ test('STOCK COUNT -- many items in one go, unchanged skipped, all-or-nothing, on
     assert.ok(saved.every((x) => x.note === 'Month-end count'));
     assert.equal((await request(`/stock-adjustments?q=${res.data.countNumber}`)).data.length, 2);
 
+    // One statement for the whole save: both items changed in this count together.
+    const doc = await request(`/stock-adjustments/document/${res.data.countNumber}`);
+    assert.equal(doc.status, 200, JSON.stringify(doc));
+    assert.equal(doc.data.isCount, true);
+    assert.equal(doc.data.note, 'Month-end count');
+    assert.deepEqual(doc.data.rows.map((r) => r.itemName).sort(), [a.name, b.name].sort());
+    assert.deepEqual(doc.data.totals, { items: 2, writtenOff: 7, addedBack: 1, netLoss: 6 });
+    // A single adjustment opens by its own number.
+    const single = await request(`/stock-adjustments/document/${doc.data.rows[0].adjustmentNumber}`);
+    assert.equal(single.status, 200);
+    assert.equal((await request('/stock-adjustments/document/NOPE-1')).status, 404);
+
     // One impossible row (below units held by a pending invoice) -> nothing is saved.
     const customer = await Customer.create({ name: 'Cumar', phone: '1' });
     assert.equal((await request('/sales', { customerId: customer.id, items: [{ itemId: b.id, quantity: 5 }], paidAmount: 0 })).status, 201);
