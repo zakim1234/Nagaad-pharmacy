@@ -1,7 +1,7 @@
 import { draftKey, readDraft, writeDraft, clearDraft, isDraftMeaningful } from '../../utils/posDraft.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { ShoppingCart, ClipboardList, Pencil, ChevronDown, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, ClipboardList, Pencil, ChevronDown, ArrowLeft, UserRound } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useBusinessDay } from '../../hooks/useBusinessDay.js';
@@ -180,7 +180,7 @@ export default function POSPage() {
   const hasInvalidDiscount = lines.some((l) => (Number(l.discount) || 0) > l.quantity * l.unitPrice);
   const needsAccount = paidNum > 0 && !paymentAccountId;
   const canComplete = !submitting && !loadingDraft && (!quotationId || !!quotation) && !!customer && lines.length > 0 && !hasOverStock && !hasInvalidDiscount && !needsAccount;
-  const panelSummary = `${customer ? customer.name : 'Select customer'} · ${formatCurrency(total)}${
+  const panelSummary = `Payment · ${formatCurrency(total)}${
     customer ? ` · ${remaining > 0 ? `Balance ${formatCurrency(remaining)}` : 'Fully Paid'}` : ''
   }`;
 
@@ -356,6 +356,20 @@ export default function POSPage() {
         </div>
       )}
 
+      {/* The customer comes first: a full-width bar at the top of the invoice. */}
+      <section className="relative z-20 mb-4 rounded-2xl border border-neutral-200/80 bg-white p-4 sm:p-5">
+        <div className="mb-3 flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl surface-blue">
+            <UserRound className="h-4.5 w-4.5" />
+          </span>
+          <div>
+            <p className="text-sm font-bold text-neutral-950">Customer</p>
+            <p className="text-xs text-neutral-500">Who is this invoice for? Search by name or phone, or add a new customer.</p>
+          </div>
+        </div>
+        <fieldset disabled={submitting || !!quotationId}><CustomerSearchBox hideLabel searchValue={customerQuery} onSearchChange={setCustomerQuery} enteredCustomer={enteredCustomer} onEnteredCustomerChange={setEnteredCustomer} activeCustomer={customer} onSelect={setCustomer} onClear={() => { setCustomer(null); setWalletAmount(''); }} cartTotal={total} paidAmount={paidNum} walletAmount={walletNum} /></fieldset>
+      </section>
+
       {/* Below lg: a single stacked column, Customer+Payment collapsed above
           Items. At lg+: Items is the wide main column (left), Customer+
           Payment is a narrower panel docked to the right, pinned in view
@@ -392,10 +406,6 @@ export default function POSPage() {
           </button>
 
           <div className={`${mobilePanelOpen ? 'block' : 'hidden'} space-y-4 lg:block`}>
-            <Card dense>
-              <fieldset disabled={submitting || !!quotationId}><CustomerSearchBox searchValue={customerQuery} onSearchChange={setCustomerQuery} enteredCustomer={enteredCustomer} onEnteredCustomerChange={setEnteredCustomer} activeCustomer={customer} onSelect={setCustomer} onClear={() => { setCustomer(null); setWalletAmount(''); }} cartTotal={total} paidAmount={paidNum} walletAmount={walletNum} /></fieldset>
-            </Card>
-
             <Card dense title="Payment">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-neutral-600">
