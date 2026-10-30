@@ -27,6 +27,7 @@ import partnerRoutes from './routes/partners.js';
 import fixedAssetRoutes from './routes/fixedAssets.js';
 import zakatRoutes from './routes/zakat.js';
 import stockAdjustmentRoutes from './routes/stockAdjustments.js';
+import chatRoutes from './routes/chat.js';
 
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js';
 import { ApiError } from './utils/ApiError.js';
@@ -89,6 +90,7 @@ app.use('/api/partners', partnerRoutes);
 app.use('/api/fixed-assets', fixedAssetRoutes);
 app.use('/api/zakat', zakatRoutes);
 app.use('/api/stock-adjustments', stockAdjustmentRoutes);
+app.use('/api/chat', chatRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

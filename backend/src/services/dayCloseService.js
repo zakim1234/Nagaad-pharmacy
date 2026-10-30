@@ -5,6 +5,7 @@ import Payment from '../models/Payment.js';
 import CustomerLedger from '../models/CustomerLedger.js';
 import Account from '../models/Account.js';
 import DayClose from '../models/DayClose.js';
+import ChatMessage from '../models/ChatMessage.js';
 import Expense from '../models/Expense.js';
 import BusinessDay from '../models/BusinessDay.js';
 import { currentBranch } from './branchContext.js';
@@ -364,6 +365,10 @@ export async function closeDay({ user } = {}) {
       ],
       { session }
     );
+
+    // The chat only lasts for the business day: closing it deletes every
+    // message of this branch.
+    await ChatMessage.deleteMany(currentBranch() ? { branch: currentBranch() } : {}, { session });
 
     // 7. Flip the business day to CLOSED.
     await BusinessDay.findByIdAndUpdate(

@@ -34,6 +34,7 @@ import { hasPermission } from '../constants/permissions.js';
 import { BUSINESS } from '../constants/business.js';
 import logo from '../images/logo.png';
 import BranchSwitcher from '../components/BranchSwitcher.jsx';
+import ChatWidget from '../components/ChatWidget.jsx';
 import client, { getSelectedBranch } from '../api/client.js';
 
 // The Super Admin outside any branch sees only the company-wide pages; a
@@ -250,6 +251,8 @@ export default function AppLayout() {
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:px-8">
           <Outlet />
         </main>
+        {/* Chat is per branch: not on the all-branches overview. */}
+        {user && !inOverview(user) && <ChatWidget />}
       </div>
     </div>
   );
