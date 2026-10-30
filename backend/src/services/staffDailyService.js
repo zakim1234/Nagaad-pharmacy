@@ -20,10 +20,11 @@ export async function getStaffDaily({ month, userId }) {
 
   const [sales, payments, accounts] = await Promise.all([
     Sale.find({ ...who, status: 'CONFIRMED', createdAt: { $gte: start, $lt: end } })
-      .select('createdBy createdAt totalCents paidAmountCents paymentAccount balanceAddedCents walletAmountCents')
+      .select('receiptNumber customerName createdBy createdAt totalCents paidAmountCents paymentAccount balanceAddedCents walletAmountCents items.itemName items.quantity')
       .lean(),
     Payment.find({ ...who, type: 'debt_payment', status: { $ne: 'CANCELLED' }, createdAt: { $gte: start, $lt: end } })
-      .select('createdBy createdAt amountCents paymentAccount paymentAccountName')
+      .select('receiptNumber customer createdBy createdAt amountCents paymentAccount paymentAccountName allocations')
+      .populate('customer', 'name')
       .lean(),
     Account.find().select('name').lean(),
   ]);
@@ -48,6 +49,7 @@ export async function getStaffDaily({ month, userId }) {
         creditCents: 0,
         walletCents: 0,
         byAccount: new Map(),
+        entries: [], // every invoice and debt payment, so the figures can be checked
       });
     }
     return rows.get(key);
@@ -68,11 +70,37 @@ export async function getStaffDaily({ month, userId }) {
     row.creditCents += s.balanceAddedCents || 0;
     row.walletCents += s.walletAmountCents || 0;
     addAccount(row, s.paymentAccount, accountName.get(String(s.paymentAccount)), s.paidAmountCents || 0);
+    row.entries.push({
+      kind: 'invoice',
+      id: s._id,
+      number: s.receiptNumber,
+      time: s.createdAt,
+      customer: s.customerName || 'Walk-in',
+      items: (s.items || []).map((i) => `${i.itemName} × ${i.quantity}`),
+      total: fromCents(s.totalCents || 0),
+      paid: fromCents(s.paidAmountCents || 0),
+      wallet: fromCents(s.walletAmountCents || 0),
+      credit: fromCents(s.balanceAddedCents || 0),
+      account: s.paidAmountCents ? accountName.get(String(s.paymentAccount)) || '' : '',
+    });
   }
   for (const p of payments) {
     const row = rowFor(p.createdAt, p.createdBy);
     row.debtCollectedCents += p.amountCents || 0;
     addAccount(row, p.paymentAccount, p.paymentAccountName || accountName.get(String(p.paymentAccount)), p.amountCents || 0);
+    row.entries.push({
+      kind: 'payment',
+      id: p._id,
+      number: p.receiptNumber,
+      time: p.createdAt,
+      customer: p.customer?.name || '',
+      items: (p.allocations || []).map((a) => `paid on ${a.receiptNumber}`),
+      total: 0,
+      paid: fromCents(p.amountCents || 0),
+      wallet: 0,
+      credit: 0,
+      account: p.paymentAccountName || accountName.get(String(p.paymentAccount)) || '',
+    });
   }
 
   const out = (r) => ({
@@ -87,6 +115,7 @@ export async function getStaffDaily({ month, userId }) {
     credit: fromCents(r.creditCents),
     wallet: fromCents(r.walletCents),
     byAccount: [...r.byAccount.values()].map((a) => ({ accountName: a.accountName, amount: fromCents(a.cents) })),
+    entries: (r.entries || []).slice().sort((a, b) => new Date(a.time) - new Date(b.time)),
   });
 
   const all = [...rows.values()];

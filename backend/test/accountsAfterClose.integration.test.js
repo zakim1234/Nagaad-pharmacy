@@ -101,6 +101,12 @@ test('ACCOUNTS AFTER CLOSE DAY -- money kept for the admin, staff see only since
     const onlyCumar = await request(`/reports/staff-daily?month=${month}&userId=${cashier.id}`, null, 'GET', admin);
     assert.deepEqual(onlyCumar.data.people.map((p) => p.userName), ['Cumar']);
     assert.equal(onlyCumar.data.totals.sales, 50);
+    // Each day lists the person's invoices and debt payments, to check the figures.
+    const entries = onlyCumar.data.days.flatMap((d) => d.rows.flatMap((r) => r.entries));
+    assert.equal(entries.filter((e) => e.kind === 'invoice').length, 2);
+    assert.equal(entries.filter((e) => e.kind === 'payment').length, 1);
+    assert.ok(entries.some((e) => e.kind === 'invoice' && e.paid === 30 && e.account === 'EVC Plus'));
+    assert.ok(entries.every((e) => e.number && e.customer === 'Cali'));
     assert.ok(rep.data.days.length >= 1);
   } finally {
     await new Promise((resolve) => server.close(resolve));

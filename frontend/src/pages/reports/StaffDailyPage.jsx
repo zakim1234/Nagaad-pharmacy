@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Printer, Users } from 'lucide-react';
 import client, { isAllBranchesView } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -33,7 +34,57 @@ const Accounts = ({ list }) =>
     <span className="text-neutral-300">—</span>
   );
 
-function Rows({ rows, totals, first = 'Person' }) {
+const clock = (d) => new Date(d).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+// Every invoice and debt payment behind a person's figures for the day.
+function Entries({ entries }) {
+  return (
+    <div className="rounded-xl border border-neutral-100 bg-neutral-50/60">
+      <table className="min-w-full text-xs">
+        <thead>
+          <tr className="text-left text-[10px] font-semibold uppercase tracking-wider text-neutral-400">
+            <th className="px-3 py-1.5">Time</th>
+            <th className="px-3 py-1.5">Number</th>
+            <th className="px-3 py-1.5">Customer</th>
+            <th className="px-3 py-1.5">What</th>
+            <th className="px-3 py-1.5 text-right">Total</th>
+            <th className="px-3 py-1.5 text-right">Paid</th>
+            <th className="px-3 py-1.5 text-right">On credit</th>
+            <th className="px-3 py-1.5">Account</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-neutral-100">
+          {entries.map((e) => (
+            <tr key={`${e.kind}-${e.id}`}>
+              <td className="whitespace-nowrap px-3 py-1.5 text-neutral-500">{clock(e.time)}</td>
+              <td className="whitespace-nowrap px-3 py-1.5">
+                <Link
+                  to={e.kind === 'invoice' ? `/receipt/${e.id}` : `/payment-receipt/${e.id}`}
+                  state={{ backLabel: 'Staff Daily' }}
+                  className="font-semibold text-brand-700 hover:underline"
+                >
+                  {e.number}
+                </Link>
+                <span className="block text-[10px] text-neutral-400">{e.kind === 'invoice' ? 'Invoice' : 'Debt payment'}</span>
+              </td>
+              <td className="px-3 py-1.5 text-neutral-800">{e.customer || '—'}</td>
+              <td className="max-w-[260px] px-3 py-1.5 text-neutral-500">{e.items.join(', ') || '—'}</td>
+              <td className="figure whitespace-nowrap px-3 py-1.5 text-right text-neutral-900">{e.kind === 'invoice' ? formatCurrency(e.total) : '—'}</td>
+              <td className="figure whitespace-nowrap px-3 py-1.5 text-right font-semibold text-emerald-600">
+                {formatCurrency(e.paid)}
+                {e.wallet > 0 && <span className="block text-[10px] font-normal text-neutral-400">+ {formatCurrency(e.wallet)} wallet</span>}
+              </td>
+              <td className="figure whitespace-nowrap px-3 py-1.5 text-right text-neutral-500">{e.credit > 0 ? formatCurrency(e.credit) : '—'}</td>
+              <td className="whitespace-nowrap px-3 py-1.5 text-neutral-600">{e.account || '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Rows({ rows, totals, first = 'Person', withEntries = false }) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-sm">
@@ -51,7 +102,8 @@ function Rows({ rows, totals, first = 'Person' }) {
         </thead>
         <tbody className="divide-y divide-neutral-100">
           {rows.map((r) => (
-            <tr key={`${r.user}-${r.day}`}>
+            <Fragment key={`${r.user}-${r.day}`}>
+            <tr>
               <td className="px-4 py-2.5 font-semibold text-neutral-900">
                 {r.userName}
                 {r.days != null && <span className="block text-xs font-normal text-neutral-400">{r.days} day{r.days === 1 ? '' : 's'}</span>}
@@ -64,6 +116,14 @@ function Rows({ rows, totals, first = 'Person' }) {
               <td className="figure px-4 py-2.5 text-right text-neutral-500">{formatCurrency(r.credit)}</td>
               <td className="px-4 py-2.5"><Accounts list={r.byAccount} /></td>
             </tr>
+            {withEntries && r.entries?.length > 0 && (
+              <tr>
+                <td colSpan={8} className="px-4 pb-3 pt-0">
+                  <Entries entries={r.entries} />
+                </td>
+              </tr>
+            )}
+            </Fragment>
           ))}
         </tbody>
         {totals && rows.length > 1 && (
@@ -186,7 +246,7 @@ export default function StaffDailyPage() {
                   <span className="font-bold text-emerald-600">{formatCurrency(d.totals.received)}</span>
                 </p>
               </div>
-              <Rows rows={d.rows} totals={d.totals} />
+              <Rows rows={d.rows} totals={d.totals} withEntries />
             </section>
           ))}
         </div>
