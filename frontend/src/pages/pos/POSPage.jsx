@@ -49,10 +49,6 @@ export default function POSPage() {
   const [drafts, setDrafts] = useState([]);
   const [draftsLoading, setDraftsLoading] = useState(true);
 
-  useEffect(() => {
-    if (customer) setMobilePanelOpen(false);
-  }, [customer?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // After Close Day, Seller/POS is locked for everyone (admins too) until
   // the day is opened; the server enforces the same rule.
   const { closed: posLocked } = useBusinessDay();
