@@ -1,7 +1,7 @@
 import { draftKey, readDraft, writeDraft, clearDraft, isDraftMeaningful } from '../../utils/posDraft.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { ShoppingCart, ClipboardList, Pencil, ChevronDown, ArrowLeft, UserRound } from 'lucide-react';
+import { ShoppingCart, ClipboardList, Pencil, ArrowLeft, UserRound, Wallet } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useBusinessDay } from '../../hooks/useBusinessDay.js';
@@ -49,13 +49,6 @@ export default function POSPage() {
   const [drafts, setDrafts] = useState([]);
   const [draftsLoading, setDraftsLoading] = useState(true);
 
-  // Below the lg breakpoint the Customer+Payment side panel collapses into a
-  // tap-to-expand section above Items, so Items (the main work area) is what
-  // a cashier sees first without scrolling. It has no effect at lg+, where
-  // the panel is always shown docked to the right. Collapses on its own once
-  // a customer is picked, since that's the natural point to turn attention
-  // to items; the cashier can still tap it open again for payment.
-  const [mobilePanelOpen, setMobilePanelOpen] = useState(true);
   useEffect(() => {
     if (customer) setMobilePanelOpen(false);
   }, [customer?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -180,9 +173,6 @@ export default function POSPage() {
   const hasInvalidDiscount = lines.some((l) => (Number(l.discount) || 0) > l.quantity * l.unitPrice);
   const needsAccount = paidNum > 0 && !paymentAccountId;
   const canComplete = !submitting && !loadingDraft && (!quotationId || !!quotation) && !!customer && lines.length > 0 && !hasOverStock && !hasInvalidDiscount && !needsAccount;
-  const panelSummary = `Payment · ${formatCurrency(total)}${
-    customer ? ` · ${remaining > 0 ? `Balance ${formatCurrency(remaining)}` : 'Fully Paid'}` : ''
-  }`;
 
   const handleAddLine = (product) => {
     setLines((prev) => {
@@ -370,141 +360,133 @@ export default function POSPage() {
         <fieldset disabled={submitting || !!quotationId}><CustomerSearchBox hideLabel searchValue={customerQuery} onSearchChange={setCustomerQuery} enteredCustomer={enteredCustomer} onEnteredCustomerChange={setEnteredCustomer} activeCustomer={customer} onSelect={setCustomer} onClear={() => { setCustomer(null); setWalletAmount(''); }} cartTotal={total} paidAmount={paidNum} walletAmount={walletNum} /></fieldset>
       </section>
 
-      {/* Below lg: a single stacked column, Customer+Payment collapsed above
-          Items. At lg+: Items is the wide main column (left), Customer+
-          Payment is a narrower panel docked to the right, pinned in view
-          with its own Complete Sale button so it's never scrolled away. */}
-      {/* Items gets ~70-75% of the width, the Customer+Payment panel ~25-30%
-          -- a true percentage split (fr units), not a fixed pixel column, so
-          the ratio holds at any lg+ viewport width. minmax() keeps the panel
-          from ever getting too narrow to use on a smaller lg screen. */}
-      <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(280px,1fr)] lg:items-start lg:gap-4">
-        <div className="order-2 min-w-0 lg:order-none">
-          <Card dense title="Items">
-            <fieldset disabled={submitting || !!quotationId}>
-              <SellerItemsGrid
-                lines={lines}
-                grandTotal={rowsTotal}
-                onAddLine={handleAddLine}
-                onLineChange={handleLineChange}
-                onRemoveLine={handleRemove}
-                disabled={submitting}
-                focusTrigger={customer?.id}
+      {/* Items, then Payment: both full width, one under the other. */}
+      <Card dense title="Items" className="mb-4">
+        <fieldset disabled={submitting || !!quotationId}>
+          <SellerItemsGrid
+            lines={lines}
+            grandTotal={rowsTotal}
+            onAddLine={handleAddLine}
+            onLineChange={handleLineChange}
+            onRemoveLine={handleRemove}
+            disabled={submitting}
+            focusTrigger={customer?.id}
+          />
+        </fieldset>
+      </Card>
+
+      <Card
+        dense
+        className="mb-4"
+        title={
+          <span className="flex items-center gap-1.5">
+            <Wallet className="h-4 w-4" /> Payment
+          </span>
+        }
+        subtitle="Discount, how the customer pays, then save the invoice"
+        actions={<span className="figure text-base font-extrabold text-neutral-950">{formatCurrency(total)}</span>}
+      >
+        <div className="grid gap-5 text-sm lg:grid-cols-3 lg:gap-6">
+          {/* 1. Totals */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-neutral-600">
+              <span>Subtotal</span>
+              <span className="font-medium tabular-nums text-neutral-800">{formatCurrency(subtotal)}</span>
+            </div>
+            {lineDiscountTotal > 0 && (
+              <div className="flex justify-between text-neutral-500">
+                <span>Line Discounts</span>
+                <span className="tabular-nums">{formatCurrency(lineDiscountTotal)}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between gap-3">
+              <Label>Discount (optional)</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={discount}
+                onChange={(e) => setDiscount(e.target.value)}
+                className="w-32 text-right tabular-nums"
+                disabled={submitting || !!quotationId}
               />
-            </fieldset>
-          </Card>
-        </div>
+            </div>
+            <div className="flex justify-between border-t border-neutral-100 pt-2 text-base font-bold text-neutral-900">
+              <span>Total After Discount</span>
+              <span className="tabular-nums">{formatCurrency(total)}</span>
+            </div>
+          </div>
 
-        <div className="order-1 mb-4 lg:order-none lg:sticky lg:top-4 lg:mb-0">
-          <button
-            type="button"
-            onClick={() => setMobilePanelOpen((o) => !o)}
-            className="mb-3 flex w-full items-center justify-between gap-2 rounded-xl border border-neutral-200/80 bg-white px-4 py-2.5 text-left text-sm font-medium text-neutral-700 lg:hidden"
-          >
-            <span className="truncate">{panelSummary}</span>
-            <ChevronDown className={`h-4 w-4 shrink-0 text-neutral-400 transition-transform ${mobilePanelOpen ? 'rotate-180' : ''}`} />
-          </button>
-
-          <div className={`${mobilePanelOpen ? 'block' : 'hidden'} space-y-4 lg:block`}>
-            <Card dense title="Payment">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-neutral-600">
-                  <span>Subtotal</span>
-                  <span className="font-medium tabular-nums text-neutral-800">{formatCurrency(subtotal)}</span>
-                </div>
-                {lineDiscountTotal > 0 && (
-                  <div className="flex justify-between text-neutral-500">
-                    <span>Line Discounts</span>
-                    <span className="tabular-nums">{formatCurrency(lineDiscountTotal)}</span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <Label>Discount (optional)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={discount}
-                    onChange={(e) => setDiscount(e.target.value)}
-                    className="w-28 text-right tabular-nums"
-                    disabled={submitting || !!quotationId}
-                  />
-                </div>
-                <div className="flex justify-between border-t border-neutral-100 pt-2 text-base font-bold text-neutral-900">
-                  <span>Total After Discount</span>
-                  <span className="tabular-nums">{formatCurrency(total)}</span>
-                </div>
-
-                {customer && walletAvailable > 0 && (
-                  <div className="pt-1">
-                    <div className="flex items-center justify-between">
-                      <Label>Pay from Wallet (available {formatCurrency(walletAvailable)})</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={walletAmount}
-                        onChange={(e) => setWalletAmount(e.target.value)}
-                        className="w-28 text-right tabular-nums"
-                        disabled={submitting || !!quotationId}
-                      />
-                    </div>
-                    {autoWalletApplies && (
-                      <p className="mt-1 text-right text-xs text-brand-600">
-                        Left blank — {formatCurrency(walletNum)} will be used from the wallet automatically.
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <div>
-                  <Label>Payment Method</Label>
-                  <AccountSelect value={paymentAccountId} onChange={setPaymentAccountId} disabled={submitting} placeholder="Select account..." />
-                </div>
-                <div>
-                  <Label>Paid Amount</Label>
+          {/* 2. How it is paid */}
+          <div className="space-y-2 lg:border-l lg:border-neutral-100 lg:pl-6">
+            {customer && walletAvailable > 0 && (
+              <div>
+                <div className="flex items-center justify-between gap-3">
+                  <Label>Pay from Wallet (available {formatCurrency(walletAvailable)})</Label>
                   <Input
                     type="number"
                     min="0"
                     step="0.01"
                     placeholder="0.00"
-                    value={paidAmount}
-                    onChange={(e) => setPaidAmount(e.target.value)}
-                    className="w-full text-right tabular-nums"
-                    disabled={submitting}
+                    value={walletAmount}
+                    onChange={(e) => setWalletAmount(e.target.value)}
+                    className="w-32 text-right tabular-nums"
+                    disabled={submitting || !!quotationId}
                   />
                 </div>
-                {needsAccount && <p className="text-right text-xs font-medium text-brand-600">Select an account to record this payment.</p>}
-
-                <div className={`flex justify-between rounded-lg px-3 py-2 font-semibold tabular-nums ${remaining > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
-                  <span className="font-semibold">{remaining > 0 ? 'Outstanding Balance (added to debt)' : 'Fully Paid'}</span>
-                  <span>{formatCurrency(remaining)}</span>
-                </div>
-
-                {!quotationId && (
-                  <div className="pt-1">
-                    <Label>Notes</Label>
-                    <Textarea rows={2} maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional" disabled={submitting} />
-                  </div>
+                {autoWalletApplies && (
+                  <p className="mt-1 text-right text-xs text-brand-600">Left blank — {formatCurrency(walletNum)} will be used from the wallet automatically.</p>
                 )}
-
-                <div className="mt-2 grid grid-cols-2 gap-3">
-                  <Button variant="secondary" size="lg" disabled={submitting} onClick={handleCancel}>
-                    Cancel
-                  </Button>
-                  <Button size="lg" loading={submitting} disabled={!canComplete} onClick={handleSubmit}>
-                    <ShoppingCart className="h-4 w-4" /> {editId ? 'Save Changes' : 'Save / Create Sale'}
-                  </Button>
-                </div>
-                <p className="text-center text-xs text-neutral-400">
-                  {editId ? 'This draft stays PENDING until Close Day confirms it.' : 'This invoice is PENDING until Close Day confirms it.'}
-                </p>
               </div>
-            </Card>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Payment Method</Label>
+                <AccountSelect value={paymentAccountId} onChange={setPaymentAccountId} disabled={submitting} placeholder="Select account..." />
+              </div>
+              <div>
+                <Label>Paid Amount</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={paidAmount}
+                  onChange={(e) => setPaidAmount(e.target.value)}
+                  className="w-full text-right tabular-nums"
+                  disabled={submitting}
+                />
+              </div>
+            </div>
+            {needsAccount && <p className="text-right text-xs font-medium text-brand-600">Select an account to record this payment.</p>}
+            <div className={`flex justify-between rounded-lg px-3 py-2 font-semibold tabular-nums ${remaining > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
+              <span className="font-semibold">{remaining > 0 ? 'Outstanding Balance (added to debt)' : 'Fully Paid'}</span>
+              <span>{formatCurrency(remaining)}</span>
+            </div>
+          </div>
+
+          {/* 3. Notes and save */}
+          <div className="flex flex-col gap-3 lg:border-l lg:border-neutral-100 lg:pl-6">
+            {!quotationId && (
+              <div>
+                <Label>Notes</Label>
+                <Textarea rows={2} maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional" disabled={submitting} />
+              </div>
+            )}
+            <div className="mt-auto grid grid-cols-[auto_1fr] gap-3">
+              <Button variant="secondary" size="lg" disabled={submitting} onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button size="lg" loading={submitting} disabled={!canComplete} onClick={handleSubmit}>
+                <ShoppingCart className="h-4 w-4" /> {editId ? 'Save Changes' : 'Save / Create Sale'}
+              </Button>
+            </div>
+            <p className="text-center text-xs text-neutral-400">
+              {editId ? 'This draft stays PENDING until Close Day confirms it.' : 'This invoice is PENDING until Close Day confirms it.'}
+            </p>
           </div>
         </div>
-      </div>
+      </Card>
 
       <Card
         dense
