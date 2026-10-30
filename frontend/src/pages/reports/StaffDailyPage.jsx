@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Printer, Users } from 'lucide-react';
 import client, { isAllBranchesView } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -34,6 +34,16 @@ const Accounts = ({ list }) =>
     <span className="text-neutral-300">—</span>
   );
 
+// Where the page was scrolled to when an invoice was opened from it.
+const SCROLL_KEY = 'staffDaily.scroll';
+const rememberScroll = () => {
+  try {
+    sessionStorage.setItem(SCROLL_KEY, String(document.querySelector('main')?.scrollTop || 0));
+  } catch {
+    // storage unavailable: Back just starts at the top
+  }
+};
+
 const clock = (d) => new Date(d).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
 // Every invoice and debt payment behind a person's figures for the day.
@@ -61,6 +71,7 @@ function Entries({ entries }) {
                 <Link
                   to={e.kind === 'invoice' ? `/receipt/${e.id}` : `/payment-receipt/${e.id}`}
                   state={{ backLabel: 'Staff Daily' }}
+                  onClick={rememberScroll}
                   className="font-semibold text-brand-700 hover:underline"
                 >
                   {e.number}
@@ -150,10 +161,27 @@ function Rows({ rows, totals, first = 'Person', withEntries = false }) {
 export default function StaffDailyPage() {
   const toast = useToast();
   const allBranches = isAllBranchesView(useAuth().user);
-  const [month, setMonth] = useState(() => monthKey(new Date()));
+  // Month and person live in the address, so Back from an invoice keeps them.
+  const [params, setParams] = useSearchParams();
+  const month = /^\d{4}-\d{2}$/.test(params.get('month') || '') ? params.get('month') : monthKey(new Date());
+  const person = params.get('person') || ''; // one person, or '' for everyone
+  const setMonth = (m) => setParams({ month: m, ...(person ? { person } : {}) }, { replace: true });
+  const setPerson = (p) => setParams({ month, ...(p ? { person: p } : {}) }, { replace: true });
   const [data, setData] = useState(null);
   const [people, setPeople] = useState([]);
-  const [person, setPerson] = useState(''); // one person, or '' for everyone
+
+  // Coming back from an invoice: scroll to where the user was.
+  useEffect(() => {
+    if (!data) return;
+    let saved = null;
+    try {
+      saved = sessionStorage.getItem(SCROLL_KEY);
+      sessionStorage.removeItem(SCROLL_KEY);
+    } catch {
+      // storage unavailable: stay at the top
+    }
+    if (saved) requestAnimationFrame(() => document.querySelector('main')?.scrollTo({ top: Number(saved) }));
+  }, [data]);
 
   useEffect(() => {
     client
