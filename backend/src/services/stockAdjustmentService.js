@@ -185,9 +185,54 @@ export async function createStockCount(session, { rows, note = '', user }) {
 
 // Net value of stock adjustments in a period: write-offs (DECREASE) minus
 // stock found (INCREASE). Positive = a loss that reduces profit.
+// Undo a whole save (a stock count's BADJ number, or one ADJ number): every
+// stock move is put back -- written-off units into the very batches they
+// came from, added units taken out of the batch the adjustment created --
+// and the rows are kept, marked REVERSED, so it can be done again correctly.
+// Refused if units it added have since been sold or are held by an invoice.
+export async function reverseAdjustmentSave(session, { number, reason = '', user }) {
+  const key = String(number || '').trim();
+  let rows = await StockAdjustment.find({ countNumber: key }).session(session);
+  if (!rows.length) rows = await StockAdjustment.find({ adjustmentNumber: key }).session(session);
+  if (!rows.length) throw new ApiError(404, 'Adjustment not found.');
+  if (rows.some((r) => r.status === 'REVERSED')) throw new ApiError(409, 'This adjustment has already been undone.');
+  const cleanReason = String(reason ?? '').trim().slice(0, 500);
+
+  // Newest first, so an item adjusted twice in one save unwinds in order.
+  for (const row of rows.sort((a, b) => b.createdAt - a.createdAt)) {
+    const item = await InventoryItem.findById(row.item).session(session);
+    if (!item) throw new ApiError(409, `"${row.itemName}" no longer exists, so ${row.adjustmentNumber} cannot be undone.`);
+    const before = item.quantity;
+    if (row.direction === 'DECREASE') {
+      for (const move of row.lots) {
+        await InventoryLot.updateOne({ _id: move.lot }, { $inc: { remainingQuantity: -move.quantity } }, { session });
+      }
+      item.quantity += row.quantity;
+    } else {
+      const free = item.quantity - (item.reservedQuantity || 0);
+      for (const move of row.lots) {
+        const result = await InventoryLot.updateOne({ _id: move.lot, remainingQuantity: { $gte: move.quantity } }, { $inc: { remainingQuantity: -move.quantity } }, { session });
+        if (result.modifiedCount !== 1 || free < row.quantity) {
+          throw new ApiError(409, `Some of the ${row.quantity} ${item.unit} of "${item.name}" added by ${row.adjustmentNumber} were already sold or are on a pending invoice, so it cannot be undone.`);
+        }
+      }
+      item.quantity -= row.quantity;
+    }
+    item.stockEvents.push({ type: 'ADJUSTMENT_UNDONE', reference: row.adjustmentNumber, quantityBefore: before, quantityAfter: item.quantity });
+    await item.save({ session });
+    row.status = 'REVERSED';
+    row.reversedAt = new Date();
+    row.reversedByName = user?.name || '';
+    row.reverseReason = cleanReason;
+    await row.save({ session });
+  }
+  return rows;
+}
+
 export async function netAdjustmentValueCents({ start, end }) {
   const rows = await StockAdjustment.aggregate([
-    { $match: { createdAt: { $gte: start, $lte: end } } },
+    // Undone adjustments no longer count.
+    { $match: { createdAt: { $gte: start, $lte: end }, status: { $ne: 'REVERSED' } } },
     { $group: { _id: '$direction', cents: { $sum: '$valueCents' } } },
   ]);
   const decrease = rows.find((r) => r._id === 'DECREASE')?.cents || 0;

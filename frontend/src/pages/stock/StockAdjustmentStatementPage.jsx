@@ -58,6 +58,18 @@ export default function StockAdjustmentStatementPage() {
           right={['Items adjusted', String(t.items), data.isCount ? 'Saved together (Adjust All Items)' : 'Single adjustment']}
         />
 
+        {data.undone && (
+          <div className="mt-5 rounded-xl border border-neutral-300 bg-neutral-50 px-4 py-3 text-sm">
+            <span className="font-bold uppercase tracking-wide text-neutral-700">Undone</span>
+            <span className="text-neutral-600">
+              {' '}
+              — {data.undoneAt ? formatDateTime(data.undoneAt) : ''}
+              {data.undoneBy ? ` by ${data.undoneBy}` : ''}
+              {data.undoReason ? `: ${data.undoReason}` : ''}. The stock was put back; this no longer counts in Profit & Loss.
+            </span>
+          </div>
+        )}
+
         <div className="mt-6">
           <table className="w-full border-collapse text-xs">
             <thead className="table-header-group">

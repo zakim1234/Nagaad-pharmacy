@@ -7,7 +7,7 @@ import { fromCents } from '../utils/money.js';
 import InventoryItem from '../models/InventoryItem.js';
 import InventoryLot from '../models/InventoryLot.js';
 import StockAdjustment from '../models/StockAdjustment.js';
-import { createStockAdjustment, createStockCount } from '../services/stockAdjustmentService.js';
+import { createStockAdjustment, createStockCount, reverseAdjustmentSave } from '../services/stockAdjustmentService.js';
 import { escapeRegex } from '../services/stockReceiptService.js';
 import { logAudit } from '../services/auditService.js';
 
@@ -34,6 +34,10 @@ function toDTO(a) {
     lots: a.lots.map((l) => ({ lot: l.lot, stockSerial: l.stockSerial, expiryDate: l.expiryDate, quantity: l.quantity })),
     createdByName: a.createdByName,
     countNumber: a.countNumber || '',
+    status: a.status || 'POSTED',
+    reversedAt: a.reversedAt || null,
+    reversedByName: a.reversedByName || '',
+    reverseReason: a.reverseReason || '',
     createdAt: a.createdAt,
   };
 }
@@ -55,12 +59,31 @@ router.get('/document/:number', asyncHandler(async (req, res) => {
       date: rows[0].createdAt,
       by: rows[0].createdByName || '',
       note: rows[0].note || '',
+      undone: rows.every((r) => r.status === 'REVERSED'),
+      undoneAt: rows[0].reversedAt || null,
+      undoneBy: rows[0].reversedByName || '',
+      undoReason: rows[0].reverseReason || '',
       rows: rows.map(toDTO),
       totals: { items: rows.length, writtenOff: fromCents(sum('DECREASE')), addedBack: fromCents(sum('INCREASE')), netLoss: fromCents(sum('DECREASE') - sum('INCREASE')) },
     },
   });
 }));
 
+
+// POST /api/stock-adjustments/:number/reverse { reason } -- admin/manager:
+// undo a whole save (BADJ-...) or one adjustment (ADJ-...) so it can be done
+// again. Stock goes back; the save stays on record, marked undone.
+router.post('/:number/reverse', requireRole('admin', 'manager'), asyncHandler(async (req, res) => {
+  const rows = await runInTransaction((session) => reverseAdjustmentSave(session, { number: req.params.number, reason: req.body.reason, user: req.user }));
+  await logAudit({
+    user: req.user,
+    action: 'stock.adjustment_undone',
+    entityType: 'StockAdjustment',
+    entityId: rows[0]._id,
+    details: { number: req.params.number, items: rows.length, reason: String(req.body.reason || '').slice(0, 500) },
+  });
+  res.json({ success: true, data: { number: req.params.number, undone: rows.length } });
+}));
 
 // GET /api/stock-adjustments?q=&direction=&reason=&from=&to=&page=
 router.get('/', asyncHandler(async (req, res) => {
@@ -76,7 +99,7 @@ router.get('/', asyncHandler(async (req, res) => {
   }
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = 50;
-  const sumsFor = () => StockAdjustment.aggregate([{ $match: filter }, { $group: { _id: '$direction', cents: { $sum: '$valueCents' }, count: { $sum: 1 } } }]);
+  const sumsFor = () => StockAdjustment.aggregate([{ $match: { ...filter, status: { $ne: 'REVERSED' } } }, { $group: { _id: '$direction', cents: { $sum: '$valueCents' }, count: { $sum: 1 } } }]);
   const summaryOf = (sums) => {
     const sum = (dir) => sums.find((s) => s._id === dir) || { cents: 0, count: 0 };
     return {
@@ -129,6 +152,10 @@ router.get('/', asyncHandler(async (req, res) => {
         writtenOff: fromCents(cents('DECREASE')),
         addedBack: fromCents(cents('INCREASE')),
         netLoss: fromCents(cents('DECREASE') - cents('INCREASE')),
+        undone: list.length > 0 && list.every((r) => r.status === 'REVERSED'),
+        undoneAt: first.reversedAt || null,
+        undoneBy: first.reversedByName || '',
+        undoReason: first.reverseReason || '',
       };
     });
     return res.json({ success: true, data: saves, summary: summaryOf(sums), pagination: { page, limit, total, pages: Math.ceil(total / limit) } });

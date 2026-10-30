@@ -39,6 +39,12 @@ const stockAdjustmentSchema = new mongoose.Schema(
     createdByName: { type: String, default: '' },
     // Set when this adjustment was one line of a whole-stock count (BADJ-YYYY-NNNNNN).
     countNumber: { type: String, default: '' },
+    // An adjustment that was undone stays on record, marked REVERSED; its
+    // stock moves were put back and it no longer counts in Profit & Loss.
+    status: { type: String, enum: ['POSTED', 'REVERSED'], default: 'POSTED' },
+    reversedAt: { type: Date, default: null },
+    reversedByName: { type: String, default: '' },
+    reverseReason: { type: String, default: '', maxlength: 500 },
   },
   { timestamps: true }
 );

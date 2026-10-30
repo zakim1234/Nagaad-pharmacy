@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowDownCircle, ArrowUpCircle, ClipboardCheck, FileText, Plus, Search, SlidersHorizontal, Scale, PackageMinus, PackagePlus, X } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ClipboardCheck, FileText, Undo2, Plus, Search, SlidersHorizontal, Scale, PackageMinus, PackagePlus, X } from 'lucide-react';
 import client from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -34,6 +34,24 @@ export default function StockAdjustmentsPage() {
   const { user } = useAuth();
   const toast = useToast();
   const canAdjust = user?.role === 'admin' || user?.role === 'manager';
+  // A wrong save can be undone (stock put back) and done again.
+  const [undoTarget, setUndoTarget] = useState(null);
+  const [undoReason, setUndoReason] = useState('');
+  const [undoing, setUndoing] = useState(false);
+  const undo = async () => {
+    setUndoing(true);
+    try {
+      await client.post(`/stock-adjustments/${encodeURIComponent(undoTarget.number)}/reverse`, { reason: undoReason });
+      toast.success(`${undoTarget.number} undone — the stock is back. You can adjust again now.`);
+      setUndoTarget(null);
+      setUndoReason('');
+      load();
+    } catch (err) {
+      toast.error(err.friendlyMessage || 'Could not undo this adjustment.');
+    } finally {
+      setUndoing(false);
+    }
+  };
   const [rows, setRows] = useState([]);
   const [summary, setSummary] = useState(null);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, limit: 50 });
@@ -177,9 +195,12 @@ export default function StockAdjustmentsPage() {
                   const more = s.itemNames.length - shown.length;
                   const gain = s.netLoss < 0;
                   return (
-                    <tr key={s.number} onClick={() => navigate(to)} className="cursor-pointer align-top hover:bg-neutral-50/70">
+                    <tr key={s.number} onClick={() => navigate(to)} className={`cursor-pointer align-top hover:bg-neutral-50/70 ${s.undone ? 'opacity-60' : ''}`}>
                       <td className="px-4 py-3">
-                        <p className="font-semibold text-neutral-900">{s.number}</p>
+                        <p className="font-semibold text-neutral-900">
+                          {s.number}
+                          {s.undone && <span className="ml-1.5 rounded bg-neutral-200 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-neutral-600">Undone</span>}
+                        </p>
                         <p className="text-xs text-neutral-400">{formatDateTime(s.date)}</p>
                         {s.note && <p className="mt-0.5 max-w-[220px] text-xs text-neutral-500">{s.note}</p>}
                       </td>
@@ -206,13 +227,28 @@ export default function StockAdjustmentsPage() {
                       </td>
                       <td className="px-4 py-3 text-neutral-500">{s.by || '—'}</td>
                       <td className="px-4 py-3 text-right">
-                        <Link
-                          to={to}
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-2.5 py-1 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
-                        >
-                          <FileText className="h-3.5 w-3.5" /> Open statement
-                        </Link>
+                        <div className="flex flex-wrap justify-end gap-1">
+                          <Link
+                            to={to}
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-2.5 py-1 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                          >
+                            <FileText className="h-3.5 w-3.5" /> Open statement
+                          </Link>
+                          {canAdjust && !s.undone && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setUndoReason('');
+                                setUndoTarget(s);
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-2.5 py-1 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                            >
+                              <Undo2 className="h-3.5 w-3.5" /> Undo
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -224,6 +260,29 @@ export default function StockAdjustmentsPage() {
       </section>
 
       <Pagination {...pagination} onChange={setPage} />
+
+      <Modal open={!!undoTarget} onClose={undoing ? undefined : () => setUndoTarget(null)} title={`Undo ${undoTarget?.number || ''}`} size="sm">
+        {undoTarget && (
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-600">
+              The stock of {undoTarget.items === 1 ? 'this item' : `these ${undoTarget.items} items`} goes back to what it was before this adjustment
+              {undoTarget.itemNames.length ? ` (${undoTarget.itemNames.slice(0, 4).join(', ')}${undoTarget.itemNames.length > 4 ? ', …' : ''})` : ''}. It stays on the list marked
+              Undone and no longer counts in Profit &amp; Loss. Then you can adjust again.
+            </p>
+            <FormField label="Reason (optional)">
+              <Textarea rows={2} maxLength={500} value={undoReason} onChange={(e) => setUndoReason(e.target.value)} placeholder="e.g. counted wrong" />
+            </FormField>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setUndoTarget(null)} disabled={undoing}>
+                Keep it
+              </Button>
+              <Button loading={undoing} onClick={undo}>
+                <Undo2 className="h-4 w-4" /> Undo adjustment
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <StockCountModal
         open={countOpen}
