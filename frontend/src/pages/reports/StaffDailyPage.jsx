@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Printer, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Printer, Search, Users, X } from 'lucide-react';
 import client, { isAllBranchesView } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -229,6 +229,133 @@ function MonthTable({ rows, totals }) {
   );
 }
 
+const shortDay = (key) => new Date(`${key}T00:00:00`).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+
+// One customer's whole month in one report: every invoice and debt payment,
+// who served them, and the totals.
+function CustomerReport({ name, entries }) {
+  const invoices = entries.filter((e) => e.kind === 'invoice');
+  const sum = (list, k) => list.reduce((t, e) => t + (e[k] || 0), 0);
+  const bought = sum(invoices, 'total');
+  const paid = sum(entries, 'paid');
+  const wallet = sum(entries, 'wallet');
+  const credit = sum(invoices, 'credit');
+  const debtPaid = sum(entries.filter((e) => e.kind !== 'invoice'), 'paid');
+  const staff = [...new Set(entries.map((e) => e.staff))];
+  return (
+    <section className="overflow-hidden rounded-2xl border border-neutral-200/70 bg-white">
+      <div className="surface-blue flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-white/70 text-sm font-bold">{name.charAt(0).toUpperCase()}</span>
+          <div>
+            <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-neutral-600">Customer</p>
+            <p className="text-base font-bold">{name}</p>
+          </div>
+        </div>
+        <p className="text-xs text-neutral-700">
+          {invoices.length} invoice{invoices.length === 1 ? '' : 's'} · {entries.length - invoices.length} debt payment{entries.length - invoices.length === 1 ? '' : 's'} · Served by {staff.join(', ')}
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-2 px-5 py-4 sm:grid-cols-5">
+        <Stat label="Bought" value={formatCurrency(bought)} cents={bought} />
+        <Stat label="Paid" value={formatCurrency(paid)} cents={paid} tone="text-emerald-600" />
+        <Stat label="Debt paid" value={formatCurrency(debtPaid)} cents={debtPaid} />
+        <Stat label="From wallet" value={formatCurrency(wallet)} cents={wallet} />
+        <Stat label="On credit" value={formatCurrency(credit)} cents={credit} tone="text-amber-700" />
+      </div>
+      <div className="px-5 pb-5">
+        <div className="overflow-x-auto rounded-xl border border-neutral-200/70">
+          <table className="w-full min-w-[900px] table-fixed text-xs">
+            <colgroup>
+              <col className="w-[110px]" />
+              <col className="w-[150px]" />
+              <col className="w-[110px]" />
+              <col />
+              <col className="w-[96px]" />
+              <col className="w-[96px]" />
+              <col className="w-[90px]" />
+              <col className="w-[90px]" />
+              <col className="w-[120px]" />
+            </colgroup>
+            <thead className="bg-neutral-50">
+              <tr className="text-left text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+                <th className="px-3 py-2">Date</th>
+                <th className="px-3 py-2">Number</th>
+                <th className="px-3 py-2">Served by</th>
+                <th className="px-3 py-2">Items</th>
+                <th className="px-3 py-2 text-right">Total</th>
+                <th className="px-3 py-2 text-right">Paid</th>
+                <th className="px-3 py-2 text-right">Wallet</th>
+                <th className="px-3 py-2 text-right">On credit</th>
+                <th className="px-3 py-2">Account</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100">
+              {entries.map((e) => (
+                <tr key={`${e.kind}-${e.id}`} className="align-top hover:bg-brand-50/40">
+                  <td className="whitespace-nowrap px-3 py-2 text-neutral-600">
+                    {shortDay(e.day)}
+                    <span className="block text-[10px] text-neutral-400">{clock(e.time)}</span>
+                  </td>
+                  <td className="px-3 py-2">
+                    <Link
+                      to={e.kind === 'invoice' ? `/receipt/${e.id}` : `/payment-receipt/${e.id}`}
+                      state={{ backLabel: 'Staff Daily' }}
+                      onClick={rememberScroll}
+                      className="block truncate font-semibold text-brand-700 hover:underline"
+                    >
+                      {e.number}
+                    </Link>
+                    <span className={`mt-0.5 inline-block rounded px-1.5 py-px text-[10px] font-semibold ${e.kind === 'invoice' ? 'bg-neutral-100 text-neutral-600' : 'bg-amber-50 text-amber-700'}`}>
+                      {e.kind === 'invoice' ? 'Invoice' : 'Debt payment'}
+                    </span>
+                  </td>
+                  <td className="truncate px-3 py-2 font-medium text-neutral-800">{e.staff}</td>
+                  <td className="truncate px-3 py-2 text-neutral-500" title={e.items.join(', ')}>{e.items.join(', ') || '—'}</td>
+                  <td className="figure whitespace-nowrap px-3 py-2 text-right font-semibold text-neutral-900">{e.kind === 'invoice' ? formatCurrency(e.total) : '—'}</td>
+                  <td className={`figure whitespace-nowrap px-3 py-2 text-right font-semibold ${e.paid ? 'text-emerald-600' : 'text-neutral-300'}`}>{formatCurrency(e.paid)}</td>
+                  <td className="figure whitespace-nowrap px-3 py-2 text-right text-neutral-600">{e.wallet > 0 ? formatCurrency(e.wallet) : <span className="text-neutral-300">—</span>}</td>
+                  <td className="figure whitespace-nowrap px-3 py-2 text-right text-neutral-600">{e.credit > 0 ? formatCurrency(e.credit) : <span className="text-neutral-300">—</span>}</td>
+                  <td className="truncate px-3 py-2 text-neutral-600" title={e.account || ''}>{e.account || <span className="text-neutral-300">—</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot className="border-t-2 border-neutral-200 bg-brand-50/50 text-xs font-bold">
+              <tr>
+                <td className="px-3 py-2.5 text-neutral-900" colSpan={4}>Total</td>
+                <td className="figure whitespace-nowrap px-3 py-2.5 text-right">{formatCurrency(bought)}</td>
+                <td className="figure whitespace-nowrap px-3 py-2.5 text-right text-emerald-700">{formatCurrency(paid)}</td>
+                <td className="figure whitespace-nowrap px-3 py-2.5 text-right">{formatCurrency(wallet)}</td>
+                <td className="figure whitespace-nowrap px-3 py-2.5 text-right text-amber-700">{formatCurrency(credit)}</td>
+                <td />
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CustomerReports({ groups, search, month }) {
+  if (!groups.length) {
+    return (
+      <div className="flex flex-col items-center gap-2 rounded-2xl border border-neutral-200/70 bg-white py-14 text-sm text-neutral-500">
+        <Search className="h-8 w-8 text-neutral-300" />
+        No customer matching “{search}” in {month}.
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-4">
+      {groups.length > 1 && <p className="text-xs text-neutral-500">{groups.length} customers match “{search}”.</p>}
+      {groups.map((g) => (
+        <CustomerReport key={g.name} name={g.name} entries={g.entries} />
+      ))}
+    </div>
+  );
+}
+
 // Admin only: one month, day by day -- what each person sold and the money
 // they took in (paid at the sale and debt payments), by account.
 export default function StaffDailyPage() {
@@ -238,8 +365,14 @@ export default function StaffDailyPage() {
   const [params, setParams] = useSearchParams();
   const month = /^\d{4}-\d{2}$/.test(params.get('month') || '') ? params.get('month') : monthKey(new Date());
   const person = params.get('person') || ''; // one person, or '' for everyone
-  const setMonth = (m) => setParams({ month: m, ...(person ? { person } : {}) }, { replace: true });
-  const setPerson = (p) => setParams({ month, ...(p ? { person: p } : {}) }, { replace: true });
+  const customer = params.get('customer') || ''; // customer name search
+  const go = (next) => {
+    const all = { month, person, customer, ...next };
+    setParams(Object.fromEntries(Object.entries(all).filter(([, v]) => v)), { replace: true });
+  };
+  const setMonth = (m) => go({ month: m });
+  const setPerson = (p) => go({ person: p });
+  const setCustomer = (c) => go({ customer: c });
   const [data, setData] = useState(null);
   const [people, setPeople] = useState([]);
 
@@ -275,6 +408,27 @@ export default function StaffDailyPage() {
   }, [month, person]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isThisMonth = month === monthKey(new Date());
+
+  // Every invoice and payment of the month, with the day and who did it.
+  const allEntries = useMemo(
+    () => (data?.days || []).flatMap((d) => d.rows.flatMap((r) => (r.entries || []).map((e) => ({ ...e, day: d.day, staff: r.userName })))),
+    [data]
+  );
+  const customerNames = useMemo(() => [...new Set(allEntries.map((e) => e.customer).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [allEntries]);
+  // The search: one report per matching customer name.
+  const customerGroups = useMemo(() => {
+    const q = customer.trim().toLowerCase();
+    if (!q) return [];
+    const byName = new Map();
+    for (const e of allEntries) {
+      if (!e.customer || !e.customer.toLowerCase().includes(q)) continue;
+      if (!byName.has(e.customer)) byName.set(e.customer, []);
+      byName.get(e.customer).push(e);
+    }
+    return [...byName.entries()]
+      .map(([name, entries]) => ({ name, entries: entries.sort((a, b) => new Date(a.time) - new Date(b.time)) }))
+      .sort((a, b) => (a.name.toLowerCase() === q ? -1 : b.name.toLowerCase() === q ? 1 : a.name.localeCompare(b.name)));
+  }, [allEntries, customer]);
 
   return (
     <div id="print-area">
@@ -319,10 +473,36 @@ export default function StaffDailyPage() {
             ))}
           </select>
         </label>
+        <span className="mx-1 h-6 w-px bg-neutral-200" />
+        <label className="flex items-center gap-2 px-1 text-xs font-semibold text-neutral-500">
+          Customer
+          <span className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            <input
+              value={customer}
+              onChange={(e) => setCustomer(e.target.value)}
+              list="staff-daily-customers"
+              placeholder="Search customer name"
+              className="w-56 rounded-lg border border-neutral-200 bg-white py-1.5 pl-8 pr-2.5 text-sm font-medium text-neutral-900 placeholder:font-normal placeholder:text-neutral-400"
+            />
+          </span>
+          <datalist id="staff-daily-customers">
+            {customerNames.map((n) => (
+              <option key={n} value={n} />
+            ))}
+          </datalist>
+          {customer && (
+            <button onClick={() => setCustomer('')} className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50">
+              <X className="h-3.5 w-3.5" /> Clear
+            </button>
+          )}
+        </label>
       </div>
 
       {!data ? (
         <PageSpinner />
+      ) : customer.trim() ? (
+        <CustomerReports groups={customerGroups} search={customer.trim()} month={monthTitle(month)} />
       ) : data.days.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-2xl border border-neutral-200/70 bg-white py-14 text-sm text-neutral-500">
           <Users className="h-8 w-8 text-neutral-300" />
