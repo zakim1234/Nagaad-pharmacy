@@ -13,7 +13,7 @@ import Branch from '../models/Branch.js';
 //    admins at once ("All admins");
 //  - a branch admin talks to the Super Admin and to the staff of their own
 //    branch: one by one, or to all of them at once ("All my staff") -- never
-//    to another branch's admins;
+//    to another admin, in this branch or any other;
 //  - staff talk to their own branch's admins (and read "All my staff").
 // Messages only last until each branch's Close Day, which deletes them.
 const router = Router();
@@ -33,7 +33,8 @@ function canChat(me, other) {
   if (a === 'super') return b === 'admin';
   if (b === 'super') return a === 'admin';
   if (!sameBranch(me, other)) return false;
-  return a === 'admin' || b === 'admin'; // staff only with their admins
+  // An admin and their own staff -- never two admins, never two staff.
+  return (a === 'admin' && b === 'staff') || (a === 'staff' && b === 'admin');
 }
 
 const toDTO = (m, me) => ({
@@ -74,7 +75,7 @@ router.get('/contacts', asyncHandler(async (req, res) => {
     success: true,
     data: {
       role,
-      group: { id: 'all', name: g.name, note: g.note, canPost: g.canPost, unread: role === 'super' ? 0 : count.get('all') || 0 },
+      group: { id: 'all', name: g.name, note: g.note, canPost: g.canPost, unread: role === 'staff' ? count.get('all') || 0 : 0 },
       people: people.map((p) => ({
         id: p._id,
         name: p.name,
@@ -82,7 +83,8 @@ router.get('/contacts', asyncHandler(async (req, res) => {
         branchName: role === 'super' ? branchName.get(String(p.branch)) || '' : '',
         unread: count.get(String(p._id)) || 0,
       })),
-      unread: [...count.values()].reduce((t, n) => t + n, 0),
+      // People I can chat with, plus (staff only) the admins' messages to all staff.
+      unread: people.reduce((t, p) => t + (count.get(String(p._id)) || 0), 0) + (role === 'staff' ? count.get('all') || 0 : 0),
     },
   });
 }));
@@ -100,7 +102,8 @@ router.get('/messages', asyncHandler(async (req, res) => {
     const seen = new Set();
     messages = copies.filter((m) => (seen.has(m.broadcastId) ? false : seen.add(m.broadcastId))).slice(0, 200);
   } else if (withId === 'all') {
-    messages = await ChatMessage.find({ to: null }).sort({ createdAt: -1 }).limit(200).lean();
+    // Staff see their admins' messages to all staff; an admin sees their own.
+    messages = await ChatMessage.find(role === 'admin' ? { to: null, from: me._id } : { to: null }).sort({ createdAt: -1 }).limit(200).lean();
   } else {
     if (!mongoose.isValidObjectId(withId)) throw new ApiError(400, 'Choose who to chat with.');
     const other = await User.findById(withId).select('role isSuperAdmin branch active').lean();

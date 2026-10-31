@@ -49,6 +49,14 @@ test('CHAT -- admin to all staff and one by one; staff only with the admin; dele
     assert.equal((await as(cali)('/chat/messages', { to: cumar.id, text: 'hi' })).status, 403);
     assert.equal((await as(cali)(`/chat/messages?with=${cumar.id}`)).status, 403);
 
+    // Two admins never chat with each other, even in the same branch, and an
+    // admin's "All my staff" shows only their own messages.
+    const admin2 = await User.create({ username: 'admin2', name: 'Admin Two', passwordHash: 'unused', role: 'admin' });
+    assert.ok(!(await as(admin2)('/chat/contacts')).data.people.some((p) => p.name === 'Admin'));
+    assert.equal((await as(admin2)('/chat/messages', { to: admin.id, text: 'hi' })).status, 403);
+    assert.equal((await as(admin2)('/chat/messages?with=all')).data.length, 0);
+    assert.equal((await as(admin2)('/chat/contacts')).data.unread, 0);
+
     // Close Day: nothing is kept.
     await closeDay({ user: admin });
     assert.equal(await ChatMessage.countDocuments(), 0);
