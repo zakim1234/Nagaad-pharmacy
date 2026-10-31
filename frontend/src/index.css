@@ -249,3 +249,13 @@ h1, h2, h3 {
 .busy-pop {
   animation: busy-pop-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
+/* Chat: a new message springs up above the Chat button. */
+@keyframes chat-pop {
+  0% { opacity: 0; transform: translateY(16px) scale(0.96); }
+  60% { opacity: 1; transform: translateY(-4px) scale(1.01); }
+  100% { transform: translateY(0) scale(1); }
+}
+.chat-pop {
+  animation: chat-pop 0.35s ease-out;
+}

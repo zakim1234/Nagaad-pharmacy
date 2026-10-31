@@ -44,8 +44,13 @@ test('CHAT -- admin to all staff and one by one; staff only with the admin; dele
     // One by one: Cumar replies to the admin; Cali cannot see it, nor write to Cumar.
     assert.equal((await as(cumar)('/chat/messages', { to: admin.id, text: 'Can I give a discount?' })).status, 201);
     assert.equal((await as(admin)('/chat/contacts')).data.people.find((p) => p.name === 'Cumar').unread, 1);
+    // The newest unread message, for the pop-up.
+    const latest = (await as(admin)('/chat/contacts')).data.latest;
+    assert.deepEqual([latest.fromName, latest.text, latest.chat], ['Cumar', 'Can I give a discount?', cumar.id]);
+    assert.equal((await as(cumar)('/chat/contacts')).data.latest.text, 'Close the shop at 9', 'staff: the admin message to all');
     assert.deepEqual((await as(admin)(`/chat/messages?with=${cumar.id}`)).data.map((m) => [m.fromName, m.text]), [['Cumar', 'Can I give a discount?']]);
     assert.equal((await as(admin)('/chat/contacts')).data.people.find((p) => p.name === 'Cumar').unread, 0, 'read');
+    assert.equal((await as(admin)('/chat/contacts')).data.latest, null, 'nothing new to pop up');
     assert.equal((await as(cali)('/chat/messages', { to: cumar.id, text: 'hi' })).status, 403);
     assert.equal((await as(cali)(`/chat/messages?with=${cumar.id}`)).status, 403);
 

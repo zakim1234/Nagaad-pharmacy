@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, MessageCircle, Send, Users, X } from 'lucide-react';
 import client from '../api/client.js';
 
+const POPPED_KEY = 'chat.popped';
 const time = (d) => new Date(d).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 const initials = (name = '') =>
   name
@@ -37,12 +38,46 @@ export default function ChatWidget() {
       .catch(() => {});
   }, [withId]);
 
-  // Unread count: now and then while closed, more often while open.
+  // Unread count and the newest message, every few seconds.
   useEffect(() => {
     loadContacts();
-    const t = setInterval(loadContacts, open ? 6000 : 20000);
+    const t = setInterval(loadContacts, open ? 6000 : 8000);
     return () => clearInterval(t);
   }, [open, loadContacts]);
+
+  // A new message pops up above the Chat button so it is not missed, then
+  // goes away by itself. Each message pops up once (also across reloads).
+  const [popup, setPopup] = useState(null);
+  const latest = contacts?.latest;
+  useEffect(() => {
+    if (!latest || open) return;
+    let shown = '';
+    try {
+      shown = sessionStorage.getItem(POPPED_KEY) || '';
+    } catch {
+      // storage unavailable: it may pop up again after a reload
+    }
+    if (shown === String(latest.id)) return;
+    try {
+      sessionStorage.setItem(POPPED_KEY, String(latest.id));
+    } catch {
+      // ignore
+    }
+    setPopup(latest);
+  }, [latest, open]);
+  useEffect(() => {
+    if (!popup) return undefined;
+    const t = setTimeout(() => setPopup(null), 10000);
+    return () => clearTimeout(t);
+  }, [popup]);
+  useEffect(() => {
+    if (open) setPopup(null);
+  }, [open]);
+  const openPopup = () => {
+    setWithId(popup.chat);
+    setOpen(true);
+    setPopup(null);
+  };
 
   // The open conversation refreshes every few seconds.
   useEffect(() => {
@@ -79,6 +114,29 @@ export default function ChatWidget() {
 
   return (
     <div className="no-print">
+      {popup && !open && (
+        <div
+          role="alert"
+          className="chat-pop fixed bottom-20 right-5 z-[81] w-[min(340px,calc(100vw-2.5rem))] overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-[0_20px_50px_-15px_rgba(11,62,168,0.55)]"
+        >
+          <div className="surface-blue flex items-center gap-2 px-3.5 py-2">
+            <MessageCircle className="h-4 w-4" />
+            <p className="min-w-0 flex-1 truncate text-xs font-bold">New message · {popup.fromName}</p>
+            <span className="text-[10px] text-neutral-600">{time(popup.createdAt)}</span>
+          </div>
+          <button onClick={openPopup} className="block w-full px-3.5 py-3 text-left hover:bg-brand-50/60">
+            <p className="line-clamp-3 whitespace-pre-wrap break-words text-sm text-neutral-900">{popup.text}</p>
+          </button>
+          <div className="flex justify-end gap-2 border-t border-neutral-100 px-3 py-2">
+            <button onClick={() => setPopup(null)} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold text-neutral-600 hover:bg-neutral-100">
+              <X className="h-3.5 w-3.5" /> Dismiss
+            </button>
+            <button onClick={openPopup} className="inline-flex items-center gap-1 rounded-lg bg-brand-400 px-3 py-1 text-xs font-bold text-neutral-950 hover:bg-brand-300">
+              <MessageCircle className="h-3.5 w-3.5" /> Open &amp; reply
+            </button>
+          </div>
+        </div>
+      )}
       {!open && (
         <button
           onClick={() => setOpen(true)}

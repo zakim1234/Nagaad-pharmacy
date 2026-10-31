@@ -71,6 +71,15 @@ router.get('/contacts', asyncHandler(async (req, res) => {
   ]).option(scope(me));
   const count = new Map(unread.map((u) => [String(u._id), u.n]));
   const g = GROUPS[role];
+  // The newest unread message, for the pop-up beside the Chat button: from
+  // someone I can chat with, or (staff) the admins' message to all staff.
+  const allowed = new Set(people.map((p) => String(p._id)));
+  const newest = await ChatMessage.find({ from: { $ne: me._id }, readBy: { $ne: me._id }, $or: role === 'staff' ? [{ to: null }, { to: me._id }] : [{ to: me._id }] })
+    .setOptions(scope(me))
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .lean();
+  const latestMsg = newest.find((m) => m.to === null || allowed.has(String(m.from)));
   res.json({
     success: true,
     data: {
@@ -85,6 +94,15 @@ router.get('/contacts', asyncHandler(async (req, res) => {
       })),
       // People I can chat with, plus (staff only) the admins' messages to all staff.
       unread: people.reduce((t, p) => t + (count.get(String(p._id)) || 0), 0) + (role === 'staff' ? count.get('all') || 0 : 0),
+      latest: latestMsg
+        ? {
+            id: latestMsg._id,
+            chat: latestMsg.to === null ? 'all' : String(latestMsg.from),
+            fromName: latestMsg.fromName,
+            text: latestMsg.text,
+            createdAt: latestMsg.createdAt,
+          }
+        : null,
     },
   });
 }));
