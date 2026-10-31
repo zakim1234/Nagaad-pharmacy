@@ -9,6 +9,8 @@ import {
   deleteInventoryItem,
   getAlertsSummary,
 } from '../controllers/inventoryController.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { stockAlerts } from '../services/stockAlertService.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -23,6 +25,10 @@ router.get('/:id', getInventoryItem);
 
 // The actual Inventory module: browsing, editing, deleting, alerts.
 router.get('/alerts/summary', requirePermission('inventory'), getAlertsSummary);
+// The pop-up alerts: stock expiring within a month, and stock running down.
+router.get('/alerts/popup', requirePermission('inventory'), asyncHandler(async (req, res) => {
+  res.json({ success: true, data: await stockAlerts() });
+}));
 router.get('/', requirePermission('inventory'), listInventory);
 router.put('/:id', requirePermission('inventory'), updateInventoryItem);
 router.delete('/:id', requirePermission('inventory'), deleteInventoryItem);

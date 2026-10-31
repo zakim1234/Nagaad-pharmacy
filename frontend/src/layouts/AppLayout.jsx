@@ -35,6 +35,7 @@ import { BUSINESS } from '../constants/business.js';
 import logo from '../images/logo.png';
 import BranchSwitcher from '../components/BranchSwitcher.jsx';
 import ChatWidget from '../components/ChatWidget.jsx';
+import StockAlerts from '../components/StockAlerts.jsx';
 import client, { getSelectedBranch } from '../api/client.js';
 
 // The Super Admin outside any branch sees only the company-wide pages; a
@@ -253,6 +254,8 @@ export default function AppLayout() {
         </main>
         {/* Chat: per branch; the Super Admin's overview reaches every branch. */}
         {user && <ChatWidget />}
+        {/* Expiry and low-stock pop-ups, for whoever looks after the stock. */}
+        {user && hasPermission(user, 'inventory') && <StockAlerts />}
       </div>
     </div>
   );

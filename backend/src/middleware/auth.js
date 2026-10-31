@@ -90,7 +90,7 @@ export function changeNotAllowed(req, user) {
 // The Super Admin's "all branches" view covers reading reports only (and the
 // lookups report screens use); anything else always runs in one branch, so
 // nothing can ever be written without a branch.
-const ALL_BRANCHES_READS = ['/api/reports', '/api/quotations', '/api/sales', '/api/customers/search', '/api/partners', '/api/commissions', '/api/zakat', '/api/chat'];
+const ALL_BRANCHES_READS = ['/api/reports', '/api/quotations', '/api/sales', '/api/customers/search', '/api/partners', '/api/commissions', '/api/zakat', '/api/chat', '/api/inventory/alerts/popup'];
 function isAllBranchesRead(req) {
   return req.method === 'GET' && ALL_BRANCHES_READS.some((p) => req.originalUrl.startsWith(p));
 }
