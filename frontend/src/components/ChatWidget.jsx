@@ -100,7 +100,7 @@ export default function ChatWidget() {
             )}
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold">{withId ? current?.name || 'Chat' : 'Chat'}</p>
-              <p className="truncate text-[11px] text-neutral-600">{contacts?.overview && !withId ? 'All branches · deleted at each Close Day' : 'Messages are deleted at Close Day'}</p>
+              <p className="truncate text-[11px] text-neutral-600">{contacts?.role === 'super' && !withId ? 'Branch admins · deleted at each Close Day' : 'Messages are deleted at Close Day'}</p>
             </div>
             <button onClick={() => setOpen(false)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold hover:bg-white/50">
               <X className="h-4 w-4" /> Close
@@ -145,7 +145,7 @@ export default function ChatWidget() {
                       {!m.mine && withId === 'all' && (
                         <p className="mb-0.5 text-[11px] font-semibold text-brand-700">
                           {m.fromName}
-                          {m.broadcast ? ' · to all branches' : ''}
+                          {m.broadcast ? ' · to all admins' : ''}
                         </p>
                       )}
                       <p className="whitespace-pre-wrap break-words">{m.text}</p>
@@ -155,6 +155,9 @@ export default function ChatWidget() {
                 ))}
                 <div ref={endRef} />
               </div>
+              {withId === 'all' && contacts?.group && !contacts.group.canPost ? (
+                <p className="border-t border-neutral-100 bg-white px-4 py-3 text-center text-xs text-neutral-500">Only the admin writes here. To reply, open your admin in the list.</p>
+              ) : (
               <form onSubmit={send} className="flex items-center gap-2 border-t border-neutral-100 bg-white p-2.5">
                 <input
                   autoFocus
@@ -172,6 +175,7 @@ export default function ChatWidget() {
                   <Send className="h-4 w-4" /> Send
                 </button>
               </form>
+              )}
             </>
           )}
         </div>
