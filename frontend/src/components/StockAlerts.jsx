@@ -6,8 +6,8 @@ import client from '../api/client.js';
 export const SHOW_EVENT = 'stock-alerts:show';
 const SEEN_KEY = 'stockAlerts.seen'; // stock steps already shown
 const EXPIRY_KEY = 'expiryAlerts.day'; // { day, times, lastAt }
-const EXPIRY_TIMES_PER_DAY = 5;
-const EXPIRY_GAP_MS = 90 * 60 * 1000; // spread the five over the day
+const EXPIRY_TIMES_PER_DAY = 3;
+const EXPIRY_GAP_MS = 3 * 60 * 60 * 1000; // spread the three over the day
 const CHECK_EVERY_MS = 5 * 60 * 1000;
 const SHOW_FOR_MS = 25 * 1000;
 const MAX_ROWS = 5;
@@ -60,8 +60,8 @@ function Card({ red, icon: Icon, title, note, onClose, onView, children }) {
 const More = ({ count }) => (count > 0 ? <li className="px-3.5 py-1.5 text-[11px] font-semibold text-neutral-500">+ {count} more</li> : null);
 
 // Pop-up alerts for whoever looks after the stock:
-//  - red: stock expiring within a month -- by itself, up to five times a
-//    day (open or closed);
+//  - red: stock expiring within a month -- from a month before it expires,
+//    by itself, up to three times a day (open or closed);
 //  - stock running down since its last restock: at 80%, 60%, 40% left, and
 //    in red at 20% (or the minimum stock). Each step pops up once.
 export default function StockAlerts() {
@@ -89,7 +89,7 @@ export default function StockAlerts() {
     writeJSON(SEEN_KEY, data.stock.map((s) => s.key));
     if (fresh.length) setStock(fresh);
 
-    // Expiry: by itself, five times a day at most -- per business day while
+    // Expiry: by itself, three times a day at most -- per business day while
     // one is open, otherwise per calendar day.
     if (data.expiring.length) {
       const dayKey = day?.status === 'OPEN' ? String(day.openedAt || day.businessDate || '') : new Date().toDateString();
