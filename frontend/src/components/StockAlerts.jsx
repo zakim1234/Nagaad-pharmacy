@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Boxes, CalendarClock, X } from 'lucide-react';
 import client from '../api/client.js';
 
+export const SHOW_EVENT = 'stock-alerts:show';
 const SEEN_KEY = 'stockAlerts.seen'; // stock steps already shown
 const EXPIRY_KEY = 'expiryAlerts.day'; // { day, times, lastAt }
 const EXPIRY_TIMES_PER_DAY = 5;
@@ -96,7 +97,7 @@ export default function StockAlerts() {
       if (rec.times < EXPIRY_TIMES_PER_DAY && Date.now() - rec.lastAt >= EXPIRY_GAP_MS) {
         rec = { ...rec, times: rec.times + 1, lastAt: Date.now() };
         writeJSON(EXPIRY_KEY, rec);
-        setExpiry({ items: data.expiring, time: rec.times });
+        setExpiry({ items: data.expiring, note: `Alert ${rec.times} of ${EXPIRY_TIMES_PER_DAY} today` });
       }
     }
   }, []);
@@ -109,6 +110,23 @@ export default function StockAlerts() {
       clearInterval(t);
     };
   }, [check]);
+
+  // "Show alerts" (Inventory page): every current alert again, now, whether
+  // the day is open or not and even if already shown.
+  useEffect(() => {
+    const showNow = async (ev) => {
+      try {
+        const data = (await client.get('/inventory/alerts/popup')).data.data;
+        if (data.expiring.length) setExpiry({ items: data.expiring, note: 'Shown on request' });
+        if (data.stock.length) setStock(data.stock);
+        if (!data.expiring.length && !data.stock.length) ev.detail?.onEmpty?.();
+      } catch {
+        ev.detail?.onEmpty?.();
+      }
+    };
+    window.addEventListener(SHOW_EVENT, showNow);
+    return () => window.removeEventListener(SHOW_EVENT, showNow);
+  }, []);
 
   useEffect(() => {
     if (!expiry) return undefined;
@@ -133,7 +151,7 @@ export default function StockAlerts() {
   return (
     <div className="no-print fixed right-5 top-16 z-[79] flex flex-col gap-3">
       {expiry && (
-        <Card red icon={CalendarClock} title="Expiring within a month" note={`Alert ${expiry.time} of ${EXPIRY_TIMES_PER_DAY} today`} onClose={() => setExpiry(null)} onView={view}>
+        <Card red icon={CalendarClock} title="Expiring within a month" note={expiry.note} onClose={() => setExpiry(null)} onView={view}>
           {expiry.items.slice(0, MAX_ROWS).map((e) => (
             <li key={String(e.item)} className="flex items-start gap-3 px-3.5 py-2">
               <div className="min-w-0 flex-1">

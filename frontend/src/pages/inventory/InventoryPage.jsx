@@ -1,7 +1,9 @@
 import { canEditRecords, canDeleteRecords } from '../../constants/permissions.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useEffect, useState, useCallback } from 'react';
-import { Search, Pencil, Trash2, Eye, Boxes, Package, Coins, TrendingUp, Tag } from 'lucide-react';
+import { Search, Pencil, Trash2, Eye, Boxes, Package, Coins, TrendingUp, Tag, BellRing } from 'lucide-react';
+import Button from '../../components/ui/Button.jsx';
+import { SHOW_EVENT } from '../../components/StockAlerts.jsx';
 import client from '../../api/client.js';
 import { useDebounce } from '../../hooks/useDebounce.js';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -116,7 +118,18 @@ export default function InventoryPage() {
 
   return (
     <div>
-      <PageHeader title="Inventory" subtitle="Every product: stock in hand, its cost and selling price, and the profit it makes." />
+      <PageHeader
+        title="Inventory"
+        subtitle="Every product: stock in hand, its cost and selling price, and the profit it makes."
+        actions={
+          <Button
+            variant="secondary"
+            onClick={() => window.dispatchEvent(new CustomEvent(SHOW_EVENT, { detail: { onEmpty: () => toast.success('No alerts right now: nothing expiring within a month and no stock running low.') } }))}
+          >
+            <BellRing className="h-4 w-4" /> Show alerts
+          </Button>
+        }
+      />
 
       {/* Totals for everything matching the filters */}
       <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-5">
