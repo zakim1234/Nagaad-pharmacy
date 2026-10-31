@@ -60,8 +60,8 @@ function Card({ red, icon: Icon, title, note, onClose, onView, children }) {
 const More = ({ count }) => (count > 0 ? <li className="px-3.5 py-1.5 text-[11px] font-semibold text-neutral-500">+ {count} more</li> : null);
 
 // Pop-up alerts for whoever looks after the stock:
-//  - red: stock expiring within a month -- up to five times a day while the
-//    business day is open;
+//  - red: stock expiring within a month -- by itself, up to five times a
+//    day (open or closed);
 //  - stock running down since its last restock: at 80%, 60%, 40% left, and
 //    in red at 20% (or the minimum stock). Each step pops up once.
 export default function StockAlerts() {
@@ -89,9 +89,10 @@ export default function StockAlerts() {
     writeJSON(SEEN_KEY, data.stock.map((s) => s.key));
     if (fresh.length) setStock(fresh);
 
-    // Expiry: only while the day is open, five times a day at most.
-    if (day?.status === 'OPEN' && data.expiring.length) {
-      const dayKey = String(day.openedAt || day.businessDate || '');
+    // Expiry: by itself, five times a day at most -- per business day while
+    // one is open, otherwise per calendar day.
+    if (data.expiring.length) {
+      const dayKey = day?.status === 'OPEN' ? String(day.openedAt || day.businessDate || '') : new Date().toDateString();
       let rec = readJSON(EXPIRY_KEY, {});
       if (rec.day !== dayKey) rec = { day: dayKey, times: 0, lastAt: 0 };
       if (rec.times < EXPIRY_TIMES_PER_DAY && Date.now() - rec.lastAt >= EXPIRY_GAP_MS) {
