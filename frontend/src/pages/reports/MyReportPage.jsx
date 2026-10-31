@@ -40,7 +40,7 @@ export default function MyReportPage() {
   const t = data.totals;
 
   return (
-    <div>
+    <div id="print-area">
       <PageHeader
         title="My Report"
         subtitle={`${user?.name || 'You'} — what you sold and the money you took ${data.since ? `since the last Close Day (${formatDateTime(data.since)})` : 'today'}.`}

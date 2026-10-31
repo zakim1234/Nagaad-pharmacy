@@ -55,7 +55,7 @@ export default function RefundsPage() {
   }, [range, kind]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div>
+    <div id="print-area">
       <PageHeader
         title="Refunds"
         subtitle={`Money given back when an invoice was cancelled — to the customer's wallet or as cash.${allBranches ? ' All branches together.' : ''}`}

@@ -99,6 +99,32 @@ h1, h2, h3 {
   .no-print {
     display: none !important;
   }
+  /* The app scrolls inside <main>; on paper everything must flow onto as many
+     pages as it needs, and wide tables shrink to the page width. */
+  html, body, #root, #root *:not(.truncate) {
+    overflow: visible !important;
+  }
+  #root > div, main {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  #print-area table {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  #print-area button,
+  #print-area select,
+  .chat-widget {
+    display: none !important;
+  }
+  #print-area section,
+  #print-area .rounded-2xl {
+    break-inside: avoid-page;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
 
   .report-section,
   .kpi-grid,

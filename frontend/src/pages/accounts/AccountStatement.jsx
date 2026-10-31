@@ -44,7 +44,7 @@ export default function AccountStatement({ accountId, params, onClose }) {
   const tab = (active) => `rounded-md px-3 py-1 text-xs font-semibold transition ${active ? 'bg-brand-400 text-neutral-950' : 'text-neutral-600 hover:bg-neutral-50'}`;
 
   return (
-    <div className="mt-5 overflow-hidden rounded-2xl border border-neutral-200/80">
+    <div id="print-area" className="mt-5 overflow-hidden rounded-2xl border border-neutral-200/80">
       <div className="surface-blue flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div>
           <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-neutral-600">Account statement</p>
