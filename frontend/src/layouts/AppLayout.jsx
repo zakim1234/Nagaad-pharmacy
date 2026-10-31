@@ -251,8 +251,8 @@ export default function AppLayout() {
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:px-8">
           <Outlet />
         </main>
-        {/* Chat is per branch: not on the all-branches overview. */}
-        {user && !inOverview(user) && <ChatWidget />}
+        {/* Chat: per branch; the Super Admin's overview reaches every branch. */}
+        {user && <ChatWidget />}
       </div>
     </div>
   );

@@ -90,13 +90,14 @@ export function changeNotAllowed(req, user) {
 // The Super Admin's "all branches" view covers reading reports only (and the
 // lookups report screens use); anything else always runs in one branch, so
 // nothing can ever be written without a branch.
-const ALL_BRANCHES_READS = ['/api/reports', '/api/quotations', '/api/sales', '/api/customers/search', '/api/partners', '/api/commissions', '/api/zakat'];
+const ALL_BRANCHES_READS = ['/api/reports', '/api/quotations', '/api/sales', '/api/customers/search', '/api/partners', '/api/commissions', '/api/zakat', '/api/chat'];
 function isAllBranchesRead(req) {
   return req.method === 'GET' && ALL_BRANCHES_READS.some((p) => req.originalUrl.startsWith(p));
 }
 // Year-end profit sharing is company-wide: from the overview it shares every
 // branch's combined profit between all partners.
-const COMPANY_WIDE_WRITES = ['/api/partners/profit-sharing'];
+// The Super Admin's chat from the overview reaches every branch.
+const COMPANY_WIDE_WRITES = ['/api/partners/profit-sharing', '/api/chat'];
 function isCompanyWideWrite(req) {
   return req.method !== 'GET' && COMPANY_WIDE_WRITES.some((p) => req.originalUrl.startsWith(p));
 }

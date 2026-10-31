@@ -100,7 +100,7 @@ export default function ChatWidget() {
             )}
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold">{withId ? current?.name || 'Chat' : 'Chat'}</p>
-              <p className="truncate text-[11px] text-neutral-600">Messages are deleted at Close Day</p>
+              <p className="truncate text-[11px] text-neutral-600">{contacts?.overview && !withId ? 'All branches · deleted at each Close Day' : 'Messages are deleted at Close Day'}</p>
             </div>
             <button onClick={() => setOpen(false)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold hover:bg-white/50">
               <X className="h-4 w-4" /> Close
@@ -122,7 +122,7 @@ export default function ChatWidget() {
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-semibold text-neutral-900">{c.name}</span>
-                          <span className={`block truncate text-[11px] text-neutral-400 ${c.isGroup ? "" : "capitalize"}`}>{c.isGroup ? "Everyone in this branch" : c.role}</span>
+                          <span className={`block truncate text-[11px] text-neutral-400 ${c.isGroup ? "" : "capitalize"}`}>{c.isGroup ? c.note : [c.role, c.branchName].filter(Boolean).join(" · ")}</span>
                         </span>
                         {c.unread > 0 && <span className="rounded-full bg-brand-400 px-2 py-0.5 text-[11px] font-bold text-neutral-950">{c.unread}</span>}
                       </button>
@@ -142,7 +142,12 @@ export default function ChatWidget() {
                 {messages.map((m) => (
                   <div key={m.id} className={`flex ${m.mine ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${m.mine ? 'rounded-br-md bg-brand-400 text-neutral-950' : 'rounded-bl-md border border-neutral-200/80 bg-white text-neutral-900'}`}>
-                      {!m.mine && withId === 'all' && <p className="mb-0.5 text-[11px] font-semibold text-brand-700">{m.fromName}</p>}
+                      {!m.mine && withId === 'all' && (
+                        <p className="mb-0.5 text-[11px] font-semibold text-brand-700">
+                          {m.fromName}
+                          {m.broadcast ? ' · to all branches' : ''}
+                        </p>
+                      )}
                       <p className="whitespace-pre-wrap break-words">{m.text}</p>
                       <p className={`mt-0.5 text-right text-[10px] ${m.mine ? 'text-neutral-700' : 'text-neutral-400'}`}>{time(m.createdAt)}</p>
                     </div>

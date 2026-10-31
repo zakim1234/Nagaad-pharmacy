@@ -12,6 +12,9 @@ const schema = new mongoose.Schema(
     to: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     text: { type: String, required: true, trim: true, maxlength: 1000 },
     readBy: { type: [mongoose.Schema.Types.ObjectId], default: [] },
+    // A Super Admin message to every branch: one copy per branch (so each
+    // branch's Close Day deletes its own), all sharing this id.
+    broadcastId: { type: String, default: '' },
   },
   { timestamps: true }
 );
